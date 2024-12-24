@@ -4,7 +4,7 @@
  * @description Custom plugin for paginating the editor content.
  */
 
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Plugin, PluginKey, EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import {
     buildNewDocument,
@@ -21,7 +21,7 @@ const PaginationPlugin = new Plugin({
         let isPaginating = false;
 
         return {
-            update(view: EditorView, prevState) {
+            update(view: EditorView, prevState: EditorState) {
                 if (isPaginating) return;
 
                 const { state } = view;
