@@ -1,0 +1,756 @@
+/**
+ * @file /src/components/TipTap/utils/pagination.ts
+ * @name Pagination
+ * @description Utility functions for paginating the editor content.
+ */
+
+import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
+import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
+import { Nullable } from "./record";
+import { EditorState, Transaction } from "@tiptap/pm/state";
+import { a4Height, a4Padding, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { EditorView } from "@tiptap/pm/view";
+import { MM_PER_INCH, STANDARD_PIXELS_PER_INCH } from "../constants/sizing";
+import {
+    moveToNearestValidCursorPosition,
+    moveToNextTextBlock,
+    moveToPreviousTextBlock,
+    moveToThisTextBlock,
+    setSelectionAtEndOfDocument,
+} from "./selection";
+import { inRange } from "./math";
+
+export type ContentNode = { node: PMNode; pos: number };
+export type CursorMap = { [key: number]: number };
+
+/**
+ * Check if the given node is a page node.
+ * @param node - The node to check.
+ * @returns {boolean} True if the node is a page node, false otherwise.
+ */
+export const isPageNode = (node: Nullable<PMNode>): boolean => {
+    if (!node) {
+        console.warn("No node provided");
+        return false;
+    }
+
+    return node.type.name === "page";
+};
+
+/**
+ * Check if the given node is a paragraph node.
+ * @param node - The node to check.
+ * @returns {boolean} True if the node is a paragraph node, false otherwise.
+ */
+export const isParagraphNode = (node: Nullable<PMNode>): boolean => {
+    if (!node) {
+        console.warn("No node provided");
+        return false;
+    }
+
+    return node.type.name === "paragraph";
+};
+
+/**
+ * Check if the given node is a text node.
+ * @param node - The node to check.
+ * @returns {boolean} True if the node is a text node, false otherwise.
+ */
+export const isTextNode = (node: Nullable<PMNode>): boolean => {
+    if (!node) {
+        console.warn("No node provided");
+        return false;
+    }
+
+    return node.type.name === "text";
+};
+
+/**
+ * Get the type of the node at the specified position.
+ * @param $pos - The resolved position in the document.
+ * @returns The type of the node at the specified position.
+ */
+export const isPositionWithinParagraph = ($pos: ResolvedPos): boolean => {
+    return getPositionNodeType($pos) === "paragraph";
+};
+
+/**
+ * Get the page node (parent of the current node) position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The position of the page node.
+ */
+export const getThisPageNodePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    return getParentNodePosOfType(doc, pos, "page").pos;
+};
+
+/**
+ * Get the paragraph node position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The position of the paragraph node.
+ */
+export const getThisParagraphNodePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    return getParentNodePosOfType(doc, pos, "paragraph").pos;
+};
+
+/**
+ * Get the page node position and the page node itself.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {pagePos: number, pageNode: Node} The position and the node of the page.
+ */
+export const getPageNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): { pagePos: number; pageNode: Nullable<PMNode> } => {
+    if (typeof pos === "number") {
+        return getPageNodeAndPosition(doc, doc.resolve(pos));
+    }
+
+    const pagePos = getThisPageNodePosition(doc, pos);
+    const pageNode = doc.nodeAt(pagePos);
+
+    return { pagePos, pageNode };
+};
+
+/**
+ * Get the paragraph node position and the paragraph node itself.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {paragraphPos: number, paragraphNode: Node} The position and the node of the paragraph.
+ */
+export const getParagraphNodeAndPosition = (
+    doc: PMNode,
+    pos: ResolvedPos | number
+): { paragraphPos: number; paragraphNode: Nullable<PMNode> } => {
+    if (typeof pos === "number") {
+        return getParagraphNodeAndPosition(doc, doc.resolve(pos));
+    }
+
+    const paragraphPos = getThisParagraphNodePosition(doc, pos);
+    const paragraphNode = doc.nodeAt(paragraphPos);
+
+    return { paragraphPos, paragraphNode };
+};
+
+/**
+ * Get the start of the page position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The start position of the page.
+ */
+export const getStartOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    if (typeof pos === "number") {
+        return getStartOfPagePosition(doc, doc.resolve(pos));
+    }
+
+    const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
+    if (!pageNode) {
+        console.warn("No page node found");
+        return -1;
+    }
+
+    return pagePos;
+};
+
+/**
+ * Get the start of the paragraph position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The start position of the paragraph.
+ */
+export const getStartOfParagraphPosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    if (typeof pos === "number") {
+        return getStartOfParagraphPosition(doc, doc.resolve(pos));
+    }
+
+    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, pos);
+    if (!paragraphNode) {
+        console.warn("No paragraph node found");
+        return -1;
+    }
+
+    return paragraphPos;
+};
+
+/**
+ * Get the start of the page and paragraph positions.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {startOfPagePos: number, startOfParagraphPos: number} The start positions of the page and paragraph.
+ */
+export const getStartOfPageAndParagraphPosition = (
+    doc: PMNode,
+    pos: ResolvedPos | number
+): { startOfPagePos: number; startOfParagraphPos: number } => {
+    const startOfParagraphPos = getStartOfParagraphPosition(doc, pos);
+    const startOfPagePos = getStartOfPagePosition(doc, pos);
+
+    return { startOfPagePos, startOfParagraphPos };
+};
+
+/**
+ * Get the end of the page position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The end position of the page.
+ */
+export const getEndOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    if (typeof pos === "number") {
+        return getEndOfPagePosition(doc, doc.resolve(pos));
+    }
+
+    const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
+    if (!pageNode) {
+        console.warn("No page node found");
+        return -1;
+    }
+
+    return pagePos + pageNode.content.size;
+};
+
+/**
+ * Get the end of the paragraph position.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The end position of the paragraph.
+ */
+export const getEndOfParagraphPosition = (doc: PMNode, $pos: ResolvedPos | number): number => {
+    if (typeof $pos === "number") {
+        return getEndOfParagraphPosition(doc, doc.resolve($pos));
+    }
+
+    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+    if (!paragraphNode) {
+        console.warn("No paragraph node found");
+        return -1;
+    }
+
+    return paragraphPos + paragraphNode.content.size;
+};
+
+/**
+ * Get the end of the page and paragraph positions.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {endOfPagePos: number, endOfParagraphPos: number} The end positions of the page and paragraph.
+ */
+export const getEndOfPageAndParagraphPosition = (
+    doc: PMNode,
+    $pos: ResolvedPos | number
+): { endOfPagePos: number; endOfParagraphPos: number } => {
+    const endOfParagraphPos = getEndOfParagraphPosition(doc, $pos);
+    const endOfPagePos = getEndOfPagePosition(doc, $pos);
+
+    return { endOfPagePos, endOfParagraphPos };
+};
+
+/**
+ * Check if the editor is currently highlighting text.
+ * @param state - The current editor state.
+ * @returns True if text is currently highlighted, false otherwise.
+ */
+const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | number, checkExactStart: boolean): boolean => {
+    // Resolve position if given as a number
+    if (typeof $pos === "number") {
+        return isPosMatchingStartOfPageCondition(doc, doc.resolve($pos), checkExactStart);
+    }
+
+    // Ensure that the position is within a valid block (paragraph)
+    if (!isPositionWithinParagraph($pos)) {
+        return false;
+    }
+
+    // Get positions for paragraph and page
+    const { startOfPagePos, startOfParagraphPos } = getStartOfPageAndParagraphPosition(doc, $pos);
+    if (startOfPagePos < 0) {
+        console.warn("Invalid page position");
+        return false;
+    }
+
+    if (startOfParagraphPos < 0) {
+        console.warn("Invalid paragraph position");
+        return false;
+    }
+
+    // Determine the condition to check
+    const isFirstParagraph = startOfPagePos + 1 === startOfParagraphPos;
+    if (checkExactStart) {
+        // Check if position is exactly at the start of the page
+        // First position of page will always be 1 more than the paragraph position
+        const isPosAtStartOfParagraph = $pos.pos - 1 === startOfParagraphPos;
+        if (isFirstParagraph && isPosAtStartOfParagraph) {
+            console.log("At the start of the page");
+            return true;
+        }
+        console.log("Not at the start of the page");
+        return false;
+    } else {
+        // Check if position is at the first child of the page
+        if (isFirstParagraph) {
+            console.log("In the first child of the page");
+            return true;
+        }
+        console.log("Not in the first child of the page");
+        return false;
+    }
+};
+
+/**
+ * Check if the given position is at the start of the page or the first child of the page.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the condition is met, false otherwise.
+ */
+export const isPosAtStartOfPage = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    return isPosMatchingStartOfPageCondition(doc, $pos, true);
+};
+
+/**
+ * Check if the given position is at the first paragraph child of the page.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the start of the page, false otherwise.
+ */
+export const isPosAtFirstChildOfPage = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    return isPosMatchingStartOfPageCondition(doc, $pos, false);
+};
+
+/**
+ * Check if the given position is at the end of the page or the last child of the page.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @param checkExactEnd - Whether to check for the exact end of the page (true) or the last child of the page (false).
+ * @returns {boolean} True if the condition is met, false otherwise.
+ */
+const isPosMatchingEndOfPageCondition = (doc: PMNode, $pos: ResolvedPos | number, checkExactEnd: boolean): boolean => {
+    // Resolve position if given as a number
+    if (typeof $pos === "number") {
+        return isPosMatchingEndOfPageCondition(doc, doc.resolve($pos), checkExactEnd);
+    }
+
+    // Ensure that the position is within a valid block (paragraph)
+    if (!isPositionWithinParagraph($pos)) {
+        return false;
+    }
+
+    // Get positions for paragraph and page
+    const { endOfParagraphPos, endOfPagePos } = getEndOfPageAndParagraphPosition(doc, $pos);
+    if (endOfParagraphPos < 0) {
+        console.warn("Invalid end of paragraph position");
+        return false;
+    }
+
+    if (endOfPagePos < 0) {
+        console.warn("Invalid end of page position");
+        return false;
+    }
+
+    // Determine the condition to check
+    if (checkExactEnd) {
+        // Check if position is exactly at the end of the page
+        if ($pos.pos === endOfPagePos) {
+            console.log("At the end of the page");
+            return true;
+        }
+        console.log("Not at the end of the page");
+        return false;
+    } else {
+        // Check if position is at the last child of the page
+        if (endOfParagraphPos + 1 === endOfPagePos) {
+            console.log("In the last child of the page");
+            return true;
+        }
+        console.log("Not in the last child of the page");
+        return false;
+    }
+};
+
+/**
+ * Check if the given position is exactly at the end of the page.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the end of the page, false otherwise.
+ */
+export const isPosAtEndOfPage = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    return isPosMatchingEndOfPageCondition(doc, $pos, true);
+};
+
+/**
+ * Check if the given position is at the last paragraph child of the page.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the end of the page, false otherwise.
+ */
+export const isPosAtLastChildOfPage = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    return isPosMatchingEndOfPageCondition(doc, $pos, false);
+};
+
+/**
+ * Get the previous paragraph node.
+ * @param doc - The document node.
+ * @param pos - The position in the document.
+ * @returns {PMNode} The previous paragraph node.
+ */
+export const getPreviousParagraph = (doc: PMNode, pos: number): { prevParagraphPos: number; prevParagraphNode: Nullable<PMNode> } => {
+    let prevParagraphPos = pos;
+    let prevParagraphNode = null;
+    while (prevParagraphNode === null && prevParagraphPos > 0) {
+        prevParagraphPos -= 1;
+        const node = doc.nodeAt(prevParagraphPos);
+        if (!node) {
+            continue;
+        }
+
+        if (isParagraphNode(node)) {
+            prevParagraphNode = node;
+            prevParagraphPos = prevParagraphPos;
+        }
+    }
+
+    return { prevParagraphPos, prevParagraphNode };
+};
+
+/**
+ * Get the next paragraph node.
+ * @param doc - The document node.
+ * @param pos - The position in the document.
+ * @returns {PMNode} The next paragraph node.
+ */
+export const getNextParagraph = (doc: PMNode, pos: number): { nextParagraphPos: number; nextParagraphNode: Nullable<PMNode> } => {
+    const documentLength = doc.nodeSize;
+    let nextParagraphPos = pos;
+    let nextParagraphNode = null;
+    while (nextParagraphNode === null && nextParagraphPos < documentLength) {
+        nextParagraphPos += 1;
+        const node = doc.nodeAt(nextParagraphPos);
+        if (!node) {
+            continue;
+        }
+
+        if (isParagraphNode(node)) {
+            nextParagraphNode = node;
+            nextParagraphPos = nextParagraphPos;
+        }
+    }
+
+    return { nextParagraphPos, nextParagraphNode };
+};
+
+/**
+ * Determine if the resolved position is at the start of a paragraph node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the start of a paragraph node, false otherwise.
+ */
+export const isAtStartOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isAtStartOfParagraph(doc, doc.resolve($pos));
+    }
+
+    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+    if (!paragraphNode) {
+        console.warn("No paragraph node found");
+        return false;
+    }
+
+    // We allow for the cursor to be at the start of the paragraph node or the start of the first text child node.
+    return inRange($pos.pos, paragraphPos, paragraphPos + 1);
+};
+
+/**
+ * Determine if the resolved position is at the end of a paragraph node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the end of a paragraph node, false otherwise.
+ */
+export const isAtEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isAtEndOfParagraph(doc, doc.resolve($pos));
+    }
+
+    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+    if (!paragraphNode) {
+        console.warn("No paragraph node found");
+        return false;
+    }
+
+    return $pos.pos + 1 === paragraphPos + paragraphNode.nodeSize;
+};
+
+/**
+ * Determine if the resolved position is at the start or end of a paragraph node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the start or end of a paragraph node, false otherwise.
+ */
+export const isAtStartOrEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    return isAtStartOfParagraph(doc, $pos) || isAtEndOfParagraph(doc, $pos);
+};
+
+/**
+ * Determine if the previous paragraph is empty.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
+ */
+export const isPreviousParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPreviousParagraphEmpty(doc, doc.resolve($pos));
+    }
+
+    const { prevParagraphNode } = getPreviousParagraph(doc, $pos.pos);
+    if (!prevParagraphNode) {
+        return false;
+    }
+
+    return isNodeEmpty(prevParagraphNode);
+};
+
+/**
+ * Determine if the next paragraph is empty.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the next paragraph is empty or does not exist, false otherwise.
+ */
+export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isNextParagraphEmpty(doc, doc.resolve($pos));
+    }
+
+    const { nextParagraphNode } = getNextParagraph(doc, $pos.pos);
+    if (!nextParagraphNode) {
+        return false;
+    }
+
+    return isNodeEmpty(nextParagraphNode);
+};
+
+/**
+ * Check if the document has page nodes.
+ * @param state - The editor state.
+ * @returns {boolean} True if the document has page nodes, false otherwise.
+ */
+export const doesDocHavePageNodes = (state: EditorState): boolean => {
+    const { schema } = state;
+    const pageType = schema.nodes.page;
+
+    let hasPageNodes = false;
+
+    state.doc.forEach((node) => {
+        if (node.type === pageType) {
+            hasPageNodes = true;
+            return false;
+        }
+    });
+
+    return hasPageNodes;
+};
+
+/**
+ * Collect content nodes and their old positions
+ * @param state - The editor state.
+ * @returns {Array<{ node: PMNode, pos: number }>} The content nodes and their positions.
+ */
+export const collectContentNodes = (state: EditorState): ContentNode[] => {
+    const { schema } = state;
+    const pageType = schema.nodes.page;
+
+    const contentNodes: ContentNode[] = [];
+    state.doc.forEach((node, offset) => {
+        if (node.type === pageType) {
+            node.forEach((child, childOffset) => {
+                contentNodes.push({ node: child, pos: offset + childOffset + 1 });
+            });
+        } else {
+            contentNodes.push({ node, pos: offset + 1 });
+        }
+    });
+
+    return contentNodes;
+};
+
+/**
+ * Measure the heights of the content nodes.
+ * @param view - The editor view.
+ * @param contentNodes - The content nodes and their positions.
+ * @returns {number[]} The heights of the content nodes.
+ */
+export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]): number[] => {
+    const paragraphType = view.state.schema.nodes.paragraph;
+
+    const nodeHeights = contentNodes.map(({ pos, node }) => {
+        const dom = view.nodeDOM(pos);
+        if (dom instanceof HTMLElement) {
+            let height = dom.getBoundingClientRect().height;
+            if (height === 0) {
+                if (node.type === paragraphType || node.isTextblock) {
+                    // Assign a minimum height to empty paragraphs or textblocks
+                    height = MIN_PARAGRAPH_HEIGHT;
+                }
+            }
+            return height;
+        }
+
+        return MIN_PARAGRAPH_HEIGHT; // Default to minimum height if DOM element is not found
+    });
+
+    return nodeHeights;
+};
+
+/**
+ * Calculate the dimensions of the A4 page.
+ * @returns {pageHeight: number} The height of the A4 page.
+ */
+const calculatePageDimensions = (): { pageHeight: number } => {
+    const yPadding = a4Padding * 2;
+    const dpi = window.devicePixelRatio * STANDARD_PIXELS_PER_INCH;
+    const pageHeight = ((a4Height - yPadding) / MM_PER_INCH) * dpi;
+
+    return { pageHeight };
+};
+
+/**
+ * Build the new document and keep track of new positions
+ * @param contentNodes - The content nodes and their positions.
+ * @param nodeHeights - The heights of the content nodes.
+ * @param schema - The schema of the editor.
+ * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
+ */
+export const buildNewDocument = (
+    contentNodes: ContentNode[],
+    nodeHeights: number[],
+    schema: Schema<any, any>
+): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
+    const pageType = schema.nodes.page;
+    const pages = [];
+    let currentPageContent: PMNode[] = [];
+    let currentHeight = 0;
+    const { pageHeight } = calculatePageDimensions();
+
+    const oldToNewPosMap: CursorMap = {};
+    let cumulativeNewDocPos = 0;
+
+    for (let i = 0; i < contentNodes.length; i++) {
+        const { node, pos: oldPos } = contentNodes[i];
+        const nodeHeight = nodeHeights[i];
+
+        if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
+            const pageNode = pageType.create({}, currentPageContent);
+            pages.push(pageNode);
+            cumulativeNewDocPos += pageNode.nodeSize;
+            currentPageContent = [];
+            currentHeight = 0;
+        }
+
+        if (currentPageContent.length === 0) {
+            cumulativeNewDocPos += 1; // Start of the page node
+        }
+
+        // Record the mapping from old position to new position
+        const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
+        oldToNewPosMap[oldPos] = nodeStartPosInNewDoc;
+
+        currentPageContent.push(node);
+        currentHeight += Math.max(nodeHeight, MIN_PARAGRAPH_HEIGHT);
+    }
+
+    if (currentPageContent.length > 0) {
+        const pageNode = pageType.create({}, currentPageContent);
+        pages.push(pageNode);
+    }
+
+    const newDoc = schema.topNodeType.create(null, pages);
+
+    return { newDoc, oldToNewPosMap };
+};
+
+/**
+ * Map the cursor position from the old document to the new document.
+ * @param contentNodes - The content nodes and their positions.
+ * @param oldCursorPos - The old cursor position.
+ * @param oldToNewPosMap - The mapping from old positions to new positions.
+ * @returns {number} The new cursor position.
+ */
+export const mapCursorPosition = (contentNodes: ContentNode[], oldCursorPos: number, oldToNewPosMap: CursorMap) => {
+    let newCursorPos: Nullable<number> = null;
+    for (let i = 0; i < contentNodes.length; i++) {
+        const { node, pos: oldNodePos } = contentNodes[i];
+        const nodeSize = node.nodeSize;
+
+        if (oldNodePos <= oldCursorPos && oldCursorPos <= oldNodePos + nodeSize) {
+            const oldNodeTextPos = oldNodePos + 1; // Start of paragraph will always be 1 less than the start of the text
+            const offsetInNode = oldCursorPos - oldNodeTextPos;
+            const newNodePos = oldToNewPosMap[oldNodePos];
+            newCursorPos = newNodePos + offsetInNode;
+            break;
+        }
+    }
+
+    return newCursorPos;
+};
+
+/**
+ * Sets the cursor selection after creating the new document.
+ * @param tr - The current transaction.
+ * @returns {void}
+ */
+export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nullable<number>): void => {
+    if (newCursorPos !== null) {
+        const $pos = tr.doc.resolve(newCursorPos);
+        let selection;
+
+        const startOfPage = isPosAtStartOfPage(tr.doc, newCursorPos);
+        const endOfPage = isPosAtEndOfPage(tr.doc, newCursorPos);
+        console.log("Is start of page", startOfPage);
+        console.log("Is end of page", endOfPage);
+
+        const firstChildOfPage = isPosAtFirstChildOfPage(tr.doc, newCursorPos);
+        const lastChildOfPage = isPosAtLastChildOfPage(tr.doc, newCursorPos);
+        console.log("Is first child of page", firstChildOfPage);
+        console.log("Is last child of page", lastChildOfPage);
+
+        const startOfParagraph = isAtStartOfParagraph(tr.doc, $pos);
+        const endOfParagraph = isAtEndOfParagraph(tr.doc, $pos);
+        console.log("Is start of paragraph", startOfParagraph);
+        console.log("Is end of paragraph", endOfParagraph);
+
+        console.log("Is parent a text block", $pos.parent.isTextblock, $pos.parent.type.name);
+        console.log("Node Before", $pos.nodeBefore);
+        console.log("Node Before type", $pos.nodeBefore?.type.name);
+
+        console.log("Node After", $pos.nodeAfter);
+        console.log("Node after type", $pos.nodeAfter?.type.name);
+
+        if ($pos.parent.isTextblock) {
+            if (firstChildOfPage) {
+                if (startOfPage) {
+                    selection = moveToThisTextBlock(tr, $pos);
+                } else {
+                    selection = moveToNextTextBlock(tr, $pos);
+                }
+            } else if (lastChildOfPage) {
+                if (endOfPage) {
+                    selection = moveToPreviousTextBlock(tr, $pos);
+                } else {
+                    selection = moveToThisTextBlock(tr, $pos);
+                }
+            } else {
+                selection = moveToNextTextBlock(tr, $pos);
+            }
+        } else if ($pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore))) {
+            selection = moveToNextTextBlock(tr, $pos);
+        } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
+            selection = moveToNextTextBlock(tr, $pos);
+        } else {
+            selection = moveToNearestValidCursorPosition(tr, $pos);
+        }
+
+        if (selection) {
+            tr.setSelection(selection);
+        } else {
+            // Fallback to a safe selection at the end of the document
+            setSelectionAtEndOfDocument(tr);
+        }
+    } else {
+        setSelectionAtEndOfDocument(tr);
+    }
+};
