@@ -35,9 +35,8 @@ const config = {
             extensions: [".ts"],
             exclude: "node_modules/**",
         }),
-        commonjs(),
-        typescript(),
     ],
+    external: [/^@tiptap\//],
 };
 
 module.exports = config;
