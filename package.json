@@ -1,11 +1,18 @@
 {
     "name": "tiptap-extension-pagination",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Add pagination to your Tiptap editor",
     "author": {
         "name": "Hugo Burton",
         "email": "burto732@gmail.com"
     },
+    "keywords": [
+        "tiptap",
+        "pagination",
+        "editor",
+        "rich-text"
+    ],
+    "license": "ISC",
     "main": "dist/index.cjs.js",
     "module": "dist/index.js",
     "types": "dist/index.d.ts",
