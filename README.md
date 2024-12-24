@@ -1,4 +1,4 @@
-# TiptapExtensionPagination
+# Tiptap Pagination Extension
 
 <h3 align="center">
     A tiptap extension that allows for pages inside your document
