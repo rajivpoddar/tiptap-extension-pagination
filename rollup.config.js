@@ -25,6 +25,11 @@ const config = {
     plugins: [
         autoExternal({ packagePath: "./package.json" }),
         sourcemaps(),
+        commonjs(),
+        typescript({
+            tsconfig: "./tsconfig.json",
+            useTsconfigDeclarationDir: true,
+        }),
         babel({
             babelHelpers: "bundled",
             extensions: [".ts"],
