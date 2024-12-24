@@ -1,10 +1,11 @@
 {
     "name": "tiptap-extension-pagination",
-    "version": "1.0.3",
+    "version": "1.0.0",
     "description": "Add pagination to your Tiptap editor",
     "author": {
         "name": "Hugo Burton",
-        "email": "burto732@gmail.com"
+        "email": "burto732@gmail.com",
+        "url": "https://www.github.com/hugs7"
     },
     "keywords": [
         "tiptap",
