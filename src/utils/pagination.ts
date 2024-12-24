@@ -1,5 +1,5 @@
 /**
- * @file /src/components/TipTap/utils/pagination.ts
+ * @file /src/utils/pagination.ts
  * @name Pagination
  * @description Utility functions for paginating the editor content.
  */

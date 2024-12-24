@@ -1,5 +1,5 @@
 /**
- * @file /src/components/TipTap/utils/node.ts
+ * @file /src/utils/node.ts
  * @name Node
  * @description Utility functions for creating custom nodes in the editor.
  */
