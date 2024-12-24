@@ -44,7 +44,7 @@ export const paragraphStyles: ParagraphStyle[] = [
 ];
 
 export const headingBlocks: HeadingBlockType[] = Array.from({ length: numHeaderStyles }, (_, index) => `h${index + 1}` as HeadingBlockType);
-export const blockTypes: BlockType[] = [...headingBlocks, "title", "paragraph", "quote", "code"] as const;
+export const blockTypes: BlockType[] = [...headingBlocks, "title", "paragraph", "quote", "code"];
 export const defaultBlockType: BlockType = "paragraph";
 
 // === Text Align ===
