@@ -741,7 +741,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
             selection = moveToNextTextBlock(tr, $pos);
         } else {
-            selection = moveToNearestValidCursorPosition(tr, $pos);
+            selection = moveToNearestValidCursorPosition($pos);
         }
 
         if (selection) {

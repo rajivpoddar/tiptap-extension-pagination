@@ -152,7 +152,7 @@ export const getNearestTextSelection = ($pos: ResolvedPos, bias: Sign = 1): Sele
  * @param $pos - The resolved position in the document.
  * @returns {Selection} The new selection.
  */
-export const moveToNearestValidCursorPosition = (tr: Transaction, $pos: ResolvedPos): Nullable<Selection> => {
+export const moveToNearestValidCursorPosition = ($pos: ResolvedPos): Nullable<Selection> => {
     const selection = Selection.findFrom($pos, 1, true) || Selection.findFrom($pos, -1, true);
     return selection;
 };
