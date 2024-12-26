@@ -252,13 +252,13 @@ const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | numb
         return isPosMatchingStartOfPageCondition(doc, doc.resolve($pos), checkExactStart);
     }
 
+    // Check if we are at the start of the document
+    if (isPosAtStartOfDocument(doc, $pos)) {
+        return true;
+    }
+
     // Ensure that the position is within a valid block (paragraph)
     if (!isPositionWithinParagraph($pos)) {
-        // Check if we are at the start of the document
-        if (isPosAtStartOfDocument(doc, $pos)) {
-            return true;
-        }
-
         return false;
     }
 
@@ -330,13 +330,13 @@ const isPosMatchingEndOfPageCondition = (doc: PMNode, $pos: ResolvedPos | number
         return isPosMatchingEndOfPageCondition(doc, doc.resolve($pos), checkExactEnd);
     }
 
+    // Check if we are at the end of the document
+    if (isPosAtEndOfDocument(doc, $pos)) {
+        return true;
+    }
+
     // Ensure that the position is within a valid block (paragraph)
     if (!isPositionWithinParagraph($pos)) {
-        // Check if we are at the end of the document
-        if (isPosAtEndOfDocument(doc, $pos)) {
-            return true;
-        }
-
         return false;
     }
 
