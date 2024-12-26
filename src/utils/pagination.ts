@@ -558,6 +558,23 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 };
 
 /**
+ * Determine if the previous paragraph is empty or does not exist.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @param zeroIndexed - Whether the page number should be zero-indexed.
+ * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
+ */
+export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = false): number => {
+    if (typeof $pos === "number") {
+        return getPageNumber(doc, doc.resolve($pos));
+    }
+
+    const { pagePos } = getPageNodeAndPosition(doc, $pos);
+    const offset = zeroIndexed ? 0 : 1;
+    return pagePos + offset;
+};
+
+/**
  * Check if the document has page nodes.
  * @param state - The editor state.
  * @returns {boolean} True if the document has page nodes, false otherwise.
