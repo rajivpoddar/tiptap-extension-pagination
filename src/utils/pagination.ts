@@ -253,6 +253,11 @@ const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | numb
 
     // Ensure that the position is within a valid block (paragraph)
     if (!isPositionWithinParagraph($pos)) {
+        // Check if we are at the start of the document
+        if (isPosAtStartOfDocument(doc, $pos)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -326,6 +331,11 @@ const isPosMatchingEndOfPageCondition = (doc: PMNode, $pos: ResolvedPos | number
 
     // Ensure that the position is within a valid block (paragraph)
     if (!isPositionWithinParagraph($pos)) {
+        // Check if we are at the end of the document
+        if (isPosAtEndOfDocument(doc, $pos)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -379,6 +389,34 @@ export const isPosAtEndOfPage = (doc: PMNode, $pos: ResolvedPos | number): boole
  */
 export const isPosAtLastChildOfPage = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
     return isPosMatchingEndOfPageCondition(doc, $pos, false);
+};
+
+/**
+ * Check if the given position is at the start of the document.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the start of the document, false otherwise.
+ */
+export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPosAtStartOfDocument(doc, doc.resolve($pos));
+    }
+
+    return $pos.pos <= 1;
+};
+
+/**
+ * Check if the given position is at the end of the document.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the end of the document, false otherwise.
+ */
+export const isPosAtEndOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPosAtEndOfDocument(doc, doc.resolve($pos));
+    }
+
+    return $pos.pos >= doc.nodeSize - 2;
 };
 
 /**
