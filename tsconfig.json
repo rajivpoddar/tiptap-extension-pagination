@@ -18,10 +18,10 @@
         "outDir": "./dist",
         "declaration": true,
         "declarationMap": true,
+        "declarationDir": "./dist/types",
         "emitDeclarationOnly": false,
-        "sourceMap": true,
-        "inlineSources": true,
-        "removeComments": false,
+        "sourceMap": false,
+        "removeComments": true,
         "noEmitOnError": true,
 
         /* Experimental and JSX */

@@ -13,13 +13,11 @@ const config = {
             file: "dist/index.cjs.js",
             format: "cjs",
             exports: "named",
-            sourcemap: true,
         },
         {
             file: "dist/index.js",
             format: "esm",
             exports: "named",
-            sourcemap: true,
         },
     ],
     plugins: [
@@ -29,6 +27,7 @@ const config = {
         typescript({
             tsconfig: "./tsconfig.json",
             useTsconfigDeclarationDir: true,
+            declaration: true,
         }),
         babel({
             babelHelpers: "bundled",
