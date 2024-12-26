@@ -1,10 +1,14 @@
-// rollup.config.js
+/**
+ * @file rollup.config.js
+ * @name rollup.config.js
+ * @description Rollup configuration file
+ */
 
-const autoExternal = require("rollup-plugin-auto-external");
-const sourcemaps = require("rollup-plugin-sourcemaps");
-const commonjs = require("@rollup/plugin-commonjs");
-const babel = require("@rollup/plugin-babel");
-const typescript = require("rollup-plugin-typescript2");
+import autoExternal from "rollup-plugin-auto-external";
+import sourcemaps from "rollup-plugin-sourcemaps";
+import commonjs from "@rollup/plugin-commonjs";
+import babel from "@rollup/plugin-babel";
+import typescript from "rollup-plugin-typescript2";
 
 const config = {
     input: "src/index.ts",
@@ -38,4 +42,4 @@ const config = {
     external: [/^@tiptap\//],
 };
 
-module.exports = config;
+export default config;
