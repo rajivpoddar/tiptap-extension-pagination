@@ -31,7 +31,19 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
             return $pos;
         }
 
+        if ($pos.pos === 0) {
+            // We have not found the node of the specified type
+            console.error(`Could not find node of type ${type}`);
+            return $pos;
+        }
+
+        try {
+            return getParentNodePosOfType(doc, $pos.before(), type);
+        } catch (error) {
+            console.error(`Failed to determine parent node of type: '${type}'. Details: ${error}`);
         return getParentNodePosOfType(doc, $pos.before(), type);
+            return $pos;
+        }
     }
 
     const thisPos = doc.resolve($pos);
