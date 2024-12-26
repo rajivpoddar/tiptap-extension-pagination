@@ -107,6 +107,10 @@ export const getPageNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): 
 
     const pagePos = getThisPageNodePosition(doc, pos);
     const pageNode = doc.nodeAt(pagePos);
+    if (!isPageNode(pageNode)) {
+        console.warn("No page node found");
+        return { pagePos: -1, pageNode };
+    }
 
     return { pagePos, pageNode };
 };
@@ -127,6 +131,10 @@ export const getParagraphNodeAndPosition = (
 
     const paragraphPos = getThisParagraphNodePosition(doc, pos);
     const paragraphNode = doc.nodeAt(paragraphPos);
+    if (!isParagraphNode(paragraphNode)) {
+        console.warn("No paragraph node found");
+        return { paragraphPos: -1, paragraphNode };
+    }
 
     return { paragraphPos, paragraphNode };
 };
@@ -142,11 +150,7 @@ export const getStartOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): 
         return getStartOfPagePosition(doc, doc.resolve(pos));
     }
 
-    const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
-    if (!pageNode) {
-        console.warn("No page node found");
-        return -1;
-    }
+    const { pagePos } = getPageNodeAndPosition(doc, pos);
 
     return pagePos;
 };
@@ -162,12 +166,7 @@ export const getStartOfParagraphPosition = (doc: PMNode, pos: ResolvedPos | numb
         return getStartOfParagraphPosition(doc, doc.resolve(pos));
     }
 
-    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, pos);
-    if (!paragraphNode) {
-        console.warn("No paragraph node found");
-        return -1;
-    }
-
+    const { paragraphPos } = getParagraphNodeAndPosition(doc, pos);
     return paragraphPos;
 };
 
@@ -200,8 +199,7 @@ export const getEndOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): nu
 
     const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
     if (!pageNode) {
-        console.warn("No page node found");
-        return -1;
+        return pagePos;
     }
 
     return pagePos + pageNode.content.size;
@@ -220,8 +218,7 @@ export const getEndOfParagraphPosition = (doc: PMNode, $pos: ResolvedPos | numbe
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
-        return -1;
+        return paragraphPos;
     }
 
     return paragraphPos + paragraphNode.content.size;
@@ -448,7 +445,6 @@ export const isAtStartOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): b
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
         return false;
     }
 
@@ -469,7 +465,6 @@ export const isAtEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boo
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
         return false;
     }
 
