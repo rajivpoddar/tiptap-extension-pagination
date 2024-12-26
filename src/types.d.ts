@@ -5,13 +5,14 @@
  */
 
 declare module "tiptap-extension-pagination" {
-    import { Extension } from "@tiptap/core";
+    import { Extension, Node } from "@tiptap/core";
 
     export interface PaginationOptions {
         // Todo
     }
 
-    export const Pagination: Extension<PaginationOptions>;
+    export const PageNode: Node;
 
+    export const Pagination: Extension<PaginationOptions>;
     export default Pagination;
 }
