@@ -55,6 +55,15 @@ export const setSelection = <S extends Selection>(tr: Transaction, selection: S)
 };
 
 /**
+ * Set the selection at the start of the document.
+ * @param tr - The current transaction.
+ * @returns The updated transaction.
+ */
+export const setSelectionAtStartOfDocument = (tr: Transaction): Transaction => {
+    return setSelectionAtPos(tr, 0);
+};
+
+/**
  * Set the selection at the end of the document.
  * @param tr - The current transaction.
  * @returns The updated transaction.
