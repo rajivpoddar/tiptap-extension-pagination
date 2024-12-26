@@ -1,6 +1,6 @@
 /**
- * @file /src/types.d.ts
- * @name types.d.ts
+ * @file /src/index.d.ts
+ * @name index.d.ts
  * @description TypeScript types for the package
  */
 
