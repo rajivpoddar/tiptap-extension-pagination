@@ -16,6 +16,7 @@ import {
     moveToPreviousTextBlock,
     moveToThisTextBlock,
     setSelectionAtEndOfDocument,
+    setSelectionAtStartOfDocument,
 } from "./selection";
 import { inRange } from "./math";
 import { mmToPixels } from "./window";
@@ -747,6 +748,11 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
     if (newCursorPos !== null) {
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
+
+        if (isPosAtStartOfDocument(tr.doc, newCursorPos)) {
+            setSelectionAtStartOfDocument(tr);
+            return;
+        }
 
         const startOfPage = isPosAtStartOfPage(tr.doc, newCursorPos);
         const endOfPage = isPosAtEndOfPage(tr.doc, newCursorPos);
