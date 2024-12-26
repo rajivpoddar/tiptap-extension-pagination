@@ -16,7 +16,6 @@ import {
     moveToPreviousTextBlock,
     moveToThisTextBlock,
     setSelectionAtEndOfDocument,
-    setSelectionAtStartOfDocument,
 } from "./selection";
 import { inRange } from "./math";
 import { mmToPixels } from "./window";
@@ -128,6 +127,16 @@ export const getParagraphNodeAndPosition = (
 ): { paragraphPos: number; paragraphNode: Nullable<PMNode> } => {
     if (typeof pos === "number") {
         return getParagraphNodeAndPosition(doc, doc.resolve(pos));
+    }
+
+    if (isPosAtStartOfDocument(doc, pos)) {
+        // Find the next paragraph node
+        const { nextParagraphPos, nextParagraphNode } = getNextParagraph(doc, pos.pos);
+        return { paragraphPos: nextParagraphPos, paragraphNode: nextParagraphNode };
+    } else if (isPosAtEndOfDocument(doc, pos)) {
+        // Find the previous paragraph node
+        const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(doc, pos.pos);
+        return { paragraphPos: prevParagraphPos, paragraphNode: prevParagraphNode };
     }
 
     const paragraphPos = getThisParagraphNodePosition(doc, pos);
@@ -442,6 +451,10 @@ export const getPreviousParagraph = (doc: PMNode, pos: number): { prevParagraphP
         }
     }
 
+    if (!prevParagraphNode) {
+        prevParagraphPos = -1;
+    }
+
     return { prevParagraphPos, prevParagraphNode };
 };
 
@@ -466,6 +479,10 @@ export const getNextParagraph = (doc: PMNode, pos: number): { nextParagraphPos: 
             nextParagraphNode = node;
             nextParagraphPos = nextParagraphPos;
         }
+    }
+
+    if (!nextParagraphNode) {
+        nextParagraphPos = -1;
     }
 
     return { nextParagraphPos, nextParagraphNode };
@@ -749,10 +766,10 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
 
-        if (isPosAtStartOfDocument(tr.doc, newCursorPos)) {
-            setSelectionAtStartOfDocument(tr);
-            return;
-        }
+        // if (isPosAtStartOfDocument(tr.doc, newCursorPos)) {
+        //     setSelectionAtStartOfDocument(tr);
+        //     return;
+        // }
 
         const startOfPage = isPosAtStartOfPage(tr.doc, newCursorPos);
         const endOfPage = isPosAtEndOfPage(tr.doc, newCursorPos);
