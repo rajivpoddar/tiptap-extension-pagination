@@ -161,6 +161,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
+                    debugger;
                     if (isHighlighting(state)) {
                         return false;
                     }
