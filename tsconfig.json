@@ -20,8 +20,8 @@
         "declarationMap": true,
         "declarationDir": "./dist",
         "emitDeclarationOnly": false,
-        "sourceMap": false,
-        "removeComments": true,
+        "sourceMap": true,
+        "removeComments": false,
         "noEmitOnError": true,
 
         /* Experimental and JSX */
