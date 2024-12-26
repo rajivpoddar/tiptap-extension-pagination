@@ -14,3 +14,13 @@
 export const inRange = (value: number, min: number, max: number): boolean => {
     return value >= min && value <= max;
 };
+
+/**
+ * Calculates the hypotenuse of a right triangle given the lengths of the other two sides.
+ * @param a - The length of side A.
+ * @param b - The length of side B.
+ * @returns The length of the hypotenuse.
+ */
+export const pythagoreanTheorem = (a: number, b: number): number => {
+    return Math.sqrt(a ** 2 + b ** 2);
+};

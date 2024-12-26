@@ -8,9 +8,8 @@ import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { a4Height, a4Padding, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { a4Height, a4Padding, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { EditorView } from "@tiptap/pm/view";
-import { MM_PER_INCH, STANDARD_PIXELS_PER_INCH } from "../constants/sizing";
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
@@ -19,6 +18,7 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
+import { mmToPixels } from "./window";
 
 export type ContentNode = { node: PMNode; pos: number };
 export type CursorMap = { [key: number]: number };
@@ -598,14 +598,14 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
 
 /**
  * Calculate the dimensions of the A4 page.
- * @returns {pageHeight: number} The height of the A4 page.
+ * @returns {pageHeight: number, pageWidth: number} The height and width of the A4 page in pixels.
  */
-const calculatePageDimensions = (): { pageHeight: number } => {
+export const calculatePageDimensions = (): { pageHeight: number; pageWidth: number } => {
     const yPadding = a4Padding * 2;
-    const dpi = window.devicePixelRatio * STANDARD_PIXELS_PER_INCH;
-    const pageHeight = ((a4Height - yPadding) / MM_PER_INCH) * dpi;
+    const pageHeight = mmToPixels(a4Height - yPadding);
+    const pageWidth = mmToPixels(a4Width);
 
-    return { pageHeight };
+    return { pageHeight, pageWidth };
 };
 
 /**
