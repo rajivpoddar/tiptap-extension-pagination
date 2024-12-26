@@ -18,7 +18,7 @@
         "outDir": "./dist",
         "declaration": true,
         "declarationMap": true,
-        "declarationDir": "./dist/types",
+        "declarationDir": "./dist",
         "emitDeclarationOnly": false,
         "sourceMap": false,
         "removeComments": true,
