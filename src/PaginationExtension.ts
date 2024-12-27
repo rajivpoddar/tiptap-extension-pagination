@@ -31,9 +31,39 @@ import {
     isTextNode,
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
+import { PaperSize } from "./types/paper";
+import { DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { defaultPaperColour, setDocumentPaperSize } from "./utils/paper";
+
+declare module "@tiptap/core" {
+    interface Commands<ReturnType> {
+        page: {
+            /**
+             * Set the paper size
+             * @param paperSize The paper size
+             * @example editor.commands.setPaperSize("A4")
+             */
+            setPaperSize: (paperSize: PaperSize) => ReturnType;
+
+            /**
+             * Set the default paper size
+             * @example editor.commands.setDefaultPaperSize()
+             */
+            setDefaultPaperSize: () => ReturnType;
+        };
+    }
+}
 
 const PaginationExtension = Extension.create({
     name: "pagination",
+
+    addOptions() {
+        return {
+            defaultPaperSize: DEFAULT_PAPER_SIZE,
+            defaultPaperColour: defaultPaperColour(),
+        };
+    },
+
     addProseMirrorPlugins() {
         return [
             keymap({
@@ -276,6 +306,19 @@ const PaginationExtension = Extension.create({
             }),
             PaginationPlugin,
         ];
+    },
+
+    addCommands() {
+        return {
+            setPaperSize:
+                (paperSize: PaperSize) =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperSize(tr, dispatch, paperSize),
+            setDefaultPaperSize:
+                () =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+        };
     },
 });
 

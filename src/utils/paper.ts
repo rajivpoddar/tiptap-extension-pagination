@@ -41,3 +41,28 @@ export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
 export const defaultPaperColour = (): string => {
     return getDeviceTheme() === DARK_THEME ? "#222" : "#fff";
 };
+
+/**
+ * Set the given paper size for the document.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param paperSize - The paper size to set.
+ * @returns {boolean} True if the paper size was set, false otherwise.
+ */
+export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperSize: PaperSize): boolean => {
+    if (!dispatch) return false;
+
+    const { doc } = tr;
+
+    doc.descendants((node, pos) => {
+        if (isPageNode(node)) {
+            const nodePaperSize: PaperSize = node.attrs.paperSize;
+            if (nodePaperSize !== paperSize) {
+                tr.setNodeAttribute(pos, "paperSize", paperSize);
+            }
+        }
+    });
+
+    dispatch(tr);
+    return true;
+};
