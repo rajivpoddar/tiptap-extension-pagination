@@ -8,7 +8,7 @@ import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { a4Height, a4Padding, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { a4Height, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { EditorView } from "@tiptap/pm/view";
 import {
     moveToNearestValidCursorPosition,
@@ -669,8 +669,7 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
  * @returns {pageHeight: number, pageWidth: number} The height and width of the A4 page in pixels.
  */
 export const calculatePageDimensions = (): { pageHeight: number; pageWidth: number } => {
-    const yPadding = a4Padding * 2;
-    const pageHeight = mmToPixels(a4Height - yPadding);
+    const pageHeight = mmToPixels(a4Height);
     const pageWidth = mmToPixels(a4Width);
 
     return { pageHeight, pageWidth };
