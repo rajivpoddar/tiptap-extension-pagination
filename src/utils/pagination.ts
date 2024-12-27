@@ -766,21 +766,6 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
 
-        // if (isPosAtStartOfDocument(tr.doc, newCursorPos)) {
-        //     setSelectionAtStartOfDocument(tr);
-        //     return;
-        // }
-
-        const startOfPage = isPosAtStartOfPage(tr.doc, newCursorPos);
-        const endOfPage = isPosAtEndOfPage(tr.doc, newCursorPos);
-        console.log("Is start of page", startOfPage);
-        console.log("Is end of page", endOfPage);
-
-        const firstChildOfPage = isPosAtFirstChildOfPage(tr.doc, newCursorPos);
-        const lastChildOfPage = isPosAtLastChildOfPage(tr.doc, newCursorPos);
-        console.log("Is first child of page", firstChildOfPage);
-        console.log("Is last child of page", lastChildOfPage);
-
         const startOfParagraph = isAtStartOfParagraph(tr.doc, $pos);
         const endOfParagraph = isAtEndOfParagraph(tr.doc, $pos);
         console.log("Is start of paragraph", startOfParagraph);
@@ -794,14 +779,14 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         console.log("Node after type", $pos.nodeAfter?.type.name);
 
         if ($pos.parent.isTextblock) {
-            if (firstChildOfPage) {
-                if (startOfPage) {
+            if (isPosAtFirstChildOfPage(tr.doc, newCursorPos)) {
+                if (isPosAtStartOfPage(tr.doc, newCursorPos)) {
                     selection = moveToThisTextBlock(tr, $pos);
                 } else {
                     selection = moveToNextTextBlock(tr, $pos);
                 }
-            } else if (lastChildOfPage) {
-                if (endOfPage) {
+            } else if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
+                if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
                     selection = moveToPreviousTextBlock(tr, $pos);
                 } else {
                     selection = moveToThisTextBlock(tr, $pos);
