@@ -1,5 +1,5 @@
 /**
- * @file src/constants/theme.ts
+ * @file /src/constants/theme.ts
  * @name Theme
  * @description Constants related to the theme
  */
