@@ -39,29 +39,35 @@ const PaginationPlugin = new Plugin({
 
                 isPaginating = true;
 
-                const contentNodes = collectContentNodes(state);
-                const nodeHeights = measureNodeHeights(view, contentNodes);
+                try {
+                    const contentNodes = collectContentNodes(state);
+                    const nodeHeights = measureNodeHeights(view, contentNodes);
 
-                // Record the cursor's old position
-                const { selection } = view.state;
-                const oldCursorPos = selection.from;
+                    // Record the cursor's old position
+                    const { selection } = view.state;
+                    const oldCursorPos = selection.from;
 
-                const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
+                    const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
-                // Compare the content of the documents
-                if (newDoc.content.eq(state.doc.content)) {
-                    isPaginating = false;
-                    return;
+                    // Compare the content of the documents
+                    if (newDoc.content.eq(state.doc.content)) {
+                        isPaginating = false;
+                        return;
+                    }
+
+                    const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
+                    tr.setMeta("pagination", true);
+
+                    const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
+                    paginationUpdateCursorPosition(tr, newCursorPos);
+
+                    view.dispatch(tr);
+                } catch (error) {
+                    console.error("Error updating page view. Details:", error);
                 }
 
-                const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
-                tr.setMeta("pagination", true);
-
-                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
-                paginationUpdateCursorPosition(tr, newCursorPos);
-
-                view.dispatch(tr);
-
+                // Reset paginating flag regardless of success or failure because we do not want to get
+                // stuck out of this loop.
                 isPaginating = false;
             },
         };
