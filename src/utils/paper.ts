@@ -6,11 +6,13 @@
 
 import { Transaction } from "@tiptap/pm/state";
 import { Dispatch } from "@tiptap/core";
+import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { getDeviceTheme } from "./theme";
 import { isPageNode } from "./page";
+import { Nullable } from "./record";
 
 /**
  * Check if the given paper size is valid.
@@ -40,6 +42,33 @@ export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
  */
 export const getDefaultPaperColour = (): string => {
     return getDeviceTheme() === DARK_THEME ? "#222" : "#fff";
+};
+
+/**
+ * Get the paper size of a particular page in the document.
+ * @param doc - The current document
+ * @param pageNum - The page number to find the paper size for
+ * @returns {Nullable<PaperSize>} The paper size of the specified page or null
+ * if the page could not be found.
+ */
+export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<PaperSize> => {
+    const { children } = doc;
+    const numPagesInDoc = children.length;
+
+    if (pageNum < numPagesInDoc) {
+        const pageNode = doc.child(pageNum);
+        if (!isPageNode(pageNode)) {
+            console.error("Unexpected! Doc dhild num:", pageNum, "is not a page node!");
+            return DEFAULT_PAPER_SIZE;
+        }
+
+        const { attrs } = pageNode;
+        if ("paperSize" in attrs) {
+            return attrs.paperSize;
+        }
+    }
+
+    return null;
 };
 
 /**
