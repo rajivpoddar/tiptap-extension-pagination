@@ -4,12 +4,12 @@
  * @description Utility functions for paginating the editor content.
  */
 
-import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
+import { EditorState, Transaction } from "@tiptap/pm/state";
+import { EditorView } from "@tiptap/pm/view";
+import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
-import { EditorState, Transaction } from "@tiptap/pm/state";
-import { a4Height, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
-import { EditorView } from "@tiptap/pm/view";
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
@@ -18,7 +18,7 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { mmToPixels } from "./window";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
 export type ContentNode = { node: PMNode; pos: number };
 export type CursorMap = { [key: number]: number };
@@ -677,16 +677,20 @@ export const calculatePageDimensions = (): { pageHeight: number; pageWidth: numb
 
 /**
  * Build the new document and keep track of new positions
+ * @param state - The editor state.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
- * @param schema - The schema of the editor.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 export const buildNewDocument = (
+    state: EditorState,
     contentNodes: ContentNode[],
-    nodeHeights: number[],
-    schema: Schema<any, any>
+    nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
+    const { schema, doc } = state;
+    const { attrs } = doc;
+
+    const paperSize = attrs.paperSize || DEFAULT_PAPER_SIZE;
     const pageType = schema.nodes.page;
     const pages = [];
     let currentPageContent: PMNode[] = [];

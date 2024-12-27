@@ -25,8 +25,7 @@ const PaginationPlugin = new Plugin({
                 if (isPaginating) return;
 
                 const { state } = view;
-                const { schema } = state;
-                const pageType = schema.nodes.page;
+                const pageType = state.schema.nodes.page;
 
                 if (!pageType) return;
 
@@ -35,9 +34,7 @@ const PaginationPlugin = new Plugin({
 
                 const hasPageNodes = doesDocHavePageNodes(state);
 
-                if (!docChanged && hasPageNodes && !initialLoad) {
-                    return;
-                }
+                if (!docChanged && hasPageNodes && !initialLoad) return;
 
                 isPaginating = true;
 
@@ -48,7 +45,7 @@ const PaginationPlugin = new Plugin({
                 const { selection } = view.state;
                 const oldCursorPos = selection.from;
 
-                const { newDoc, oldToNewPosMap } = buildNewDocument(contentNodes, nodeHeights, schema);
+                const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
                 // Compare the content of the documents
                 if (newDoc.content.eq(state.doc.content)) {
