@@ -132,7 +132,6 @@ const PaginationExtension = Extension.create({
                     }
 
                     // Traverse $pos.path to find the nearest page node
-                    const thisNodePos = $pos.pos;
                     const thisPageNodePos = getThisPageNodePosition(state.doc, $pos);
                     const firstChildPos = thisPageNodePos + 1;
                     if (firstChildPos !== thisNodePos - 1) {
@@ -168,7 +167,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    if (!isNodeEmpty(paragraphNode)) {
+                    if (!isNodeEmpty(prevParagraphNode) || !isNodeEmpty(paragraphNode)) {
                         deleteNode(tr, paragraphPos, paragraphNode);
                     }
 
@@ -187,7 +186,6 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    debugger;
                     if (isHighlighting(state)) {
                         return false;
                     }
