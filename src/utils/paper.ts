@@ -43,6 +43,26 @@ export const getDefaultPaperColour = (): string => {
 };
 
 /**
+ * Set a paper node attribute to the given value for all page nodes in the document.
+ * @param tr - The transaction to apply the change to.
+ * @param attr - The attribute to set.
+ * @param value - The value to set the attribute to.
+ * @returns {void}
+ */
+const setPaperNodeAttribute = (tr: Transaction, attr: string, value: any): void => {
+    const { doc } = tr;
+
+    doc.descendants((node, pos) => {
+        if (isPageNode(node)) {
+            const nodeAttr: PaperSize = node.attrs[attr];
+            if (nodeAttr !== value) {
+                tr.setNodeAttribute(pos, attr, value);
+            }
+        }
+    });
+};
+
+/**
  * Set the given paper size for the document.
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
@@ -57,16 +77,23 @@ export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperS
         return false;
     }
 
-    const { doc } = tr;
+    setPaperNodeAttribute(tr, "paperSize", paperSize);
 
-    doc.descendants((node, pos) => {
-        if (isPageNode(node)) {
-            const nodePaperSize: PaperSize = node.attrs.paperSize;
-            if (nodePaperSize !== paperSize) {
-                tr.setNodeAttribute(pos, "paperSize", paperSize);
-            }
-        }
-    });
+    dispatch(tr);
+    return true;
+};
+
+/**
+ * Set the given paper colour for the document.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param paperColour - The paper colour to set.
+ * @returns {boolean} True if the paper colour was set, false otherwise.
+ */
+export const setDocumentPaperColour = (tr: Transaction, dispatch: Dispatch, paperColour: string): boolean => {
+    if (!dispatch) return false;
+
+    setPaperNodeAttribute(tr, "paperColour", paperColour);
 
     dispatch(tr);
     return true;

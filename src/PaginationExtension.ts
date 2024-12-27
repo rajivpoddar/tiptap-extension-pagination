@@ -32,7 +32,7 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { getDefaultPaperColour, setDocumentPaperSize } from "./utils/paper";
+import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize } from "./utils/paper";
 import { isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
@@ -50,6 +50,19 @@ declare module "@tiptap/core" {
              * @example editor.commands.setDefaultPaperSize()
              */
             setDefaultPaperSize: () => ReturnType;
+
+            /**
+             * Set the paper colour
+             * @param paperColour The paper colour
+             * @example editor.commands.setPaperColour("#fff")
+             */
+            setPaperColour: (paperColour: string) => ReturnType;
+
+            /**
+             * Set the default paper colour
+             * @example editor.commands.setDefaultPaperColour()
+             */
+            setDefaultPaperColour: () => ReturnType;
         };
     }
 }
@@ -318,6 +331,14 @@ const PaginationExtension = Extension.create({
                 () =>
                 ({ tr, dispatch }) =>
                     setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+            setPaperColour:
+                (paperColour: string) =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperColour(tr, dispatch, paperColour),
+            setDefaultPaperColour:
+                () =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperColour(tr, dispatch, this.options.defaultPaperColour),
         };
     },
 });
