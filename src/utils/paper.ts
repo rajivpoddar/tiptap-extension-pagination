@@ -6,7 +6,7 @@
 
 import { Transaction } from "@tiptap/pm/state";
 import { Dispatch } from "@tiptap/core";
-import { DEFAULT_PAPER_SIZE, paperSizes } from "../constants/paper";
+import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { getDeviceTheme } from "./theme";
@@ -18,7 +18,7 @@ import { isPageNode } from "./page";
  * @returns {boolean} True if the paper size is valid, false otherwise.
  */
 export const isValidPaperSize = (paperSize: PaperSize): boolean => {
-    return paperSize in paperSizes;
+    return paperSize in paperDimensions;
 };
 
 /**
@@ -31,7 +31,7 @@ export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
         return getPaperDimensions(DEFAULT_PAPER_SIZE);
     }
 
-    return paperSizes[paperSize];
+    return paperDimensions[paperSize];
 };
 
 /**

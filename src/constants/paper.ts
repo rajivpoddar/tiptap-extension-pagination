@@ -89,9 +89,11 @@ export const usPaperSizes: Record<USPaperSize, PaperDimensions> = {
     "Arch E3": { width: 686, height: 991 },
 };
 
-export const paperSizes: Record<PaperSize, PaperDimensions> = {
+export const paperDimensions: Record<PaperSize, PaperDimensions> = {
     ...aPaperSizes,
     ...bPaperSizes,
     ...cPaperSizes,
     ...usPaperSizes,
 };
+
+export const paperSizes: PaperSize[] = Object.keys(paperDimensions) as PaperSize[];
