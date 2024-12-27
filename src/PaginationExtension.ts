@@ -15,6 +15,7 @@ import {
     setSelection,
     moveToNextTextBlock,
     moveToNearestTextSelection,
+    moveToPreviousTextBlock,
 } from "./utils/selection";
 import {
     getNextParagraph,
@@ -95,10 +96,35 @@ const PaginationExtension = Extension.create({
 
                     const tr = state.tr;
                     const $pos = getResolvedPosition(state);
+                    const thisNodePos = $pos.pos;
 
                     // Ensure that the position is within a valid block (paragraph)
                     if (!isPositionWithinParagraph($pos)) {
                         return false;
+                    }
+
+                    if (isPosAtEndOfPage(state.doc, $pos)) {
+                        // Traverse $pos.path to find the nearest page node
+                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                        if (!paragraphNode) {
+                            console.warn("No current paragraph node found");
+                            return false;
+                        }
+
+                        if (isNodeEmpty(paragraphNode)) {
+                            deleteNode(tr, paragraphPos, paragraphNode);
+                            const selection = moveToPreviousTextBlock(tr, paragraphPos);
+                            setSelection(tr, selection);
+                        } else {
+                            // Remove the last character from the current paragraph
+                            const newContent = paragraphNode.content.cut(0, paragraphNode.content.size - 1);
+                            const newParagraph = state.schema.nodes.paragraph.create({}, newContent);
+                            tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
+                            setSelectionAtPos(tr, thisNodePos - 1);
+                        }
+
+                        dispatch(tr);
+                        return true;
                     }
 
                     if (!isPosAtStartOfPage(state.doc, $pos)) {
