@@ -1,10 +1,10 @@
 /**
- * @file /src/utils/pagination.ts
- * @name Pagination
- * @description Utility functions for paginating the editor content.
+ * @file /src/components/TipTap/utils/selection.ts
+ * @name Selection
+ * @description Utility functions for working with selections in the editor.
  */
 
-import { ResolvedPos } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Selection, TextSelection, Transaction } from "@tiptap/pm/state";
 import { Nullable } from "./record";
 import { Sign } from "../constants/direction";
@@ -55,12 +55,45 @@ export const setSelection = <S extends Selection>(tr: Transaction, selection: S)
 };
 
 /**
+ * Set the selection at the start of the document.
+ * @param tr - The current transaction.
+ * @returns The updated transaction.
+ */
+export const setSelectionAtStartOfDocument = (tr: Transaction): Transaction => {
+    return setSelectionAtPos(tr, 0);
+};
+
+/**
  * Set the selection at the end of the document.
  * @param tr - The current transaction.
  * @returns The updated transaction.
  */
 export const setSelectionAtEndOfDocument = (tr: Transaction): Transaction => {
     return setSelectionAtPos(tr, tr.doc.content.size);
+};
+
+/**
+ * Set the selection to the start of the paragraph.
+ * @param tr - The current transaction.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @param paragraphNode - The paragraph node.
+ * @returns {void}
+ */
+export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: number): void => {
+    const paragraphStartPos = tr.doc.resolve(paragraphPos + 1);
+    moveToNearestTextSelection(tr, paragraphStartPos, 1);
+};
+
+/**
+ * Set the selection to the end of the paragraph.
+ * @param tr - The current transaction.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @param paragraphNode - The paragraph node.
+ * @returns {void}
+ */
+export const setSelectionToEndOfParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode): void => {
+    const paragraphEndPos = tr.doc.resolve(paragraphPos + paragraphNode.nodeSize - 1);
+    moveToNearestTextSelection(tr, paragraphEndPos, -1);
 };
 
 /**

@@ -8,7 +8,7 @@ import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { a4Height, a4Padding, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { a4Height, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { EditorView } from "@tiptap/pm/view";
 import {
     moveToNearestValidCursorPosition,
@@ -107,6 +107,10 @@ export const getPageNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): 
 
     const pagePos = getThisPageNodePosition(doc, pos);
     const pageNode = doc.nodeAt(pagePos);
+    if (!isPageNode(pageNode)) {
+        console.warn("No page node found");
+        return { pagePos: -1, pageNode };
+    }
 
     return { pagePos, pageNode };
 };
@@ -125,8 +129,22 @@ export const getParagraphNodeAndPosition = (
         return getParagraphNodeAndPosition(doc, doc.resolve(pos));
     }
 
+    if (isPosAtStartOfDocument(doc, pos)) {
+        // Find the next paragraph node
+        const { nextParagraphPos, nextParagraphNode } = getNextParagraph(doc, pos.pos);
+        return { paragraphPos: nextParagraphPos, paragraphNode: nextParagraphNode };
+    } else if (isPosAtEndOfDocument(doc, pos)) {
+        // Find the previous paragraph node
+        const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(doc, pos.pos);
+        return { paragraphPos: prevParagraphPos, paragraphNode: prevParagraphNode };
+    }
+
     const paragraphPos = getThisParagraphNodePosition(doc, pos);
     const paragraphNode = doc.nodeAt(paragraphPos);
+    if (!isParagraphNode(paragraphNode)) {
+        console.warn("No paragraph node found");
+        return { paragraphPos: -1, paragraphNode };
+    }
 
     return { paragraphPos, paragraphNode };
 };
@@ -142,11 +160,7 @@ export const getStartOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): 
         return getStartOfPagePosition(doc, doc.resolve(pos));
     }
 
-    const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
-    if (!pageNode) {
-        console.warn("No page node found");
-        return -1;
-    }
+    const { pagePos } = getPageNodeAndPosition(doc, pos);
 
     return pagePos;
 };
@@ -162,12 +176,7 @@ export const getStartOfParagraphPosition = (doc: PMNode, pos: ResolvedPos | numb
         return getStartOfParagraphPosition(doc, doc.resolve(pos));
     }
 
-    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, pos);
-    if (!paragraphNode) {
-        console.warn("No paragraph node found");
-        return -1;
-    }
-
+    const { paragraphPos } = getParagraphNodeAndPosition(doc, pos);
     return paragraphPos;
 };
 
@@ -200,8 +209,7 @@ export const getEndOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): nu
 
     const { pagePos, pageNode } = getPageNodeAndPosition(doc, pos);
     if (!pageNode) {
-        console.warn("No page node found");
-        return -1;
+        return pagePos;
     }
 
     return pagePos + pageNode.content.size;
@@ -220,8 +228,7 @@ export const getEndOfParagraphPosition = (doc: PMNode, $pos: ResolvedPos | numbe
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
-        return -1;
+        return paragraphPos;
     }
 
     return paragraphPos + paragraphNode.content.size;
@@ -252,6 +259,11 @@ const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | numb
     // Resolve position if given as a number
     if (typeof $pos === "number") {
         return isPosMatchingStartOfPageCondition(doc, doc.resolve($pos), checkExactStart);
+    }
+
+    // Check if we are at the start of the document
+    if (isPosAtStartOfDocument(doc, $pos)) {
+        return true;
     }
 
     // Ensure that the position is within a valid block (paragraph)
@@ -327,6 +339,11 @@ const isPosMatchingEndOfPageCondition = (doc: PMNode, $pos: ResolvedPos | number
         return isPosMatchingEndOfPageCondition(doc, doc.resolve($pos), checkExactEnd);
     }
 
+    // Check if we are at the end of the document
+    if (isPosAtEndOfDocument(doc, $pos)) {
+        return true;
+    }
+
     // Ensure that the position is within a valid block (paragraph)
     if (!isPositionWithinParagraph($pos)) {
         return false;
@@ -385,6 +402,34 @@ export const isPosAtLastChildOfPage = (doc: PMNode, $pos: ResolvedPos | number):
 };
 
 /**
+ * Check if the given position is at the start of the document.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the start of the document, false otherwise.
+ */
+export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPosAtStartOfDocument(doc, doc.resolve($pos));
+    }
+
+    return $pos.pos <= 1;
+};
+
+/**
+ * Check if the given position is at the end of the document.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the end of the document, false otherwise.
+ */
+export const isPosAtEndOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPosAtEndOfDocument(doc, doc.resolve($pos));
+    }
+
+    return $pos.pos >= doc.nodeSize - 2;
+};
+
+/**
  * Get the previous paragraph node.
  * @param doc - The document node.
  * @param pos - The position in the document.
@@ -404,6 +449,10 @@ export const getPreviousParagraph = (doc: PMNode, pos: number): { prevParagraphP
             prevParagraphNode = node;
             prevParagraphPos = prevParagraphPos;
         }
+    }
+
+    if (!prevParagraphNode) {
+        prevParagraphPos = -1;
     }
 
     return { prevParagraphPos, prevParagraphNode };
@@ -432,6 +481,10 @@ export const getNextParagraph = (doc: PMNode, pos: number): { nextParagraphPos: 
         }
     }
 
+    if (!nextParagraphNode) {
+        nextParagraphPos = -1;
+    }
+
     return { nextParagraphPos, nextParagraphNode };
 };
 
@@ -448,7 +501,6 @@ export const isAtStartOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): b
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
         return false;
     }
 
@@ -469,7 +521,6 @@ export const isAtEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boo
 
     const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
     if (!paragraphNode) {
-        console.warn("No paragraph node found");
         return false;
     }
 
@@ -522,6 +573,23 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
     }
 
     return isNodeEmpty(nextParagraphNode);
+};
+
+/**
+ * Determine if the previous paragraph is empty or does not exist.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @param zeroIndexed - Whether the page number should be zero-indexed.
+ * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
+ */
+export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = false): number => {
+    if (typeof $pos === "number") {
+        return getPageNumber(doc, doc.resolve($pos));
+    }
+
+    const { pagePos } = getPageNodeAndPosition(doc, $pos);
+    const offset = zeroIndexed ? 0 : 1;
+    return pagePos + offset;
 };
 
 /**
@@ -601,8 +669,7 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
  * @returns {pageHeight: number, pageWidth: number} The height and width of the A4 page in pixels.
  */
 export const calculatePageDimensions = (): { pageHeight: number; pageWidth: number } => {
-    const yPadding = a4Padding * 2;
-    const pageHeight = mmToPixels(a4Height - yPadding);
+    const pageHeight = mmToPixels(a4Height);
     const pageWidth = mmToPixels(a4Width);
 
     return { pageHeight, pageWidth };
@@ -698,16 +765,6 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
 
-        const startOfPage = isPosAtStartOfPage(tr.doc, newCursorPos);
-        const endOfPage = isPosAtEndOfPage(tr.doc, newCursorPos);
-        console.log("Is start of page", startOfPage);
-        console.log("Is end of page", endOfPage);
-
-        const firstChildOfPage = isPosAtFirstChildOfPage(tr.doc, newCursorPos);
-        const lastChildOfPage = isPosAtLastChildOfPage(tr.doc, newCursorPos);
-        console.log("Is first child of page", firstChildOfPage);
-        console.log("Is last child of page", lastChildOfPage);
-
         const startOfParagraph = isAtStartOfParagraph(tr.doc, $pos);
         const endOfParagraph = isAtEndOfParagraph(tr.doc, $pos);
         console.log("Is start of paragraph", startOfParagraph);
@@ -721,14 +778,14 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         console.log("Node after type", $pos.nodeAfter?.type.name);
 
         if ($pos.parent.isTextblock) {
-            if (firstChildOfPage) {
-                if (startOfPage) {
+            if (isPosAtFirstChildOfPage(tr.doc, newCursorPos)) {
+                if (isPosAtStartOfPage(tr.doc, newCursorPos)) {
                     selection = moveToThisTextBlock(tr, $pos);
                 } else {
                     selection = moveToNextTextBlock(tr, $pos);
                 }
-            } else if (lastChildOfPage) {
-                if (endOfPage) {
+            } else if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
+                if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
                     selection = moveToPreviousTextBlock(tr, $pos);
                 } else {
                     selection = moveToThisTextBlock(tr, $pos);

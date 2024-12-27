@@ -6,7 +6,6 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { Selection } from "@tiptap/pm/state";
 import PaginationPlugin from "./Plugins/Pagination";
 import {
     isHighlighting,
@@ -15,6 +14,8 @@ import {
     setSelection,
     moveToNextTextBlock,
     moveToNearestTextSelection,
+    moveToPreviousTextBlock,
+    setSelectionToEndOfParagraph,
 } from "./utils/selection";
 import {
     getNextParagraph,
@@ -95,63 +96,81 @@ const PaginationExtension = Extension.create({
 
                     const tr = state.tr;
                     const $pos = getResolvedPosition(state);
+                    const thisNodePos = $pos.pos;
 
                     // Ensure that the position is within a valid block (paragraph)
                     if (!isPositionWithinParagraph($pos)) {
                         return false;
                     }
 
-                    if (!isPosAtStartOfPage(state.doc, $pos)) {
+                    if (isPosAtEndOfPage(state.doc, $pos)) {
+                        // Traverse $pos.path to find the nearest page node
+                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                        if (!paragraphNode) {
+                            console.warn("No current paragraph node found");
+                            return false;
+                        }
+
+                        if (isNodeEmpty(paragraphNode)) {
+                            deleteNode(tr, paragraphPos, paragraphNode);
+                            const selection = moveToPreviousTextBlock(tr, paragraphPos);
+                            setSelection(tr, selection);
+                        } else {
+                            // Remove the last character from the current paragraph
+                            const newContent = paragraphNode.content.cut(0, paragraphNode.content.size - 1);
+                            const newParagraph = state.schema.nodes.paragraph.create({}, newContent);
+                            tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
+                            setSelectionAtPos(tr, thisNodePos - 1);
+                        }
+                    } else if (!isPosAtStartOfPage(state.doc, $pos)) {
                         return false;
+                    } else {
+                        // Traverse $pos.path to find the nearest page node
+                        const thisPageNodePos = getThisPageNodePosition(state.doc, $pos);
+                        const firstChildPos = thisPageNodePos + 1;
+                        if (firstChildPos !== thisNodePos - 1) {
+                            // Not at the beginning of the page
+                            return false;
+                        }
+
+                        const prevPageChild = state.doc.childBefore(thisPageNodePos);
+                        const prevPageNode = prevPageChild.node;
+
+                        // Confirm that the previous node is a page node
+                        if (!prevPageNode) {
+                            // Start of document
+                            console.log("No previous page node found");
+                            return false;
+                        }
+
+                        if (!isPageNode(prevPageNode)) {
+                            console.warn("Previous node is not a page node");
+                            return false;
+                        }
+
+                        // Append the content of the current paragraph to the end of the previous paragraph
+                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                        if (!paragraphNode) {
+                            console.warn("No current paragraph node found");
+                            return false;
+                        }
+
+                        const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(state.doc, paragraphPos);
+                        if (!prevParagraphNode) {
+                            console.warn("No previous paragraph node found");
+                            return false;
+                        }
+
+                        if (!isNodeEmpty(prevParagraphNode) || !isNodeEmpty(paragraphNode)) {
+                            deleteNode(tr, paragraphPos, paragraphNode);
+                        }
+
+                        appendAndReplaceNode(tr, prevParagraphPos, prevParagraphNode, paragraphNode);
+
+                        // Set the selection to the end of the previous paragraph
+                        setSelectionToEndOfParagraph(tr, prevParagraphPos, prevParagraphNode);
                     }
 
-                    // Traverse $pos.path to find the nearest page node
-                    const thisNodePos = $pos.pos;
-                    const thisPageNodePos = getThisPageNodePosition(state.doc, $pos);
-                    const firstChildPos = thisPageNodePos + 1;
-                    if (firstChildPos !== thisNodePos - 1) {
-                        // Not at the beginning of the page
-                        return false;
-                    }
-
-                    const prevPageChild = state.doc.childBefore(thisPageNodePos);
-                    const prevPageNode = prevPageChild.node;
-
-                    // Confirm that the previous node is a page node
-                    if (!prevPageNode) {
-                        // Start of document
-                        console.log("No previous page node found");
-                        return false;
-                    }
-
-                    if (!isPageNode(prevPageNode)) {
-                        console.warn("Previous node is not a page node");
-                        return false;
-                    }
-
-                    // Append the content of the current paragraph to the end of the previous paragraph
-                    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
-                    if (!paragraphNode) {
-                        console.warn("No current paragraph node found");
-                        return false;
-                    }
-
-                    const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(state.doc, paragraphPos);
-                    if (!prevParagraphNode) {
-                        console.warn("No previous paragraph node found");
-                        return false;
-                    }
-
-                    if (!isNodeEmpty(paragraphNode)) {
-                        deleteNode(tr, paragraphPos, paragraphNode);
-                    }
-
-                    appendAndReplaceNode(tr, prevParagraphPos, prevParagraphNode, paragraphNode);
-
-                    // Set the selection to the end of the previous paragraph
-                    const lastChildPosition = tr.doc.resolve(prevPageNode.content.size);
-                    const newSelection = Selection.near(lastChildPosition, 1);
-                    setSelection(tr, newSelection);
                     dispatch(tr);
                     return true;
                 },
