@@ -52,6 +52,11 @@ export const getDefaultPaperColour = (): string => {
 export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperSize: PaperSize): boolean => {
     if (!dispatch) return false;
 
+    if (!isValidPaperSize(paperSize)) {
+        console.warn(`Invalid paper size: ${paperSize}`);
+        return false;
+    }
+
     const { doc } = tr;
 
     doc.descendants((node, pos) => {
