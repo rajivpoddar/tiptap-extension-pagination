@@ -1,5 +1,5 @@
 /**
- * @file rollup.config.js
+ * @file /rollup.config.js
  * @name rollup.config.js
  * @description Rollup configuration file
  */
