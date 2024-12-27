@@ -4,11 +4,12 @@
  * @description TypeScript types for the package
  */
 
-declare module "tiptap-extension-pagination" {
-    import { Extension, Node } from "@tiptap/core";
+import type { PaperSize } from "./types/paper";
+import type { Extension, Node } from "@tiptap/core";
 
+declare module "tiptap-extension-pagination" {
     export interface PaginationOptions {
-        // Todo
+        paperSize: PaperSize;
     }
 
     export const PageNode: Node;
