@@ -15,6 +15,7 @@ import {
     moveToNextTextBlock,
     moveToNearestTextSelection,
     moveToPreviousTextBlock,
+    setSelectionToEndOfParagraph,
 } from "./utils/selection";
 import {
     getNextParagraph,
@@ -167,8 +168,7 @@ const PaginationExtension = Extension.create({
                         appendAndReplaceNode(tr, prevParagraphPos, prevParagraphNode, paragraphNode);
 
                         // Set the selection to the end of the previous paragraph
-                        const lastChildPosition = tr.doc.resolve(prevParagraphPos + prevParagraphNode.nodeSize - 1);
-                        moveToNearestTextSelection(tr, lastChildPosition, -1);
+                        setSelectionToEndOfParagraph(tr, prevParagraphPos, prevParagraphNode);
                     }
 
                     dispatch(tr);
