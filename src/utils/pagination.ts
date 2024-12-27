@@ -8,7 +8,6 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
-import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import {
@@ -19,8 +18,9 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { getPaperDimensions } from "./paper";
+import { getPageNumPaperSize, getPaperDimensions } from "./paper";
 import { isPageNode } from "./page";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
 export type ContentNode = { node: PMNode; pos: number };
 export type CursorMap = Map<number, number>;
@@ -665,11 +665,11 @@ export const buildNewDocument = (
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
     const { schema, doc } = state;
-    const { attrs } = doc;
+    let pageNum = 0;
 
-    const paperSize = attrs.paperSize || DEFAULT_PAPER_SIZE;
     const pageType = schema.nodes.page;
     const pages = [];
+    let paperSize = getPageNumPaperSize(doc, pageNum) ?? DEFAULT_PAPER_SIZE;
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
 
@@ -683,11 +683,13 @@ export const buildNewDocument = (
         const nodeHeight = nodeHeights[i];
 
         if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
-            const pageNode = pageType.create({}, currentPageContent);
+            const pageNode = pageType.create({ paperSize }, currentPageContent);
             pages.push(pageNode);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
+            pageNum++;
+            paperSize = getPageNumPaperSize(doc, pageNum) ?? paperSize;
         }
 
         if (currentPageContent.length === 0) {
@@ -704,8 +706,10 @@ export const buildNewDocument = (
 
     if (currentPageContent.length > 0) {
         // Add final page (may not be full)
-        const pageNode = pageType.create({}, currentPageContent);
+        const pageNode = pageType.create({ paperSize }, currentPageContent);
         pages.push(pageNode);
+    } else {
+        pageNum--;
     }
 
     const newDoc = schema.topNodeType.create(null, pages);
