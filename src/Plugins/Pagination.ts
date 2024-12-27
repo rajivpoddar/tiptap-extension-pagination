@@ -14,6 +14,7 @@ import {
     measureNodeHeights,
     paginationUpdateCursorPosition,
 } from "../utils/pagination";
+import { isNodeEmpty } from "../utils/node";
 
 const PaginationPlugin = new Plugin({
     key: new PluginKey("pagination"),
@@ -30,7 +31,7 @@ const PaginationPlugin = new Plugin({
                 if (!pageType) return;
 
                 const docChanged = !view.state.doc.eq(prevState.doc);
-                const initialLoad = prevState.doc.content.size === 0 && state.doc.content.size > 0;
+                const initialLoad = isNodeEmpty(prevState.doc) && !isNodeEmpty(state.doc);
 
                 const hasPageNodes = doesDocHavePageNodes(state);
 
