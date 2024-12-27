@@ -32,7 +32,7 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { defaultPaperColour, setDocumentPaperSize } from "./utils/paper";
+import { getDefaultPaperColour, setDocumentPaperSize } from "./utils/paper";
 import { isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
@@ -60,7 +60,7 @@ const PaginationExtension = Extension.create({
     addOptions() {
         return {
             defaultPaperSize: DEFAULT_PAPER_SIZE,
-            defaultPaperColour: defaultPaperColour(),
+            defaultPaperColour: getDefaultPaperColour(),
         };
     },
 

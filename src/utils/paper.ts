@@ -38,7 +38,7 @@ export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
  * Get the default paper colour based on the device theme
  * @returns {string} The default paper colour
  */
-export const defaultPaperColour = (): string => {
+export const getDefaultPaperColour = (): string => {
     return getDeviceTheme() === DARK_THEME ? "#222" : "#fff";
 };
 

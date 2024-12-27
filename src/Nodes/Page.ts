@@ -7,7 +7,7 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING } from "../constants/paper";
 import { PaperSize } from "../types/paper";
-import { defaultPaperColour, getPaperDimensions } from "../utils/paper";
+import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -68,7 +68,7 @@ const PageNode = Node.create({
 
             dom.style.border = "1px solid #ccc";
 
-            const paperColour = (node.attrs.paperColour as string) || defaultPaperColour();
+            const paperColour = (node.attrs.paperColour as string) || getDefaultPaperColour();
             dom.style.background = paperColour;
 
             dom.style.overflow = "hidden";
