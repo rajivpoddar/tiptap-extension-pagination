@@ -5,12 +5,12 @@
  */
 
 import { Transaction } from "@tiptap/pm/state";
+import { Dispatch } from "@tiptap/core";
 import { DEFAULT_PAPER_SIZE, paperSizes } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { getDeviceTheme } from "./theme";
-import { isPageNode } from "./pagination";
-import { Dispatch } from "@tiptap/core";
+import { isPageNode } from "./page";
 
 /**
  * Check if the given paper size is valid.

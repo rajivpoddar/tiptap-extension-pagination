@@ -6,6 +6,7 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
+import { DEFAULT_PAPER_SIZE } from "./constants/paper";
 import PaginationPlugin from "./Plugins/Pagination";
 import {
     isHighlighting,
@@ -23,7 +24,6 @@ import {
     getPreviousParagraph,
     getThisPageNodePosition,
     isAtStartOrEndOfParagraph,
-    isPageNode,
     isParagraphNode,
     isPosAtEndOfPage,
     isPosAtStartOfPage,
@@ -32,8 +32,8 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { defaultPaperColour, setDocumentPaperSize } from "./utils/paper";
+import { isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {

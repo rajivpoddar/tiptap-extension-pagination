@@ -8,6 +8,7 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import {
@@ -19,24 +20,10 @@ import {
 } from "./selection";
 import { inRange } from "./math";
 import { getPaperDimensions } from "./paper";
-import { DEFAULT_PAPER_SIZE } from "../constants/paper";
+import { isPageNode } from "./page";
 
 export type ContentNode = { node: PMNode; pos: number };
 export type CursorMap = { [key: number]: number };
-
-/**
- * Check if the given node is a page node.
- * @param node - The node to check.
- * @returns {boolean} True if the node is a page node, false otherwise.
- */
-export const isPageNode = (node: Nullable<PMNode>): boolean => {
-    if (!node) {
-        console.warn("No node provided");
-        return false;
-    }
-
-    return node.type.name === "page";
-};
 
 /**
  * Check if the given node is a paragraph node.
