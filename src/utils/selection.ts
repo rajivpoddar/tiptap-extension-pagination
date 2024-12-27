@@ -1,7 +1,7 @@
 /**
- * @file /src/utils/pagination.ts
- * @name Pagination
- * @description Utility functions for paginating the editor content.
+ * @file /src/components/TipTap/utils/selection.ts
+ * @name Selection
+ * @description Utility functions for working with selections in the editor.
  */
 
 import { ResolvedPos } from "@tiptap/pm/model";
