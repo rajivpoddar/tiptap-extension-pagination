@@ -5,7 +5,7 @@
  */
 
 // === Extensions ===
-export default "./PaginationExtension";
+import PaginationExtension from "./PaginationExtension";
 
 // === Types ===
 
@@ -21,3 +21,5 @@ import PageNode from "./Nodes/Page";
 
 // === Exports ===
 export { PageNode };
+
+export default PaginationExtension;
