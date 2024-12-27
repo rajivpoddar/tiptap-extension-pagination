@@ -18,6 +18,7 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
+import { getPaperDimensions } from "./paper";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
 export type ContentNode = { node: PMNode; pos: number };
@@ -665,17 +666,6 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
 };
 
 /**
- * Calculate the dimensions of the A4 page.
- * @returns {pageHeight: number, pageWidth: number} The height and width of the A4 page in pixels.
- */
-export const calculatePageDimensions = (): { pageHeight: number; pageWidth: number } => {
-    const pageHeight = mmToPixels(a4Height);
-    const pageWidth = mmToPixels(a4Width);
-
-    return { pageHeight, pageWidth };
-};
-
-/**
  * Build the new document and keep track of new positions
  * @param state - The editor state.
  * @param contentNodes - The content nodes and their positions.
@@ -695,7 +685,8 @@ export const buildNewDocument = (
     const pages = [];
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
-    const { pageHeight } = calculatePageDimensions();
+
+    const { height: pageHeight } = getPaperDimensions(paperSize);
 
     const oldToNewPosMap: CursorMap = {};
     let cumulativeNewDocPos = 0;
