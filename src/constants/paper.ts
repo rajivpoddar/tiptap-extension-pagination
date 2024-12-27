@@ -4,7 +4,10 @@
  * @description Constants for the paper sizes
  */
 
-import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions } from "../types/paper";
+import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions, PaperSize } from "../types/paper";
+
+export const DEFAULT_PAPER_SIZE: PaperSize = "A4" as const;
+export const DEFAULT_PAPER_PADDING: number = 10;
 
 const aPaperSizes: Record<APaperSize, PaperDimensions> = {
     A0: { width: 841, height: 1189 },
@@ -86,7 +89,7 @@ export const usPaperSizes: Record<USPaperSize, PaperDimensions> = {
     "Arch E3": { width: 686, height: 991 },
 };
 
-export const paperSizes = {
+export const paperSizes: Record<PaperSize, PaperDimensions> = {
     ...aPaperSizes,
     ...bPaperSizes,
     ...cPaperSizes,
