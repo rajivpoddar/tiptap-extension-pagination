@@ -23,7 +23,7 @@ import { getPaperDimensions } from "./paper";
 import { isPageNode } from "./page";
 
 export type ContentNode = { node: PMNode; pos: number };
-export type CursorMap = { [key: number]: number };
+export type CursorMap = Map<number, number>;
 
 /**
  * Check if the given node is a paragraph node.
@@ -675,7 +675,7 @@ export const buildNewDocument = (
 
     const { height: pageHeight } = getPaperDimensions(paperSize);
 
-    const oldToNewPosMap: CursorMap = {};
+    const oldToNewPosMap: CursorMap = new Map<number, number>();
     let cumulativeNewDocPos = 0;
 
     for (let i = 0; i < contentNodes.length; i++) {
@@ -696,18 +696,26 @@ export const buildNewDocument = (
 
         // Record the mapping from old position to new position
         const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
-        oldToNewPosMap[oldPos] = nodeStartPosInNewDoc;
+        oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
         currentPageContent.push(node);
         currentHeight += Math.max(nodeHeight, MIN_PARAGRAPH_HEIGHT);
     }
 
     if (currentPageContent.length > 0) {
+        // Add final page (may not be full)
         const pageNode = pageType.create({}, currentPageContent);
         pages.push(pageNode);
     }
 
     const newDoc = schema.topNodeType.create(null, pages);
+    const docSize = newDoc.content.size;
+
+    oldToNewPosMap.forEach((newPos, oldPos) => {
+        if (newPos > docSize) {
+            oldToNewPosMap.set(oldPos, docSize);
+        }
+    });
 
     return { newDoc, oldToNewPosMap };
 };
@@ -728,8 +736,14 @@ export const mapCursorPosition = (contentNodes: ContentNode[], oldCursorPos: num
         if (oldNodePos <= oldCursorPos && oldCursorPos <= oldNodePos + nodeSize) {
             const oldNodeTextPos = oldNodePos + 1; // Start of paragraph will always be 1 less than the start of the text
             const offsetInNode = oldCursorPos - oldNodeTextPos;
-            const newNodePos = oldToNewPosMap[oldNodePos];
-            newCursorPos = newNodePos + offsetInNode;
+            const newNodePos = oldToNewPosMap.get(oldNodePos);
+            if (newNodePos === undefined) {
+                console.error("Unable to determine new node position from cursor map!");
+                newCursorPos = 0;
+            } else {
+                newCursorPos = newNodePos + offsetInNode;
+            }
+
             break;
         }
     }
