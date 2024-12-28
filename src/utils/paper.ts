@@ -30,7 +30,7 @@ export const isValidPaperSize = (paperSize: PaperSize): boolean => {
  */
 export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
     if (!isValidPaperSize(paperSize)) {
-        return getPaperDimensions(DEFAULT_PAPER_SIZE);
+        paperSize = DEFAULT_PAPER_SIZE;
     }
 
     return paperDimensions[paperSize];
