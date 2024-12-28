@@ -93,27 +93,43 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
 };
 
 /**
- * Set a paper node attribute to the given value for all page nodes in the document.
+ * Set the paper size for a particular page in the document.
  * @param tr - The transaction to apply the change to.
- * @param attr - The attribute to set.
- * @param value - The value to set the attribute to.
- * @returns {void}
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pageNum - The page number to set the paper size for.
+ * @param paperSize - The paper size to set.
+ * @returns {boolean} True if the paper size was set, false otherwise.
  */
-const setPaperNodeAttribute = (tr: Transaction, attr: string, value: any): void => {
+export const setPageNumPaperSize = (tr: Transaction, dispatch: Dispatch, pageNum: number, paperSize: PaperSize): boolean => {
+    if (!dispatch) return false;
+
+    if (!isValidPaperSize(paperSize)) {
+        console.warn(`Invalid paper size: ${paperSize}`);
+        return false;
+    }
+
     const { doc } = tr;
 
-    doc.descendants((node, pos) => {
-        if (isPageNode(node)) {
-            const nodeAttr: PaperSize = node.attrs[attr];
-            if (nodeAttr !== value) {
-                tr.setNodeAttribute(pos, attr, value);
-            }
-        }
-    });
+    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+    if (!pageNodePos) {
+        return false;
+    }
+
+    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+    if (getPageNodePaperSize(pageNode) === paperSize) {
+        // Paper size is already set
+        return false;
+    }
+
+    tr.setNodeAttribute(pagePos, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+
+    dispatch(tr);
+    return true;
 };
 
 /**
- * Set the given paper size for the document.
+ * Set the given paper size for the document to all page nodes.
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
  * @param paperSize - The paper size to set.
@@ -127,7 +143,7 @@ export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperS
         return false;
     }
 
-    setPaperNodeAttribute(tr, "paperSize", paperSize);
+    setPageNodesAttribute(tr, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
 
     dispatch(tr);
     return true;
@@ -143,7 +159,7 @@ export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperS
 export const setDocumentPaperColour = (tr: Transaction, dispatch: Dispatch, paperColour: string): boolean => {
     if (!dispatch) return false;
 
-    setPaperNodeAttribute(tr, "paperColour", paperColour);
+    setPageNodesAttribute(tr, "paperColour", paperColour);
 
     dispatch(tr);
     return true;
