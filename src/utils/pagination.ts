@@ -22,7 +22,8 @@ import { getPageNumPaperSize, getPaperDimensions } from "./paper";
 import { isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
-export type ContentNode = { node: PMNode; pos: number };
+export type NodePosArray = Array<NodePos>;
+export type NodePos = { node: PMNode; pos: number };
 export type CursorMap = Map<number, number>;
 
 /**
@@ -564,20 +565,27 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 };
 
 /**
- * Determine if the previous paragraph is empty or does not exist.
- * @param doc - The document node.
- * @param $pos - The resolved position in the document or the absolute position of the node.
- * @param zeroIndexed - Whether the page number should be zero-indexed.
- * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
+ * Get the page number of the resolved position.
+ * @param state - The editor state.
+ * @param $pos - The resolved position in the document.
+ * @param zeroIndexed - Whether to return the page number as zero-indexed.
+ * @returns {number} The page number of the resolved position.
  */
-export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = false): number => {
+export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, zeroIndexed: boolean = false): number => {
+    const { doc } = state;
     if (typeof $pos === "number") {
-        return getPageNumber(doc, doc.resolve($pos));
+        return getPageNumber(state, doc.resolve($pos));
     }
 
     const { pagePos } = getPageNodeAndPosition(doc, $pos);
-    const offset = zeroIndexed ? 0 : 1;
-    return pagePos + offset;
+    if (pagePos < 0) {
+        console.log("Unable to find page node");
+        return -1;
+    }
+
+    const pageNodes = collectPageNodes(state);
+    const pageNode = pageNodes.findIndex((node) => node.pos === pagePos);
+    return pageNode + (zeroIndexed ? 0 : 1);
 };
 
 /**
@@ -602,15 +610,34 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
 };
 
 /**
+ * Collect page nodes and their positions in the document.
+ * @param state - The editor state.
+ * @returns {NodePosArray} A map of page positions to page nodes.
+ */
+export const collectPageNodes = (state: EditorState): NodePosArray => {
+    const { schema, doc } = state;
+    const pageType = schema.nodes.page;
+
+    const pageNodes: NodePosArray = [];
+    doc.forEach((node, offset) => {
+        if (node.type === pageType) {
+            pageNodes.push({ node, pos: offset });
+        }
+    });
+
+    return pageNodes;
+};
+
+/**
  * Collect content nodes and their old positions
  * @param state - The editor state.
- * @returns {Array<{ node: PMNode, pos: number }>} The content nodes and their positions.
+ * @returns {NodePosArray} The content nodes and their positions.
  */
-export const collectContentNodes = (state: EditorState): ContentNode[] => {
+export const collectContentNodes = (state: EditorState): NodePosArray => {
     const { schema } = state;
     const pageType = schema.nodes.page;
 
-    const contentNodes: ContentNode[] = [];
+    const contentNodes: NodePosArray = [];
     state.doc.forEach((node, offset) => {
         if (node.type === pageType) {
             node.forEach((child, childOffset) => {
@@ -630,7 +657,7 @@ export const collectContentNodes = (state: EditorState): ContentNode[] => {
  * @param contentNodes - The content nodes and their positions.
  * @returns {number[]} The heights of the content nodes.
  */
-export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]): number[] => {
+export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): number[] => {
     const paragraphType = view.state.schema.nodes.paragraph;
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
@@ -661,7 +688,7 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
  */
 export const buildNewDocument = (
     state: EditorState,
-    contentNodes: ContentNode[],
+    contentNodes: NodePosArray,
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
     const { schema, doc } = state;
@@ -731,7 +758,7 @@ export const buildNewDocument = (
  * @param oldToNewPosMap - The mapping from old positions to new positions.
  * @returns {number} The new cursor position.
  */
-export const mapCursorPosition = (contentNodes: ContentNode[], oldCursorPos: number, oldToNewPosMap: CursorMap) => {
+export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap) => {
     let newCursorPos: Nullable<number> = null;
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldNodePos } = contentNodes[i];
