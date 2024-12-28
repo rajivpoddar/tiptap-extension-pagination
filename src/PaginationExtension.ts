@@ -32,7 +32,14 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize, setPageNumPaperSize } from "./utils/paper";
+import {
+    getDefaultPaperColour,
+    pageNodeHasPageSize,
+    setDocumentPaperColour,
+    setDocumentPaperSize,
+    setPageNumPaperSize,
+    setPagePaperSize,
+} from "./utils/paper";
 import { getPageNodeByPageNum, isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
@@ -60,6 +67,13 @@ declare module "@tiptap/core" {
             setPagePaperSize: (pageNum: number, paperSize: PaperSize) => ReturnType;
 
             /**
+             * Checks the paper sizes are set for each page in the document.
+             * Sets the default paper size if not set.
+             * @example editor.commands.checkPaperSizes()
+             */
+            checkPaperSizes: () => ReturnType;
+
+            /**
              * Set the paper colour
              * @param paperColour The paper colour
              * @example editor.commands.setPaperColour("#fff")
@@ -83,6 +97,10 @@ const PaginationExtension = Extension.create({
             defaultPaperSize: DEFAULT_PAPER_SIZE,
             defaultPaperColour: getDefaultPaperColour(),
         };
+    },
+
+    onCreate() {
+        this.editor.commands.checkPaperSizes();
     },
 
     addProseMirrorPlugins() {
@@ -343,6 +361,22 @@ const PaginationExtension = Extension.create({
                 (pageNum: number, paperSize: PaperSize) =>
                 ({ tr, dispatch }) =>
                     setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
+            checkPaperSizes:
+                () =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+                    const paperSizeUpdates: boolean[] = [];
+                    doc.descendants((node, pos) => {
+                        if (isPageNode(node)) {
+                            if (!pageNodeHasPageSize(node)) {
+                                paperSizeUpdates.push(setPagePaperSize(tr, dispatch, pos, this.options.defaultPaperSize));
+                            }
+                        }
+                    });
+
+                    // If any page sizes were updated
+                    return paperSizeUpdates.some((update) => update);
+                },
             setPaperColour:
                 (paperColour: string) =>
                 ({ tr, dispatch }) =>
