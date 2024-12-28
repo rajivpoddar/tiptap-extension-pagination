@@ -21,6 +21,8 @@ import PageNode from "./Nodes/Page";
 
 // === Utils ===
 export { isPageNode } from "./utils/page";
+export { getPageNumber } from "./utils/pagination";
+export { getPageNumPaperSize } from "./utils/paper";
 
 // === Exports ===
 export { PageNode };
