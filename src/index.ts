@@ -19,6 +19,9 @@ export { getDefaultPaperColour } from "./utils/paper";
 // === Nodes ===
 import PageNode from "./Nodes/Page";
 
+// === Utils ===
+export { isPageNode } from "./utils/page";
+
 // === Exports ===
 export { PageNode };
 
