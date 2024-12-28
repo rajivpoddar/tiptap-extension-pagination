@@ -11,7 +11,7 @@ import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
-const pageNodeName = "page" as const;
+export const pageNodeName = "page" as const;
 
 const PageNode = Node.create({
     name: pageNodeName,
