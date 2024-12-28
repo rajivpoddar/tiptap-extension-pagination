@@ -5,9 +5,12 @@
  */
 
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
+import { DOMSerializer, Fragment } from "@tiptap/pm/model";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING } from "../constants/paper";
 import { PaperSize } from "../types/paper";
 import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
+import { isPageNode } from "../utils/page";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -84,6 +87,43 @@ const PageNode = Node.create({
                 contentDOM,
             };
         };
+    },
+
+    addProseMirrorPlugins() {
+        const schema = this.editor.schema;
+
+        // Extend DOMSerializer to override serializeFragment
+        const paginationClipboardSerializer = Object.create(DOMSerializer.fromSchema(schema));
+
+        // Override serializeFragment
+        paginationClipboardSerializer.serializeFragment = (
+            fragment: Fragment,
+            options = {},
+            target = document.createDocumentFragment()
+        ) => {
+            const serializer = DOMSerializer.fromSchema(schema);
+
+            fragment.forEach((node) => {
+                if (isPageNode(node)) {
+                    // Serialize only the children of the page node
+                    serializer.serializeFragment(node.content, options, target);
+                } else {
+                    // Serialize non-page nodes directly
+                    serializer.serializeNode(node, options);
+                }
+            });
+
+            return target;
+        };
+
+        return [
+            new Plugin({
+                key: new PluginKey("pageClipboardPlugin"),
+                props: {
+                    clipboardSerializer: paginationClipboardSerializer,
+                },
+            }),
+        ];
     },
 });
 
