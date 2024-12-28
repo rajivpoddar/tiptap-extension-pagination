@@ -18,8 +18,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { getPageNumPaperSize, getPaperDimensions } from "./paper";
-import { isPageNode } from "./page";
+import { getPageNumPaperSize } from "./paper";
+import { calculatePagePixelDimensions, isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
 export type NodePosArray = Array<NodePos>;
@@ -700,7 +700,7 @@ export const buildNewDocument = (
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
 
-    const { height: pageHeight } = getPaperDimensions(paperSize);
+    const { pageHeight } = calculatePagePixelDimensions(paperSize);
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
     let cumulativeNewDocPos = 0;
