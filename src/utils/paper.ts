@@ -11,7 +11,7 @@ import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { getDeviceTheme } from "./theme";
-import { getPageNodeByPageNum, getPageNodePosByPageNum, setPageNodesAttribute } from "./page";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute, setPageNodesAttribute } from "./page";
 import { Nullable } from "./record";
 import { nodeHasAttribute } from "./node";
 import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
@@ -51,7 +51,7 @@ export const getDefaultPaperColour = (): string => {
  * @param pageNode - The page node to check.
  * @returns {boolean} True if the page node has a paper size attribute, false otherwise.
  */
-const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
+export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
     return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_SIZE_ATTR);
 };
 
@@ -101,13 +101,6 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
  * @returns {boolean} True if the paper size was set, false otherwise.
  */
 export const setPageNumPaperSize = (tr: Transaction, dispatch: Dispatch, pageNum: number, paperSize: PaperSize): boolean => {
-    if (!dispatch) return false;
-
-    if (!isValidPaperSize(paperSize)) {
-        console.warn(`Invalid paper size: ${paperSize}`);
-        return false;
-    }
-
     const { doc } = tr;
 
     const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
@@ -117,12 +110,55 @@ export const setPageNumPaperSize = (tr: Transaction, dispatch: Dispatch, pageNum
 
     const { pos: pagePos, node: pageNode } = pageNodePos;
 
+    return setPageNodePosPaperSize(tr, dispatch, pagePos, pageNode, paperSize);
+};
+
+/**
+ * Set the paper size for a page node at the specified position.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the paper size for.
+ * @param paperSize - The paper size to set.
+ * @returns {boolean} True if the paper size was set, false otherwise.
+ */
+export const setPagePaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: number, paperSize: PaperSize): boolean => {
+    const pageNode = tr.doc.nodeAt(pagePos);
+    if (!pageNode) {
+        console.error("No node found at pos:", pagePos);
+        return false;
+    }
+
+    return setPageNodePosPaperSize(tr, dispatch, pagePos, pageNode, paperSize);
+};
+
+/**
+ * Helper to set the paper size for a page node at the specified position.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the paper size for.
+ * @param pageNode - The page node to set the paper size for.
+ * @param paperSize - The paper size to set.
+ * @returns {boolean} True if the paper size was set, false otherwise.
+ */
+const setPageNodePosPaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: number, pageNode: PMNode, paperSize: PaperSize): boolean => {
+    if (!dispatch) return false;
+
+    if (!isValidPaperSize(paperSize)) {
+        console.warn(`Invalid paper size: ${paperSize}`);
+        return false;
+    }
+
+    if (!isPageNode(pageNode)) {
+        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
+        return false;
+    }
+
     if (getPageNodePaperSize(pageNode) === paperSize) {
         // Paper size is already set
         return false;
     }
 
-    tr.setNodeAttribute(pagePos, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
 
     dispatch(tr);
     return true;
