@@ -14,6 +14,7 @@ import {
     measureNodeHeights,
     paginationUpdateCursorPosition,
 } from "../utils/pagination";
+import { isNodeEmpty } from "../utils/node";
 
 const PaginationPlugin = new Plugin({
     key: new PluginKey("pagination"),
@@ -25,45 +26,48 @@ const PaginationPlugin = new Plugin({
                 if (isPaginating) return;
 
                 const { state } = view;
-                const { schema } = state;
+                const { doc, schema } = state;
                 const pageType = schema.nodes.page;
 
                 if (!pageType) return;
 
-                const docChanged = !view.state.doc.eq(prevState.doc);
-                const initialLoad = prevState.doc.content.size === 0 && state.doc.content.size > 0;
-
+                const docChanged = !doc.eq(prevState.doc);
+                const initialLoad = isNodeEmpty(prevState.doc) && !isNodeEmpty(doc);
                 const hasPageNodes = doesDocHavePageNodes(state);
 
-                if (!docChanged && hasPageNodes && !initialLoad) {
-                    return;
-                }
+                if (!docChanged && hasPageNodes && !initialLoad) return;
 
                 isPaginating = true;
 
-                const contentNodes = collectContentNodes(state);
-                const nodeHeights = measureNodeHeights(view, contentNodes);
+                try {
+                    const contentNodes = collectContentNodes(state);
+                    const nodeHeights = measureNodeHeights(view, contentNodes);
 
-                // Record the cursor's old position
-                const { selection } = view.state;
-                const oldCursorPos = selection.from;
+                    // Record the cursor's old position
+                    const { selection } = state;
+                    const oldCursorPos = selection.from;
 
-                const { newDoc, oldToNewPosMap } = buildNewDocument(contentNodes, nodeHeights, schema);
+                    const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
-                // Compare the content of the documents
-                if (newDoc.content.eq(state.doc.content)) {
-                    isPaginating = false;
-                    return;
+                    // Compare the content of the documents
+                    if (newDoc.content.eq(doc.content)) {
+                        isPaginating = false;
+                        return;
+                    }
+
+                    const tr = state.tr.replaceWith(0, doc.content.size, newDoc.content);
+                    tr.setMeta("pagination", true);
+
+                    const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
+                    paginationUpdateCursorPosition(tr, newCursorPos);
+
+                    view.dispatch(tr);
+                } catch (error) {
+                    console.error("Error updating page view. Details:", error);
                 }
 
-                const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
-                tr.setMeta("pagination", true);
-
-                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
-                paginationUpdateCursorPosition(tr, newCursorPos);
-
-                view.dispatch(tr);
-
+                // Reset paginating flag regardless of success or failure because we do not want to get
+                // stuck out of this loop.
                 isPaginating = false;
             },
         };

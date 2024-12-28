@@ -6,6 +6,7 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
+import { DEFAULT_PAPER_SIZE } from "./constants/paper";
 import PaginationPlugin from "./Plugins/Pagination";
 import {
     isHighlighting,
@@ -23,7 +24,6 @@ import {
     getPreviousParagraph,
     getThisPageNodePosition,
     isAtStartOrEndOfParagraph,
-    isPageNode,
     isParagraphNode,
     isPosAtEndOfPage,
     isPosAtStartOfPage,
@@ -31,9 +31,52 @@ import {
     isTextNode,
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
+import { PaperSize } from "./types/paper";
+import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize } from "./utils/paper";
+import { isPageNode } from "./utils/page";
+
+declare module "@tiptap/core" {
+    interface Commands<ReturnType> {
+        page: {
+            /**
+             * Set the paper size
+             * @param paperSize The paper size
+             * @example editor.commands.setPaperSize("A4")
+             */
+            setPaperSize: (paperSize: PaperSize) => ReturnType;
+
+            /**
+             * Set the default paper size
+             * @example editor.commands.setDefaultPaperSize()
+             */
+            setDefaultPaperSize: () => ReturnType;
+
+            /**
+             * Set the paper colour
+             * @param paperColour The paper colour
+             * @example editor.commands.setPaperColour("#fff")
+             */
+            setPaperColour: (paperColour: string) => ReturnType;
+
+            /**
+             * Set the default paper colour
+             * @example editor.commands.setDefaultPaperColour()
+             */
+            setDefaultPaperColour: () => ReturnType;
+        };
+    }
+}
 
 const PaginationExtension = Extension.create({
     name: "pagination",
+
+    addOptions() {
+        return {
+            defaultPaperSize: DEFAULT_PAPER_SIZE,
+            defaultPaperColour: getDefaultPaperColour(),
+        };
+    },
+
     addProseMirrorPlugins() {
         return [
             keymap({
@@ -276,6 +319,27 @@ const PaginationExtension = Extension.create({
             }),
             PaginationPlugin,
         ];
+    },
+
+    addCommands() {
+        return {
+            setPaperSize:
+                (paperSize: PaperSize) =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperSize(tr, dispatch, paperSize),
+            setDefaultPaperSize:
+                () =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+            setPaperColour:
+                (paperColour: string) =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperColour(tr, dispatch, paperColour),
+            setDefaultPaperColour:
+                () =>
+                ({ tr, dispatch }) =>
+                    setDocumentPaperColour(tr, dispatch, this.options.defaultPaperColour),
+        };
     },
 });
 

@@ -4,12 +4,12 @@
  * @description Utility functions for paginating the editor content.
  */
 
-import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
+import { EditorState, Transaction } from "@tiptap/pm/state";
+import { EditorView } from "@tiptap/pm/view";
+import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
-import { EditorState, Transaction } from "@tiptap/pm/state";
-import { a4Height, a4Width, MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
-import { EditorView } from "@tiptap/pm/view";
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
@@ -18,24 +18,13 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { mmToPixels } from "./window";
+import { getPageNumPaperSize, getPaperDimensions } from "./paper";
+import { isPageNode } from "./page";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 
-export type ContentNode = { node: PMNode; pos: number };
-export type CursorMap = { [key: number]: number };
-
-/**
- * Check if the given node is a page node.
- * @param node - The node to check.
- * @returns {boolean} True if the node is a page node, false otherwise.
- */
-export const isPageNode = (node: Nullable<PMNode>): boolean => {
-    if (!node) {
-        console.warn("No node provided");
-        return false;
-    }
-
-    return node.type.name === "page";
-};
+export type NodePosArray = Array<NodePos>;
+export type NodePos = { node: PMNode; pos: number };
+export type CursorMap = Map<number, number>;
 
 /**
  * Check if the given node is a paragraph node.
@@ -576,20 +565,27 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 };
 
 /**
- * Determine if the previous paragraph is empty or does not exist.
- * @param doc - The document node.
- * @param $pos - The resolved position in the document or the absolute position of the node.
- * @param zeroIndexed - Whether the page number should be zero-indexed.
- * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
+ * Get the page number of the resolved position.
+ * @param state - The editor state.
+ * @param $pos - The resolved position in the document.
+ * @param zeroIndexed - Whether to return the page number as zero-indexed. Default is true.
+ * @returns {number} The page number of the resolved position.
  */
-export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = false): number => {
+export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, zeroIndexed: boolean = true): number => {
+    const { doc } = state;
     if (typeof $pos === "number") {
-        return getPageNumber(doc, doc.resolve($pos));
+        return getPageNumber(state, doc.resolve($pos));
     }
 
     const { pagePos } = getPageNodeAndPosition(doc, $pos);
-    const offset = zeroIndexed ? 0 : 1;
-    return pagePos + offset;
+    if (pagePos < 0) {
+        console.log("Unable to find page node");
+        return -1;
+    }
+
+    const pageNodes = collectPageNodes(state);
+    const pageNode = pageNodes.findIndex((node) => node.pos === pagePos);
+    return pageNode + (zeroIndexed ? 0 : 1);
 };
 
 /**
@@ -614,15 +610,34 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
 };
 
 /**
+ * Collect page nodes and their positions in the document.
+ * @param state - The editor state.
+ * @returns {NodePosArray} A map of page positions to page nodes.
+ */
+export const collectPageNodes = (state: EditorState): NodePosArray => {
+    const { schema, doc } = state;
+    const pageType = schema.nodes.page;
+
+    const pageNodes: NodePosArray = [];
+    doc.forEach((node, offset) => {
+        if (node.type === pageType) {
+            pageNodes.push({ node, pos: offset });
+        }
+    });
+
+    return pageNodes;
+};
+
+/**
  * Collect content nodes and their old positions
  * @param state - The editor state.
- * @returns {Array<{ node: PMNode, pos: number }>} The content nodes and their positions.
+ * @returns {NodePosArray} The content nodes and their positions.
  */
-export const collectContentNodes = (state: EditorState): ContentNode[] => {
+export const collectContentNodes = (state: EditorState): NodePosArray => {
     const { schema } = state;
     const pageType = schema.nodes.page;
 
-    const contentNodes: ContentNode[] = [];
+    const contentNodes: NodePosArray = [];
     state.doc.forEach((node, offset) => {
         if (node.type === pageType) {
             node.forEach((child, childOffset) => {
@@ -642,7 +657,7 @@ export const collectContentNodes = (state: EditorState): ContentNode[] => {
  * @param contentNodes - The content nodes and their positions.
  * @returns {number[]} The heights of the content nodes.
  */
-export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]): number[] => {
+export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): number[] => {
     const paragraphType = view.state.schema.nodes.paragraph;
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
@@ -665,35 +680,29 @@ export const measureNodeHeights = (view: EditorView, contentNodes: ContentNode[]
 };
 
 /**
- * Calculate the dimensions of the A4 page.
- * @returns {pageHeight: number, pageWidth: number} The height and width of the A4 page in pixels.
- */
-export const calculatePageDimensions = (): { pageHeight: number; pageWidth: number } => {
-    const pageHeight = mmToPixels(a4Height);
-    const pageWidth = mmToPixels(a4Width);
-
-    return { pageHeight, pageWidth };
-};
-
-/**
  * Build the new document and keep track of new positions
+ * @param state - The editor state.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
- * @param schema - The schema of the editor.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 export const buildNewDocument = (
-    contentNodes: ContentNode[],
-    nodeHeights: number[],
-    schema: Schema<any, any>
+    state: EditorState,
+    contentNodes: NodePosArray,
+    nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
+    const { schema, doc } = state;
+    let pageNum = 0;
+
     const pageType = schema.nodes.page;
     const pages = [];
+    let paperSize = getPageNumPaperSize(doc, pageNum) ?? DEFAULT_PAPER_SIZE;
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
-    const { pageHeight } = calculatePageDimensions();
 
-    const oldToNewPosMap: CursorMap = {};
+    const { height: pageHeight } = getPaperDimensions(paperSize);
+
+    const oldToNewPosMap: CursorMap = new Map<number, number>();
     let cumulativeNewDocPos = 0;
 
     for (let i = 0; i < contentNodes.length; i++) {
@@ -701,11 +710,13 @@ export const buildNewDocument = (
         const nodeHeight = nodeHeights[i];
 
         if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
-            const pageNode = pageType.create({}, currentPageContent);
+            const pageNode = pageType.create({ paperSize }, currentPageContent);
             pages.push(pageNode);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
+            pageNum++;
+            paperSize = getPageNumPaperSize(doc, pageNum) ?? paperSize;
         }
 
         if (currentPageContent.length === 0) {
@@ -714,18 +725,28 @@ export const buildNewDocument = (
 
         // Record the mapping from old position to new position
         const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
-        oldToNewPosMap[oldPos] = nodeStartPosInNewDoc;
+        oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
         currentPageContent.push(node);
         currentHeight += Math.max(nodeHeight, MIN_PARAGRAPH_HEIGHT);
     }
 
     if (currentPageContent.length > 0) {
-        const pageNode = pageType.create({}, currentPageContent);
+        // Add final page (may not be full)
+        const pageNode = pageType.create({ paperSize }, currentPageContent);
         pages.push(pageNode);
+    } else {
+        pageNum--;
     }
 
     const newDoc = schema.topNodeType.create(null, pages);
+    const docSize = newDoc.content.size;
+
+    oldToNewPosMap.forEach((newPos, oldPos) => {
+        if (newPos > docSize) {
+            oldToNewPosMap.set(oldPos, docSize);
+        }
+    });
 
     return { newDoc, oldToNewPosMap };
 };
@@ -737,7 +758,7 @@ export const buildNewDocument = (
  * @param oldToNewPosMap - The mapping from old positions to new positions.
  * @returns {number} The new cursor position.
  */
-export const mapCursorPosition = (contentNodes: ContentNode[], oldCursorPos: number, oldToNewPosMap: CursorMap) => {
+export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap) => {
     let newCursorPos: Nullable<number> = null;
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldNodePos } = contentNodes[i];
@@ -746,8 +767,14 @@ export const mapCursorPosition = (contentNodes: ContentNode[], oldCursorPos: num
         if (oldNodePos <= oldCursorPos && oldCursorPos <= oldNodePos + nodeSize) {
             const oldNodeTextPos = oldNodePos + 1; // Start of paragraph will always be 1 less than the start of the text
             const offsetInNode = oldCursorPos - oldNodeTextPos;
-            const newNodePos = oldToNewPosMap[oldNodePos];
-            newCursorPos = newNodePos + offsetInNode;
+            const newNodePos = oldToNewPosMap.get(oldNodePos);
+            if (newNodePos === undefined) {
+                console.error("Unable to determine new node position from cursor map!");
+                newCursorPos = 0;
+            } else {
+                newCursorPos = newNodePos + offsetInNode;
+            }
+
             break;
         }
     }

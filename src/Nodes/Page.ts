@@ -4,8 +4,10 @@
  * @description Custom node for creating a page in the editor.
  */
 
-import { Node, mergeAttributes } from "@tiptap/core";
-import { a4Height, a4Padding, a4Width } from "../constants/tiptap";
+import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
+import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING } from "../constants/paper";
+import { PaperSize } from "../types/paper";
+import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -17,6 +19,17 @@ const PageNode = Node.create({
     content: "block*",
     defining: true,
     isolating: false,
+
+    addAttributes() {
+        return {
+            paperSize: {
+                default: this.options.defaultPaperSize,
+            },
+            paperColour: {
+                default: this.options.defaultPaperColour,
+            },
+        };
+    },
 
     parseHTML() {
         return [
@@ -41,15 +54,23 @@ const PageNode = Node.create({
     },
 
     addNodeView() {
-        return () => {
+        return (props: NodeViewRendererProps) => {
+            const { node } = props;
             const dom = document.createElement(baseElement);
             dom.setAttribute(dataPageAttribute, String(true));
             dom.classList.add(pageNodeName);
-            dom.style.height = `${a4Height}mm`;
-            dom.style.width = `${a4Width}mm`;
-            dom.style.padding = `${a4Padding}mm`;
+
+            const paperSize = (node.attrs.paperSize as PaperSize) || DEFAULT_PAPER_SIZE;
+            const { width, height } = getPaperDimensions(paperSize);
+            dom.style.width = `${width}mm`;
+            dom.style.height = `${height}mm`;
+            dom.style.padding = `${DEFAULT_PAPER_PADDING}mm`;
+
             dom.style.border = "1px solid #ccc";
-            dom.style.background = "#222";
+
+            const paperColour = (node.attrs.paperColour as string) || getDefaultPaperColour();
+            dom.style.background = paperColour;
+
             dom.style.overflow = "hidden";
             dom.style.position = "relative";
             dom.style.marginLeft = "auto";
