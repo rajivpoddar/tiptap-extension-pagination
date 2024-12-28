@@ -583,7 +583,7 @@ export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, ze
         return -1;
     }
 
-    const pageNodes = collectPageNodes(state);
+    const pageNodes = collectPageNodes(doc);
     const pageNode = pageNodes.findIndex((node) => node.pos === pagePos);
     return pageNode + (zeroIndexed ? 0 : 1);
 };
@@ -611,16 +611,13 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
 
 /**
  * Collect page nodes and their positions in the document.
- * @param state - The editor state.
+ * @param doc - The document node.
  * @returns {NodePosArray} A map of page positions to page nodes.
  */
-export const collectPageNodes = (state: EditorState): NodePosArray => {
-    const { schema, doc } = state;
-    const pageType = schema.nodes.page;
-
+export const collectPageNodes = (doc: PMNode): NodePosArray => {
     const pageNodes: NodePosArray = [];
     doc.forEach((node, offset) => {
-        if (node.type === pageType) {
+        if (isPageNode(node)) {
             pageNodes.push({ node, pos: offset });
         }
     });
