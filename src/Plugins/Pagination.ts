@@ -26,13 +26,13 @@ const PaginationPlugin = new Plugin({
                 if (isPaginating) return;
 
                 const { state } = view;
-                const pageType = state.schema.nodes.page;
+                const { doc, schema } = state;
+                const pageType = schema.nodes.page;
 
                 if (!pageType) return;
 
-                const docChanged = !view.state.doc.eq(prevState.doc);
-                const initialLoad = isNodeEmpty(prevState.doc) && !isNodeEmpty(state.doc);
-
+                const docChanged = !doc.eq(prevState.doc);
+                const initialLoad = isNodeEmpty(prevState.doc) && !isNodeEmpty(doc);
                 const hasPageNodes = doesDocHavePageNodes(state);
 
                 if (!docChanged && hasPageNodes && !initialLoad) return;
@@ -44,18 +44,18 @@ const PaginationPlugin = new Plugin({
                     const nodeHeights = measureNodeHeights(view, contentNodes);
 
                     // Record the cursor's old position
-                    const { selection } = view.state;
+                    const { selection } = state;
                     const oldCursorPos = selection.from;
 
                     const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
                     // Compare the content of the documents
-                    if (newDoc.content.eq(state.doc.content)) {
+                    if (newDoc.content.eq(doc.content)) {
                         isPaginating = false;
                         return;
                     }
 
-                    const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
+                    const tr = state.tr.replaceWith(0, doc.content.size, newDoc.content);
                     tr.setMeta("pagination", true);
 
                     const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
