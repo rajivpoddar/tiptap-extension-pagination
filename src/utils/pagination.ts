@@ -741,14 +741,24 @@ export const buildNewDocument = (
 
     const newDoc = schema.topNodeType.create(null, pages);
     const docSize = newDoc.content.size;
+    limitMappedCursorPositions(oldToNewPosMap, docSize);
 
+    return { newDoc, oldToNewPosMap };
+};
+
+/***
+ * Limit mapped cursor positions to document size to prevent out of bounds errors
+ * when setting the cursor position
+ * @param oldToNewPosMap - The mapping from old positions to new positions.
+ * @param docSize - The size of the new document.
+ * @returns {void}
+ */
+const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number): void => {
     oldToNewPosMap.forEach((newPos, oldPos) => {
         if (newPos > docSize) {
             oldToNewPosMap.set(oldPos, docSize);
         }
     });
-
-    return { newDoc, oldToNewPosMap };
 };
 
 /**
