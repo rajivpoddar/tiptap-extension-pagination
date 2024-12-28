@@ -103,11 +103,26 @@ export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any)
     const { doc } = tr;
 
     doc.descendants((node, pos) => {
-        if (isPageNode(node)) {
-            const nodeAttr = node.attrs[attr];
-            if (nodeAttr !== value) {
-                tr.setNodeAttribute(pos, attr, value);
-            }
-        }
+        setPageNodeAttribute(tr, pos, node, attr, value);
     });
+};
+
+/**
+ * Set a page node attribute to the given value.
+ * @param tr - The transaction to apply the change to.
+ * @param pos - The position of the node to set the attribute for.
+ * @param node - The node to set the attribute for.
+ * @param attr - The attribute to set.
+ * @param value - The value to set the attribute to.
+ * @returns {void}
+ */
+export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): void => {
+    if (!isPageNode(node)) {
+        return;
+    }
+
+    const nodeAttr = node.attrs[attr];
+    if (nodeAttr !== value) {
+        tr.setNodeAttribute(pos, attr, value);
+    }
 };
