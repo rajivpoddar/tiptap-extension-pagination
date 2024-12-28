@@ -104,5 +104,6 @@ export const isNodeEmpty = (node: Node): boolean => {
  * @returns {boolean} True if the node has the specified attribute, false otherwise.
  */
 export const nodeHasAttribute = (node: Node, attr: string): boolean => {
-    return attr in node.attrs;
+    const { attrs } = node;
+    return attr in attrs && attrs[attr] !== undefined && attrs[attr] !== null;
 };
