@@ -13,6 +13,7 @@ import { PagePixelDimensions } from "../types/page";
 import { Transaction } from "@tiptap/pm/state";
 import { collectPageNodes, NodePos } from "./pagination";
 import { inRange } from "./math";
+import { pageNodeName } from "../Nodes/Page";
 
 /**
  * Check if the given node is a page node.
@@ -25,7 +26,7 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
         return false;
     }
 
-    return node.type.name === "page";
+    return node.type.name === pageNodeName;
 };
 
 /**
