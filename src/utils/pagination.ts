@@ -566,15 +566,14 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 
 /**
  * Get the page number of the resolved position.
- * @param state - The editor state.
+ * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @param zeroIndexed - Whether to return the page number as zero-indexed. Default is true.
  * @returns {number} The page number of the resolved position.
  */
-export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, zeroIndexed: boolean = true): number => {
-    const { doc } = state;
+export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = true): number => {
     if (typeof $pos === "number") {
-        return getPageNumber(state, doc.resolve($pos));
+        return getPageNumber(doc, doc.resolve($pos));
     }
 
     const { pagePos } = getPageNodeAndPosition(doc, $pos);
