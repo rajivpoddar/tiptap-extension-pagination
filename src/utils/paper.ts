@@ -11,8 +11,10 @@ import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { getDeviceTheme } from "./theme";
-import { isPageNode } from "./page";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, setPageNodesAttribute } from "./page";
 import { Nullable } from "./record";
+import { nodeHasAttribute } from "./node";
+import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 
 /**
  * Check if the given paper size is valid.
@@ -45,6 +47,26 @@ export const getDefaultPaperColour = (): string => {
 };
 
 /**
+ * Check if a page node has a paper size attribute.
+ * @param pageNode - The page node to check.
+ * @returns {boolean} True if the page node has a paper size attribute, false otherwise.
+ */
+const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
+    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_SIZE_ATTR);
+};
+
+/**
+ * Get the paper size of a particular page node in the document.
+ * @param pageNode - The page node to find the paper size for
+ * @returns {Nullable<PaperSize>} The paper size of the specified page or null
+ * if the page could not be found.
+ */
+const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
+    const { attrs } = pageNode;
+    return attrs.paperSize;
+};
+
+/**
  * Get the paper size of a particular page in the document.
  * @param doc - The current document
  * @param pageNum - The page number to find the paper size for
@@ -56,15 +78,14 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
     const numPagesInDoc = children.length;
 
     if (pageNum < numPagesInDoc) {
-        const pageNode = doc.child(pageNum);
-        if (!isPageNode(pageNode)) {
+        const pageNode = getPageNodeByPageNum(doc, pageNum);
+        if (!pageNode) {
             console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
             return DEFAULT_PAPER_SIZE;
         }
 
-        const { attrs } = pageNode;
-        if ("paperSize" in attrs) {
-            return attrs.paperSize;
+        if (pageNodeHasPageSize(pageNode)) {
+            return getPageNodePaperSize(pageNode);
         }
     }
 
