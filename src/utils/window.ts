@@ -11,7 +11,7 @@ import { pythagoreanTheorem } from "./math";
  * Calculates the DPI of the window.
  * @returns The DPI of the window.
  */
-export const calculateWindowDPI = (): number => {
+const calculateWindowDPI = (): number => {
     const ratio =
         pythagoreanTheorem(window.screen.width, window.screen.height) /
         pythagoreanTheorem(window.screen.availWidth, window.screen.availHeight);
