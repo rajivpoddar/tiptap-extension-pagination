@@ -96,3 +96,14 @@ export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
 export const isNodeEmpty = (node: Node): boolean => {
     return node.content.size === 0;
 };
+
+/**
+ * Check if the node has the specified attribute.
+ * @param node - The node to check.
+ * @param attr - The attribute to check for.
+ * @returns {boolean} True if the node has the specified attribute, false otherwise.
+ */
+export const nodeHasAttribute = (node: Node, attr: string): boolean => {
+    const { attrs } = node;
+    return attr in attrs && attrs[attr] !== undefined && attrs[attr] !== null;
+};

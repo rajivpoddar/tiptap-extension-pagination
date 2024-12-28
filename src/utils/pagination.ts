@@ -566,15 +566,14 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 
 /**
  * Get the page number of the resolved position.
- * @param state - The editor state.
+ * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @param zeroIndexed - Whether to return the page number as zero-indexed. Default is true.
  * @returns {number} The page number of the resolved position.
  */
-export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, zeroIndexed: boolean = true): number => {
-    const { doc } = state;
+export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndexed: boolean = true): number => {
     if (typeof $pos === "number") {
-        return getPageNumber(state, doc.resolve($pos));
+        return getPageNumber(doc, doc.resolve($pos));
     }
 
     const { pagePos } = getPageNodeAndPosition(doc, $pos);
@@ -583,7 +582,7 @@ export const getPageNumber = (state: EditorState, $pos: ResolvedPos | number, ze
         return -1;
     }
 
-    const pageNodes = collectPageNodes(state);
+    const pageNodes = collectPageNodes(doc);
     const pageNode = pageNodes.findIndex((node) => node.pos === pagePos);
     return pageNode + (zeroIndexed ? 0 : 1);
 };
@@ -611,16 +610,13 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
 
 /**
  * Collect page nodes and their positions in the document.
- * @param state - The editor state.
+ * @param doc - The document node.
  * @returns {NodePosArray} A map of page positions to page nodes.
  */
-export const collectPageNodes = (state: EditorState): NodePosArray => {
-    const { schema, doc } = state;
-    const pageType = schema.nodes.page;
-
+export const collectPageNodes = (doc: PMNode): NodePosArray => {
     const pageNodes: NodePosArray = [];
     doc.forEach((node, offset) => {
-        if (node.type === pageType) {
+        if (isPageNode(node)) {
             pageNodes.push({ node, pos: offset });
         }
     });
@@ -741,14 +737,24 @@ export const buildNewDocument = (
 
     const newDoc = schema.topNodeType.create(null, pages);
     const docSize = newDoc.content.size;
+    limitMappedCursorPositions(oldToNewPosMap, docSize);
 
+    return { newDoc, oldToNewPosMap };
+};
+
+/***
+ * Limit mapped cursor positions to document size to prevent out of bounds errors
+ * when setting the cursor position
+ * @param oldToNewPosMap - The mapping from old positions to new positions.
+ * @param docSize - The size of the new document.
+ * @returns {void}
+ */
+const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number): void => {
     oldToNewPosMap.forEach((newPos, oldPos) => {
         if (newPos > docSize) {
             oldToNewPosMap.set(oldPos, docSize);
         }
     });
-
-    return { newDoc, oldToNewPosMap };
 };
 
 /**

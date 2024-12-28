@@ -32,8 +32,15 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize } from "./utils/paper";
-import { isPageNode } from "./utils/page";
+import {
+    getDefaultPaperColour,
+    pageNodeHasPageSize,
+    setDocumentPaperColour,
+    setDocumentPaperSize,
+    setPageNumPaperSize,
+    setPagePaperSize,
+} from "./utils/paper";
+import { getPageNodeByPageNum, isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
@@ -43,13 +50,28 @@ declare module "@tiptap/core" {
              * @param paperSize The paper size
              * @example editor.commands.setPaperSize("A4")
              */
-            setPaperSize: (paperSize: PaperSize) => ReturnType;
+            setDocumentPaperSize: (paperSize: PaperSize) => ReturnType;
 
             /**
              * Set the default paper size
              * @example editor.commands.setDefaultPaperSize()
              */
-            setDefaultPaperSize: () => ReturnType;
+            setDocumentDefaultPaperSize: () => ReturnType;
+
+            /**
+             * Set the paper size for a specific page
+             * @param pageNum The page number
+             * @param paperSize The paper size
+             * @example editor.commands.setPagePaperSize(0, "A4")
+             */
+            setPagePaperSize: (pageNum: number, paperSize: PaperSize) => ReturnType;
+
+            /**
+             * Checks the paper sizes are set for each page in the document.
+             * Sets the default paper size if not set.
+             * @example editor.commands.checkPaperSizes()
+             */
+            checkPaperSizes: () => ReturnType;
 
             /**
              * Set the paper colour
@@ -77,6 +99,10 @@ const PaginationExtension = Extension.create({
         };
     },
 
+    onCreate() {
+        this.editor.commands.checkPaperSizes();
+    },
+
     addProseMirrorPlugins() {
         return [
             keymap({
@@ -90,8 +116,8 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    const { from } = state.selection;
-                    const tr = state.tr;
+                    const { doc, tr, schema, selection } = state;
+                    const { from } = selection;
                     const $pos = getResolvedPosition(state);
 
                     // Ensure that the position is within a valid block (paragraph)
@@ -100,24 +126,24 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    const { paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                    const { paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
                     if (!paragraphNode) {
                         console.warn("No current paragraph node found");
                         return false;
                     }
 
                     // Create a new empty paragraph node
-                    const newParagraph = state.schema.nodes.paragraph.create();
+                    const newParagraph = schema.nodes.paragraph.create();
                     console.log("Inserting new paragraph at position", from);
 
                     if (isNodeEmpty(paragraphNode)) {
                         tr.insert(from, newParagraph);
                     } else {
-                        if (isAtStartOrEndOfParagraph(state.doc, $pos)) {
+                        if (isAtStartOrEndOfParagraph(doc, $pos)) {
                             tr.replaceSelectionWith(newParagraph);
                         } else {
                             const remainingContent = paragraphNode.content.cut($pos.parentOffset);
-                            const newContentParagraph = state.schema.nodes.paragraph.create({}, remainingContent);
+                            const newContentParagraph = schema.nodes.paragraph.create({}, remainingContent);
                             tr.replaceWith($pos.pos, $pos.pos + remainingContent.size, newContentParagraph);
                         }
                     }
@@ -137,7 +163,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    const tr = state.tr;
+                    const { doc, tr, schema } = state;
                     const $pos = getResolvedPosition(state);
                     const thisNodePos = $pos.pos;
 
@@ -146,9 +172,9 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    if (isPosAtEndOfPage(state.doc, $pos)) {
+                    if (isPosAtEndOfPage(doc, $pos)) {
                         // Traverse $pos.path to find the nearest page node
-                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
                         if (!paragraphNode) {
                             console.warn("No current paragraph node found");
                             return false;
@@ -161,22 +187,22 @@ const PaginationExtension = Extension.create({
                         } else {
                             // Remove the last character from the current paragraph
                             const newContent = paragraphNode.content.cut(0, paragraphNode.content.size - 1);
-                            const newParagraph = state.schema.nodes.paragraph.create({}, newContent);
+                            const newParagraph = schema.nodes.paragraph.create({}, newContent);
                             tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
                             setSelectionAtPos(tr, thisNodePos - 1);
                         }
-                    } else if (!isPosAtStartOfPage(state.doc, $pos)) {
+                    } else if (!isPosAtStartOfPage(doc, $pos)) {
                         return false;
                     } else {
                         // Traverse $pos.path to find the nearest page node
-                        const thisPageNodePos = getThisPageNodePosition(state.doc, $pos);
+                        const thisPageNodePos = getThisPageNodePosition(doc, $pos);
                         const firstChildPos = thisPageNodePos + 1;
                         if (firstChildPos !== thisNodePos - 1) {
                             // Not at the beginning of the page
                             return false;
                         }
 
-                        const prevPageChild = state.doc.childBefore(thisPageNodePos);
+                        const prevPageChild = doc.childBefore(thisPageNodePos);
                         const prevPageNode = prevPageChild.node;
 
                         // Confirm that the previous node is a page node
@@ -192,13 +218,13 @@ const PaginationExtension = Extension.create({
                         }
 
                         // Append the content of the current paragraph to the end of the previous paragraph
-                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                        const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
                         if (!paragraphNode) {
                             console.warn("No current paragraph node found");
                             return false;
                         }
 
-                        const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(state.doc, paragraphPos);
+                        const { prevParagraphPos, prevParagraphNode } = getPreviousParagraph(doc, paragraphPos);
                         if (!prevParagraphNode) {
                             console.warn("No previous paragraph node found");
                             return false;
@@ -227,7 +253,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    const tr = state.tr;
+                    const { doc, tr } = state;
                     const $pos = getResolvedPosition(state);
 
                     // Ensure that the position is within a valid block (paragraph)
@@ -236,7 +262,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    if (!isPosAtEndOfPage(state.doc, $pos)) {
+                    if (!isPosAtEndOfPage(doc, $pos)) {
                         return false;
                     }
 
@@ -245,13 +271,13 @@ const PaginationExtension = Extension.create({
                     // end of the current page)
                     const thisPos = $pos.pos;
                     const expectedTextNodePos = thisPos - 1;
-                    const thisTextNode = state.doc.nodeAt(expectedTextNodePos);
+                    const thisTextNode = doc.nodeAt(expectedTextNodePos);
                     if (!thisTextNode) {
                         console.warn("No node found at position", expectedTextNodePos);
                         return false;
                     }
 
-                    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(state.doc, $pos);
+                    const { paragraphPos, paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
                     if (!paragraphNode) {
                         console.warn("No current paragraph node found");
                         return false;
@@ -262,7 +288,7 @@ const PaginationExtension = Extension.create({
                         return false;
                     }
 
-                    const thisPageChild = state.doc.childAfter(paragraphPos);
+                    const thisPageChild = doc.childAfter(paragraphPos);
                     if (!isPageNode(thisPageChild.node)) {
                         console.warn("No page node found");
                         return false;
@@ -270,7 +296,7 @@ const PaginationExtension = Extension.create({
 
                     const pageNum = thisPageChild.index;
                     const nextPageNum = pageNum + 1;
-                    if (nextPageNum > state.doc.childCount - 1) {
+                    if (nextPageNum > doc.childCount - 1) {
                         console.log("At end of document");
                         // If we don't handle the delete, the default behaviour will remove this
                         // paragraph node, which we don't want.
@@ -278,13 +304,13 @@ const PaginationExtension = Extension.create({
                         return true;
                     }
 
-                    const nextPageNode = state.doc.child(nextPageNum);
+                    const nextPageNode = getPageNodeByPageNum(doc, nextPageNum);
                     if (!nextPageNode) {
                         console.log("No next page node found");
                         return false;
                     }
 
-                    const { nextParagraphPos, nextParagraphNode } = getNextParagraph(state.doc, thisPos);
+                    const { nextParagraphPos, nextParagraphNode } = getNextParagraph(doc, thisPos);
                     if (!nextParagraphNode) {
                         console.log("No first paragraph node found");
                         return false;
@@ -323,14 +349,34 @@ const PaginationExtension = Extension.create({
 
     addCommands() {
         return {
-            setPaperSize:
+            setDocumentPaperSize:
                 (paperSize: PaperSize) =>
                 ({ tr, dispatch }) =>
                     setDocumentPaperSize(tr, dispatch, paperSize),
-            setDefaultPaperSize:
+            setDocumentDefaultPaperSize:
                 () =>
                 ({ tr, dispatch }) =>
                     setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+            setPagePaperSize:
+                (pageNum: number, paperSize: PaperSize) =>
+                ({ tr, dispatch }) =>
+                    setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
+            checkPaperSizes:
+                () =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+                    const paperSizeUpdates: boolean[] = [];
+                    doc.descendants((node, pos) => {
+                        if (isPageNode(node)) {
+                            if (!pageNodeHasPageSize(node)) {
+                                paperSizeUpdates.push(setPagePaperSize(tr, dispatch, pos, this.options.defaultPaperSize));
+                            }
+                        }
+                    });
+
+                    // If any page sizes were updated
+                    return paperSizeUpdates.some((update) => update);
+                },
             setPaperColour:
                 (paperColour: string) =>
                 ({ tr, dispatch }) =>
