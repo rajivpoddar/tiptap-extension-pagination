@@ -32,8 +32,8 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize } from "./utils/paper";
-import { isPageNode } from "./utils/page";
+import { getDefaultPaperColour, setDocumentPaperColour, setDocumentPaperSize, setPageNumPaperSize } from "./utils/paper";
+import { getPageNodeByPageNum, isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
@@ -43,13 +43,21 @@ declare module "@tiptap/core" {
              * @param paperSize The paper size
              * @example editor.commands.setPaperSize("A4")
              */
-            setPaperSize: (paperSize: PaperSize) => ReturnType;
+            setDocumentPaperSize: (paperSize: PaperSize) => ReturnType;
 
             /**
              * Set the default paper size
              * @example editor.commands.setDefaultPaperSize()
              */
-            setDefaultPaperSize: () => ReturnType;
+            setDocumentDefaultPaperSize: () => ReturnType;
+
+            /**
+             * Set the paper size for a specific page
+             * @param pageNum The page number
+             * @param paperSize The paper size
+             * @example editor.commands.setPagePaperSize(0, "A4")
+             */
+            setPagePaperSize: (pageNum: number, paperSize: PaperSize) => ReturnType;
 
             /**
              * Set the paper colour
@@ -323,14 +331,18 @@ const PaginationExtension = Extension.create({
 
     addCommands() {
         return {
-            setPaperSize:
+            setDocumentPaperSize:
                 (paperSize: PaperSize) =>
                 ({ tr, dispatch }) =>
                     setDocumentPaperSize(tr, dispatch, paperSize),
-            setDefaultPaperSize:
+            setDocumentDefaultPaperSize:
                 () =>
                 ({ tr, dispatch }) =>
                     setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+            setPagePaperSize:
+                (pageNum: number, paperSize: PaperSize) =>
+                ({ tr, dispatch }) =>
+                    setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
             setPaperColour:
                 (paperColour: string) =>
                 ({ tr, dispatch }) =>
