@@ -58,7 +58,7 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
     if (pageNum < numPagesInDoc) {
         const pageNode = doc.child(pageNum);
         if (!isPageNode(pageNode)) {
-            console.error("Unexpected! Doc dhild num:", pageNum, "is not a page node!");
+            console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
             return DEFAULT_PAPER_SIZE;
         }
 
