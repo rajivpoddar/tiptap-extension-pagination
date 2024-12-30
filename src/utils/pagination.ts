@@ -22,7 +22,7 @@ import { inRange } from "./math";
 import { getPageNumPaperSize } from "./paper";
 import { calculatePagePixelDimensions, isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
-import { pageNodeName } from "../Nodes/Page";
+import { PAGE_NODE_NAME } from "../constants/page";
 
 export type NodePosArray = Array<NodePos>;
 export type NodePos = { node: PMNode; pos: number };
@@ -72,7 +72,7 @@ export const isPositionWithinParagraph = ($pos: ResolvedPos): boolean => {
  * @returns {number} The position of the page node.
  */
 export const getThisPageNodePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
-    return getParentNodePosOfType(doc, pos, pageNodeName).pos;
+    return getParentNodePosOfType(doc, pos, PAGE_NODE_NAME).pos;
 };
 
 /**

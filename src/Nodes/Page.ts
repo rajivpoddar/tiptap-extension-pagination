@@ -11,13 +11,13 @@ import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING } from "../constants/paper";
 import { PaperSize } from "../types/paper";
 import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
 import { isPageNode } from "../utils/page";
+import { PAGE_NODE_NAME } from "../constants/page";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
-export const pageNodeName = "page" as const;
 
 const PageNode = Node.create({
-    name: pageNodeName,
+    name: PAGE_NODE_NAME,
     group: "block",
     content: "block*",
     defining: true,
@@ -61,7 +61,7 @@ const PageNode = Node.create({
             const { node } = props;
             const dom = document.createElement(baseElement);
             dom.setAttribute(dataPageAttribute, String(true));
-            dom.classList.add(pageNodeName);
+            dom.classList.add(PAGE_NODE_NAME);
 
             const paperSize = (node.attrs.paperSize as PaperSize) || DEFAULT_PAPER_SIZE;
             const { width, height } = getPaperDimensions(paperSize);
