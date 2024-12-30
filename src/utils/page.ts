@@ -5,12 +5,8 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { Nullable } from "./record";
-import { PaperSize } from "../types/paper";
-import { mmToPixels } from "./window";
-import { getPaperDimensions } from "./paper";
-import { PagePixelDimensions } from "../types/page";
 import { Transaction } from "@tiptap/pm/state";
+import { Nullable } from "./record";
 import { collectPageNodes, NodePos } from "./pagination";
 import { inRange } from "./math";
 import { PAGE_NODE_NAME } from "../constants/page";
@@ -27,20 +23,6 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
     }
 
     return node.type.name === PAGE_NODE_NAME;
-};
-
-/**
- * Calculates the pixel width and height of a given paper size.
- * @param paperSize - The paper size to calculate the dimensions for.
- * @returns {PagePixelDimensions} The height and width of the A4 page in pixels.
- */
-export const calculatePagePixelDimensions = (paperSize: PaperSize): PagePixelDimensions => {
-    const paperDimensions = getPaperDimensions(paperSize);
-    const { width, height } = paperDimensions;
-    const pageHeight = mmToPixels(height);
-    const pageWidth = mmToPixels(width);
-
-    return { pageHeight, pageWidth };
 };
 
 /**

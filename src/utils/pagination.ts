@@ -19,8 +19,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { getPageNumPaperSize } from "./paper";
-import { calculatePagePixelDimensions, isPageNode } from "./page";
+import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
+import { isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
 
