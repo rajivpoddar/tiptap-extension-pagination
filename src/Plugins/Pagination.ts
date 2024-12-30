@@ -25,7 +25,7 @@ const PaginationPlugin = new Plugin({
             update(view: EditorView, prevState: EditorState) {
                 if (isPaginating) return;
 
-                const { state } = view;
+                const { state, dispatch } = view;
                 const { doc, schema } = state;
                 const pageType = schema.nodes.page;
 
@@ -49,19 +49,17 @@ const PaginationPlugin = new Plugin({
 
                     const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
+                    const tr = state.tr;
                     // Compare the content of the documents
-                    if (newDoc.content.eq(doc.content)) {
-                        isPaginating = false;
-                        return;
+                    if (!newDoc.content.eq(doc.content)) {
+                        tr.replaceWith(0, doc.content.size, newDoc.content);
+                        tr.setMeta("pagination", true);
+
+                        const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
+                        paginationUpdateCursorPosition(tr, newCursorPos);
                     }
 
-                    const tr = state.tr.replaceWith(0, doc.content.size, newDoc.content);
-                    tr.setMeta("pagination", true);
-
-                    const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
-                    paginationUpdateCursorPosition(tr, newCursorPos);
-
-                    view.dispatch(tr);
+                    dispatch(tr);
                 } catch (error) {
                     console.error("Error updating page view. Details:", error);
                 }
