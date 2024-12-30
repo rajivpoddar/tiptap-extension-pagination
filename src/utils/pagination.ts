@@ -8,8 +8,12 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
+import { PAGE_NODE_NAME } from "../constants/page";
+import { NodePosArray } from "../types/node";
+import { CursorMap } from "../types/cursor";
+import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
-import { Nullable } from "./record";
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
@@ -19,14 +23,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { getPageNumPaperSize } from "./paper";
-import { calculatePagePixelDimensions, isPageNode } from "./page";
-import { DEFAULT_PAPER_SIZE } from "../constants/paper";
-import { pageNodeName } from "../Nodes/Page";
-
-export type NodePosArray = Array<NodePos>;
-export type NodePos = { node: PMNode; pos: number };
-export type CursorMap = Map<number, number>;
+import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
+import { collectPageNodes, isPageNode } from "./page";
 
 /**
  * Check if the given node is a paragraph node.
@@ -72,7 +70,7 @@ export const isPositionWithinParagraph = ($pos: ResolvedPos): boolean => {
  * @returns {number} The position of the page node.
  */
 export const getThisPageNodePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
-    return getParentNodePosOfType(doc, pos, pageNodeName).pos;
+    return getParentNodePosOfType(doc, pos, PAGE_NODE_NAME).pos;
 };
 
 /**
@@ -608,22 +606,6 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
     });
 
     return hasPageNodes;
-};
-
-/**
- * Collect page nodes and their positions in the document.
- * @param doc - The document node.
- * @returns {NodePosArray} A map of page positions to page nodes.
- */
-export const collectPageNodes = (doc: PMNode): NodePosArray => {
-    const pageNodes: NodePosArray = [];
-    doc.forEach((node, offset) => {
-        if (isPageNode(node)) {
-            pageNodes.push({ node, pos: offset });
-        }
-    });
-
-    return pageNodes;
 };
 
 /**

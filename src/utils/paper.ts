@@ -9,12 +9,14 @@ import { Dispatch } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
+import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperDimensions, PaperSize } from "../types/paper";
+import { PagePixelDimensions } from "../types/page";
+import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute, setPageNodesAttribute } from "./page";
-import { Nullable } from "./record";
+import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
-import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 
 /**
  * Check if the given paper size is valid.
@@ -36,6 +38,20 @@ export const getPaperDimensions = (paperSize: PaperSize): PaperDimensions => {
     }
 
     return paperDimensions[paperSize];
+};
+
+/**
+ * Calculates the pixel width and height of a given paper size.
+ * @param paperSize - The paper size to calculate the dimensions for.
+ * @returns {PagePixelDimensions} The height and width of the A4 page in pixels.
+ */
+export const calculatePagePixelDimensions = (paperSize: PaperSize): PagePixelDimensions => {
+    const paperDimensions = getPaperDimensions(paperSize);
+    const { width, height } = paperDimensions;
+    const pageHeight = mmToPixels(height);
+    const pageWidth = mmToPixels(width);
+
+    return { pageHeight, pageWidth };
 };
 
 /**

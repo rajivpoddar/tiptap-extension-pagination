@@ -5,15 +5,11 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { Nullable } from "./record";
-import { PaperSize } from "../types/paper";
-import { mmToPixels } from "./window";
-import { getPaperDimensions } from "./paper";
-import { PagePixelDimensions } from "../types/page";
 import { Transaction } from "@tiptap/pm/state";
-import { collectPageNodes, NodePos } from "./pagination";
+import { NodePos, NodePosArray } from "../types/node";
+import { Nullable } from "../types/record";
 import { inRange } from "./math";
-import { pageNodeName } from "../Nodes/Page";
+import { PAGE_NODE_NAME } from "../constants/page";
 
 /**
  * Check if the given node is a page node.
@@ -26,21 +22,7 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
         return false;
     }
 
-    return node.type.name === pageNodeName;
-};
-
-/**
- * Calculates the pixel width and height of a given paper size.
- * @param paperSize - The paper size to calculate the dimensions for.
- * @returns {PagePixelDimensions} The height and width of the A4 page in pixels.
- */
-export const calculatePagePixelDimensions = (paperSize: PaperSize): PagePixelDimensions => {
-    const paperDimensions = getPaperDimensions(paperSize);
-    const { width, height } = paperDimensions;
-    const pageHeight = mmToPixels(height);
-    const pageWidth = mmToPixels(width);
-
-    return { pageHeight, pageWidth };
+    return node.type.name === PAGE_NODE_NAME;
 };
 
 /**
@@ -74,6 +56,22 @@ export const getPageNodeByPageNum = (doc: PMNode, pageNum: number): Nullable<PMN
     }
 
     return pageNode;
+};
+
+/**
+ * Collect page nodes and their positions in the document.
+ * @param doc - The document node.
+ * @returns {NodePosArray} A map of page positions to page nodes.
+ */
+export const collectPageNodes = (doc: PMNode): NodePosArray => {
+    const pageNodes: NodePosArray = [];
+    doc.forEach((node, offset) => {
+        if (isPageNode(node)) {
+            pageNodes.push({ node, pos: offset });
+        }
+    });
+
+    return pageNodes;
 };
 
 /**
