@@ -12,9 +12,9 @@ import { DARK_THEME } from "../constants/theme";
 import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
+import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute, setPageNodesAttribute } from "./page";
-import { Nullable } from "./record";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 

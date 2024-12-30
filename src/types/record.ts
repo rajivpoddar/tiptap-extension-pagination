@@ -1,10 +1,8 @@
 /**
- * @file /src/utils/record.ts
+ * @file /src/types/record.ts
  * @name Record
- * @description This file contains utility functions for working with records.
+ * @description This file contains utility types for working with records.
  */
-
-// ======= Type Definitions =======
 
 /**
  * A type definition for a nullable record. Allows records to be either T or null.

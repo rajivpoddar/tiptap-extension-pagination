@@ -6,10 +6,10 @@
 
 import { Node as PMNode } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
-import { Nullable } from "./record";
+import { NodePos, NodePosArray } from "../types/node";
+import { Nullable } from "../types/record";
 import { inRange } from "./math";
 import { PAGE_NODE_NAME } from "../constants/page";
-import { NodePos, NodePosArray } from "../types/node";
 
 /**
  * Check if the given node is a page node.

@@ -12,8 +12,8 @@ import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
+import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
-import { Nullable } from "./record";
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
