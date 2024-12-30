@@ -8,6 +8,10 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
+import { DEFAULT_PAPER_SIZE } from "../constants/paper";
+import { PAGE_NODE_NAME } from "../constants/page";
+import { NodePosArray } from "../types/node";
+import { CursorMap } from "../types/cursor";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { Nullable } from "./record";
 import {
@@ -21,10 +25,6 @@ import {
 import { inRange } from "./math";
 import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
 import { collectPageNodes, isPageNode } from "./page";
-import { DEFAULT_PAPER_SIZE } from "../constants/paper";
-import { PAGE_NODE_NAME } from "../constants/page";
-import { NodePosArray } from "../types/node";
-import { CursorMap } from "../types/cursor";
 
 /**
  * Check if the given node is a paragraph node.
