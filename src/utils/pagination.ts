@@ -23,10 +23,8 @@ import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
 import { isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
-
-export type NodePosArray = Array<NodePos>;
-export type NodePos = { node: PMNode; pos: number };
-export type CursorMap = Map<number, number>;
+import { NodePosArray } from "../types/node";
+import { CursorMap } from "../types/cursor";
 
 /**
  * Check if the given node is a paragraph node.
