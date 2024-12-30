@@ -20,7 +20,7 @@ import {
 } from "./selection";
 import { inRange } from "./math";
 import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
-import { isPageNode } from "./page";
+import { collectPageNodes, isPageNode } from "./page";
 import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePosArray } from "../types/node";
@@ -606,22 +606,6 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
     });
 
     return hasPageNodes;
-};
-
-/**
- * Collect page nodes and their positions in the document.
- * @param doc - The document node.
- * @returns {NodePosArray} A map of page positions to page nodes.
- */
-export const collectPageNodes = (doc: PMNode): NodePosArray => {
-    const pageNodes: NodePosArray = [];
-    doc.forEach((node, offset) => {
-        if (isPageNode(node)) {
-            pageNodes.push({ node, pos: offset });
-        }
-    });
-
-    return pageNodes;
 };
 
 /**

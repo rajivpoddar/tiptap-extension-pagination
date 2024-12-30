@@ -7,7 +7,6 @@
 import { Node as PMNode } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
 import { Nullable } from "./record";
-import { collectPageNodes, NodePos } from "./pagination";
 import { inRange } from "./math";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePos, NodePosArray } from "../types/node";
@@ -57,6 +56,22 @@ export const getPageNodeByPageNum = (doc: PMNode, pageNum: number): Nullable<PMN
     }
 
     return pageNode;
+};
+
+/**
+ * Collect page nodes and their positions in the document.
+ * @param doc - The document node.
+ * @returns {NodePosArray} A map of page positions to page nodes.
+ */
+export const collectPageNodes = (doc: PMNode): NodePosArray => {
+    const pageNodes: NodePosArray = [];
+    doc.forEach((node, offset) => {
+        if (isPageNode(node)) {
+            pageNodes.push({ node, pos: offset });
+        }
+    });
+
+    return pageNodes;
 };
 
 /**
