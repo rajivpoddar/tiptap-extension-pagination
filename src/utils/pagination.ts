@@ -15,6 +15,7 @@ import {
     moveToNextTextBlock,
     moveToPreviousTextBlock,
     moveToThisTextBlock,
+    setSelection,
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
@@ -836,7 +837,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         }
 
         if (selection) {
-            tr.setSelection(selection);
+            setSelection(tr, selection);
         } else {
             // Fallback to a safe selection at the end of the document
             setSelectionAtEndOfDocument(tr);
