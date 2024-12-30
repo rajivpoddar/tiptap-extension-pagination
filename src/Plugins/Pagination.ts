@@ -15,7 +15,6 @@ import {
     paginationUpdateCursorPosition,
 } from "../utils/pagination";
 import { isNodeEmpty } from "../utils/node";
-import { setSelection } from "../utils/selection";
 
 const PaginationPlugin = new Plugin({
     key: new PluginKey("pagination"),
@@ -50,13 +49,9 @@ const PaginationPlugin = new Plugin({
 
                     const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
-                    // Compare the content of the documents
                     const tr = state.tr;
-                    if (newDoc.content.eq(doc.content)) {
-                        // Set cursor position to the current position.
-                        const selection = tr.selection;
-                        setSelection(tr, selection);
-                    } else {
+                    // Compare the content of the documents
+                    if (!newDoc.content.eq(doc.content)) {
                         tr.replaceWith(0, doc.content.size, newDoc.content);
                         tr.setMeta("pagination", true);
 
