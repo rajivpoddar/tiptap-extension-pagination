@@ -25,6 +25,7 @@ import {
 import { inRange } from "./math";
 import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
 import { collectPageNodes, isPageNode } from "./page";
+import { PaperSize } from "../types/paper";
 
 /**
  * Check if the given node is a paragraph node.
@@ -664,19 +665,29 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
  * @param state - The editor state.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
+ * @param hasPageNodes - Whether the existing document has page nodes.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 export const buildNewDocument = (
     state: EditorState,
     contentNodes: NodePosArray,
-    nodeHeights: number[]
+    nodeHeights: number[],
+    hasPageNodes: boolean
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
+    const wrapGetPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<PaperSize> => {
+        if (hasPageNodes) {
+            return getPageNumPaperSize(doc, pageNum);
+        } else {
+            return DEFAULT_PAPER_SIZE;
+        }
+    };
+
     const { schema, doc } = state;
     let pageNum = 0;
 
     const pageType = schema.nodes.page;
     const pages = [];
-    let paperSize = getPageNumPaperSize(doc, pageNum) ?? DEFAULT_PAPER_SIZE;
+    let paperSize = wrapGetPageNumPaperSize(doc, pageNum) ?? DEFAULT_PAPER_SIZE;
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
 
@@ -696,7 +707,7 @@ export const buildNewDocument = (
             currentPageContent = [];
             currentHeight = 0;
             pageNum++;
-            paperSize = getPageNumPaperSize(doc, pageNum) ?? paperSize;
+            paperSize = wrapGetPageNumPaperSize(doc, pageNum) ?? paperSize;
         }
 
         if (currentPageContent.length === 0) {
