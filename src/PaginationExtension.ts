@@ -419,7 +419,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 ({ tr, dispatch }) => {
                     if (!dispatch) return false;
 
-                    setPageNodesAttribute(tr, "paperColour", paperColour);
+                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
 
                     dispatch(tr);
                     return true;
