@@ -47,7 +47,7 @@ const PaginationPlugin = new Plugin({
                     const { selection } = state;
                     const oldCursorPos = selection.from;
 
-                    const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights, hasPageNodes);
+                    const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
 
                     const tr = state.tr;
                     // Compare the content of the documents
