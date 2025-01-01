@@ -5,7 +5,7 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { Transaction } from "@tiptap/pm/state";
+import { EditorState, Transaction } from "@tiptap/pm/state";
 import { NodePos, NodePosArray } from "../types/node";
 import { Nullable } from "../types/record";
 import { inRange } from "./math";
@@ -74,6 +74,27 @@ export const getPageNodeByPageNum = (doc: PMNode, pageNum: number): Nullable<PMN
     }
 
     return pageNode;
+};
+
+/**
+ * Check if the document has page nodes.
+ * @param state - The editor state.
+ * @returns {boolean} True if the document has page nodes, false otherwise.
+ */
+export const doesDocHavePageNodes = (state: EditorState): boolean => {
+    const { schema } = state;
+    const pageType = schema.nodes.page;
+
+    let hasPageNodes = false;
+
+    state.doc.forEach((node) => {
+        if (node.type === pageType) {
+            hasPageNodes = true;
+            return false;
+        }
+    });
+
+    return hasPageNodes;
 };
 
 /**

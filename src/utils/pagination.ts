@@ -587,27 +587,6 @@ export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndex
 };
 
 /**
- * Check if the document has page nodes.
- * @param state - The editor state.
- * @returns {boolean} True if the document has page nodes, false otherwise.
- */
-export const doesDocHavePageNodes = (state: EditorState): boolean => {
-    const { schema } = state;
-    const pageType = schema.nodes.page;
-
-    let hasPageNodes = false;
-
-    state.doc.forEach((node) => {
-        if (node.type === pageType) {
-            hasPageNodes = true;
-            return false;
-        }
-    });
-
-    return hasPageNodes;
-};
-
-/**
  * Collect content nodes and their old positions
  * @param state - The editor state.
  * @returns {NodePosArray} The content nodes and their positions.

@@ -14,11 +14,10 @@ import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
-import { getLastPageNum, getPageNodeByPageNum, isPageNode, isPageNumInRange, setPageNodeAttribute } from "./page";
+import { doesDocHavePageNodes, getLastPageNum, getPageNodeByPageNum, isPageNode, isPageNumInRange, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 import { isValidColour } from "./colour";
-import { doesDocHavePageNodes } from "./pagination";
 
 /**
  * Check if the given paper size is valid.

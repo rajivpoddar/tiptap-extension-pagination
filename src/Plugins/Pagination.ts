@@ -9,12 +9,12 @@ import { EditorView } from "@tiptap/pm/view";
 import {
     buildNewDocument,
     collectContentNodes,
-    doesDocHavePageNodes,
     mapCursorPosition,
     measureNodeHeights,
     paginationUpdateCursorPosition,
 } from "../utils/pagination";
 import { isNodeEmpty } from "../utils/node";
+import { doesDocHavePageNodes } from "../utils/page";
 
 const PaginationPlugin = new Plugin({
     key: new PluginKey("pagination"),
