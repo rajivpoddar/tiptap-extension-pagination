@@ -7,17 +7,9 @@
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR } from "./constants/paper";
+import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import {
-    isHighlighting,
-    getResolvedPosition,
-    setSelectionAtPos,
-    setSelection,
-    moveToNextTextBlock,
-    moveToNearestTextSelection,
-    moveToPreviousTextBlock,
-    setSelectionToEndOfParagraph,
-} from "./utils/selection";
+import { PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -30,11 +22,19 @@ import {
     isPositionWithinParagraph,
     isTextNode,
 } from "./utils/pagination";
+import {
+    isHighlighting,
+    getResolvedPosition,
+    setSelectionAtPos,
+    setSelection,
+    moveToNextTextBlock,
+    moveToNearestTextSelection,
+    moveToPreviousTextBlock,
+    setSelectionToEndOfParagraph,
+} from "./utils/selection";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
-import { PaperSize } from "./types/paper";
-import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperColour, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
-import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
+import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperColour, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
 
 export interface PaginationOptions {
     /**
