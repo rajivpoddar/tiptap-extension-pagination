@@ -73,6 +73,15 @@ export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
 };
 
 /**
+ * Check if a page node has a paper colour attribute.
+ * @param pageNode - The page node to check.
+ * @returns {boolean} True if the page node has a paper colour attribute, false otherwise.
+ */
+export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
+    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_COLOUR_ATTR);
+};
+
+/**
  * Get the paper size of a particular page node in the document.
  * @param pageNode - The page node to find the paper size for
  * @returns {Nullable<PaperSize>} The paper size of the specified page or null
@@ -118,6 +127,31 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
     }
 
     return null;
+};
+
+/**
+ * Get the paper colour of a particular page in the document.
+ * @param doc - The current document
+ * @param pageNum - The page number to find the paper colour for
+ * @returns {string} The paper colour of the specified page or the default paper colour.
+ */
+export const getPageNumPaperColour = (doc: PMNode, pageNum: number): string => {
+    const { children } = doc;
+    const numPagesInDoc = children.length;
+
+    if (pageNum < numPagesInDoc) {
+        const pageNode = getPageNodeByPageNum(doc, pageNum);
+        if (!pageNode) {
+            console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
+            return LIGHT_PAPER_COLOUR;
+        }
+
+        if (pageNodeHasPaperColour(pageNode)) {
+            return getPageNodePaperColour(pageNode) || LIGHT_PAPER_COLOUR;
+        }
+    }
+
+    return LIGHT_PAPER_COLOUR;
 };
 
 /**
