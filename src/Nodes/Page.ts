@@ -8,10 +8,10 @@ import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING, LIGHT_PAPER_COLOUR } from "../constants/paper";
+import { PAGE_NODE_NAME, PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperSize } from "../types/paper";
 import { getPaperDimensions } from "../utils/paper";
 import { isPageNode } from "../utils/page";
-import { PAGE_NODE_NAME } from "../constants/page";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -63,7 +63,9 @@ const PageNode = Node.create({
             dom.setAttribute(dataPageAttribute, String(true));
             dom.classList.add(PAGE_NODE_NAME);
 
-            const paperSize = (node.attrs.paperSize as PaperSize) || DEFAULT_PAPER_SIZE;
+            const { attrs } = node;
+
+            const paperSize = (attrs[PAGE_NODE_PAPER_SIZE_ATTR] as PaperSize) || DEFAULT_PAPER_SIZE;
             const { width, height } = getPaperDimensions(paperSize);
             dom.style.width = `${width}mm`;
             dom.style.height = `${height}mm`;
@@ -71,7 +73,7 @@ const PageNode = Node.create({
 
             dom.style.border = "1px solid #ccc";
 
-            const paperColour = (node.attrs.paperColour as string) || LIGHT_PAPER_COLOUR;
+            const paperColour = (attrs[PAGE_NODE_PAPER_COLOUR_ATTR] as string) || LIGHT_PAPER_COLOUR;
             dom.style.background = paperColour;
 
             dom.style.overflow = "hidden";
