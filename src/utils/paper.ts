@@ -14,7 +14,7 @@ import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
-import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute, setPageNodesAttribute } from "./page";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 
@@ -175,43 +175,6 @@ const setPageNodePosPaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: n
     }
 
     setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
-
-    dispatch(tr);
-    return true;
-};
-
-/**
- * Set the given paper size for the document to all page nodes.
- * @param tr - The transaction to apply the change to.
- * @param dispatch - The dispatch function to apply the transaction.
- * @param paperSize - The paper size to set.
- * @returns {boolean} True if the paper size was set, false otherwise.
- */
-export const setDocumentPaperSize = (tr: Transaction, dispatch: Dispatch, paperSize: PaperSize): boolean => {
-    if (!dispatch) return false;
-
-    if (!isValidPaperSize(paperSize)) {
-        console.warn(`Invalid paper size: ${paperSize}`);
-        return false;
-    }
-
-    setPageNodesAttribute(tr, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
-
-    dispatch(tr);
-    return true;
-};
-
-/**
- * Set the given paper colour for the document.
- * @param tr - The transaction to apply the change to.
- * @param dispatch - The dispatch function to apply the transaction.
- * @param paperColour - The paper colour to set.
- * @returns {boolean} True if the paper colour was set, false otherwise.
- */
-export const setDocumentPaperColour = (tr: Transaction, dispatch: Dispatch, paperColour: string): boolean => {
-    if (!dispatch) return false;
-
-    setPageNodesAttribute(tr, "paperColour", paperColour);
 
     dispatch(tr);
     return true;

@@ -32,8 +32,9 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { pageNodeHasPageSize, setDocumentPaperColour, setDocumentPaperSize, setPageNumPaperSize, setPagePaperSize } from "./utils/paper";
-import { getPageNodeByPageNum, isPageNode } from "./utils/page";
+import { isValidPaperSize, pageNodeHasPageSize, setPageNumPaperSize, setPagePaperSize } from "./utils/paper";
+import { getPageNodeByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
+import { PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 
 export interface PaginationOptions {
     /**
@@ -61,19 +62,19 @@ declare module "@tiptap/core" {
             /**
              * Set the paper size
              * @param paperSize The paper size
-             * @example editor.commands.setPaperSize("A4")
+             * @example editor.commands.setDocumentPaperSize("A4")
              */
             setDocumentPaperSize: (paperSize: PaperSize) => ReturnType;
 
             /**
              * Set the default paper size
-             * @example editor.commands.setDefaultPaperSize()
+             * @example editor.commands.setDocumentDefaultPaperSize()
              */
             setDocumentDefaultPaperSize: () => ReturnType;
 
             /**
              * Set the paper size for a specific page
-             * @param pageNum The page number
+             * @param pageNum The page number (0-indexed)
              * @param paperSize The paper size
              * @example editor.commands.setPagePaperSize(0, "A4")
              */
@@ -87,17 +88,25 @@ declare module "@tiptap/core" {
             checkPaperSizes: () => ReturnType;
 
             /**
-             * Set the paper colour
+             * Set the paper colour for the document
              * @param paperColour The paper colour
-             * @example editor.commands.setPaperColour("#fff")
+             * @example editor.commands.setDocumentPaperColour("#fff")
              */
-            setPaperColour: (paperColour: string) => ReturnType;
+            setDocumentPaperColour: (paperColour: string) => ReturnType;
 
             /**
              * Set the default paper colour
-             * @example editor.commands.setDefaultPaperColour()
+             * @example editor.commands.setDocumentDefaultPaperColour()
              */
-            setDefaultPaperColour: () => ReturnType;
+            setDocumentDefaultPaperColour: () => ReturnType;
+
+            /**
+             * Set the paper colour for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param paperColour The paper colour
+             * @example editor.commands.setPagePaperColour(0, "#fff")
+             */
+            setPagePaperColour: (pageNum: number, paperColour: string) => ReturnType;
         };
     }
 }
@@ -364,16 +373,30 @@ const PaginationExtension = Extension.create<PaginationOptions>({
         return {
             setDocumentPaperSize:
                 (paperSize: PaperSize) =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperSize(tr, dispatch, paperSize),
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    if (!isValidPaperSize(paperSize)) {
+                        console.warn(`Invalid paper size: ${paperSize}`);
+                        return false;
+                    }
+
+                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+
+                    dispatch(tr);
+                    return true;
+                },
+
             setDocumentDefaultPaperSize:
                 () =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+                ({ editor }) =>
+                    editor.commands.setDocumentPaperSize(this.options.defaultPaperSize),
+
             setPagePaperSize:
                 (pageNum: number, paperSize: PaperSize) =>
                 ({ tr, dispatch }) =>
                     setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
+
             checkPaperSizes:
                 () =>
                 ({ tr, dispatch }) => {
@@ -390,14 +413,24 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     // If any page sizes were updated
                     return paperSizeUpdates.some((update) => update);
                 },
-            setPaperColour:
+
+            setDocumentPaperColour:
                 (paperColour: string) =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperColour(tr, dispatch, paperColour),
-            setDefaultPaperColour:
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    setPageNodesAttribute(tr, "paperColour", paperColour);
+
+                    dispatch(tr);
+                    return true;
+                },
+
+            setDocumentDefaultPaperColour:
                 () =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperColour(tr, dispatch, this.options.defaultPaperColour),
+                ({ editor }) =>
+                    editor.commands.setDocumentPaperColour(this.options.defaultPaperColour),
+
+          
         };
     },
 });
