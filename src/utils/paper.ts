@@ -9,7 +9,7 @@ import { Dispatch } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DARK_PAPER_COLOUR, DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
-import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
+import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
@@ -75,11 +75,22 @@ export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
  * Get the paper size of a particular page node in the document.
  * @param pageNode - The page node to find the paper size for
  * @returns {Nullable<PaperSize>} The paper size of the specified page or null
- * if the page could not be found.
+ * if the paper size is not set.
  */
 const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
     const { attrs } = pageNode;
-    return attrs.paperSize;
+    return attrs[PAGE_NODE_PAPER_SIZE_ATTR];
+};
+
+/**
+ * Get the paper colour of a particular page node in the document.
+ * @param pageNode - The page node to find the paper colour for
+ * @returns {Nullable<string>} The paper colour of the specified page or null
+ * if the paper colour is not set.
+ */
+const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
+    const { attrs } = pageNode;
+    return attrs[PAGE_NODE_PAPER_COLOUR_ATTR];
 };
 
 /**
