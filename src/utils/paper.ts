@@ -104,121 +104,97 @@ export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
     return attrs[PAGE_NODE_PAPER_COLOUR_ATTR];
 };
 
+// Utility function to handle out-of-range page numbers
 /**
- * Get the paper size of a particular page in the document. If page num is out of range,
- * will warn and use the last page size. If page size is not set, will use the default paper size.
- * @param editor - The current editor
- * @param pageNum - The page number to find the paper size for
- * @returns {PaperSize} The paper size of the specified page or the default paper size.
- * if the page could not be found.
+ * Handles cases where the given page number is out of range.
+ * Logs a warning and falls back to the last page number.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to validate.
+ * @param fallbackFn - A function to determine the fallback value based on the last page number.
+ * @returns {any} The fallback value determined by the provided function.
+ */
+const handleOutOfRangePageNum = (state: EditorState, pageNum: number, fallbackFn: (state: EditorState, pageNum: number) => any): any => {
+    console.warn("Page number:", pageNum, "is out of range for the document. Using last page.");
+    const lastPageNum = getLastPageNum(state.doc);
+    return fallbackFn(state, lastPageNum);
+};
+
+// Generic function to get a page attribute
+/**
+ * Retrieves a specific attribute of a given page number.
+ * Falls back to defaults if the page number is invalid or the attribute is missing.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to retrieve the attribute for.
+ * @param getDefault - A function to get the default value for the attribute.
+ * @param getNodeAttribute - A function to extract the attribute from the page node.
+ * @returns {any} The attribute value or the default if unavailable.
+ */
+const getPageAttribute = <T>(
+    state: EditorState,
+    pageNum: number,
+    getDefault: () => T,
+    getNodeAttribute: (node: PMNode) => Nullable<T>
+): T => {
+    if (!doesDocHavePageNodes(state)) {
+        return getDefault();
+    }
+
+    if (!isPageNumInRange(state.doc, pageNum)) {
+        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttribute(s, p, getDefault, getNodeAttribute));
+    }
+
+    const pageNode = getPageNodeByPageNum(state.doc, pageNum);
+    if (!pageNode) {
+        return getDefault();
+    }
+
+    return getNodeAttribute(pageNode) ?? getDefault();
+};
+
+/**
+ * Retrieves the paper size of a specific page using the editor instance.
+ * Falls back to the default paper size if the page number is invalid.
+ * @param editor - The current editor instance.
+ * @param pageNum - The page number to retrieve the paper size for.
+ * @returns {PaperSize} The paper size of the specified page or default.
  */
 export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize => {
     const { state, commands } = editor;
-    if (!doesDocHavePageNodes(state)) {
-        return commands.getDefaultPaperSize();
-    }
-
-    const { doc } = state;
-
-    if (!isPageNumInRange(doc, pageNum)) {
-        console.warn("Page number:", pageNum, "is out of range for the document. Using last page size.");
-        const lastPageNum = getLastPageNum(doc);
-        return getPageNumPaperSize(editor, lastPageNum);
-    }
-
-    const pageNode = getPageNodeByPageNum(doc, pageNum);
-    if (!pageNode) {
-        return commands.getDefaultPaperSize();
-    }
-
-    return getPageNodePaperSize(pageNode) ?? commands.getDefaultPaperSize();
+    return getPageAttribute(state, pageNum, () => commands.getDefaultPaperSize(), getPageNodePaperSize);
 };
 
 /**
- * Get the paper size of a particular page in the document when we only have the state (no editor).
- * If page num is out of range, will warn and use the last page size. If page size is not set,
- * will use the default paper size.
- * @param state - The current editor state
- * @param pageNum - The page number to find the paper size for
- * @returns {PaperSize} The paper size of the specified page or the default paper size.
+ * Retrieves the paper size of a specific page using only the editor state.
+ * Falls back to the default paper size if the page number is invalid.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to retrieve the paper size for.
+ * @returns {PaperSize} The paper size of the specified page or default.
  */
 export const getPageNumPaperSizeFromState = (state: EditorState, pageNum: number): PaperSize => {
-    if (!doesDocHavePageNodes(state)) {
-        return DEFAULT_PAPER_SIZE;
-    }
-
-    const { doc } = state;
-
-    if (!isPageNumInRange(doc, pageNum)) {
-        console.warn("Page number:", pageNum, "is out of range for the document. Using last page size.");
-        const lastPageNum = getLastPageNum(doc);
-        return getPageNumPaperSizeFromState(state, lastPageNum);
-    }
-
-    const pageNode = getPageNodeByPageNum(doc, pageNum);
-    if (!pageNode) {
-        return DEFAULT_PAPER_SIZE;
-    }
-
-    return getPageNodePaperSize(pageNode) ?? DEFAULT_PAPER_SIZE;
+    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_SIZE, getPageNodePaperSize);
 };
 
 /**
- * Get the paper colour of a particular page in the document. If page num is out of range,
- * will warn and use the last page colour. If page colour is not set, will use the default paper colour.
- * @param editor - The current editor
- * @param pageNum - The page number to find the paper colour for
- * @returns {string} The paper colour of the specified page or the default paper colour.
+ * Retrieves the paper color of a specific page using the editor instance.
+ * Falls back to the default paper color if the page number is invalid.
+ * @param editor - The current editor instance.
+ * @param pageNum - The page number to retrieve the paper color for.
+ * @returns {string} The paper color of the specified page or default.
  */
 export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
     const { state, commands } = editor;
-    if (!doesDocHavePageNodes(state)) {
-        return commands.getDefaultPaperColour();
-    }
-
-    const { doc } = state;
-
-    if (!isPageNumInRange(doc, pageNum)) {
-        console.warn("Page number:", pageNum, "is out of range for the document. Using last page colour.");
-        const lastPageNum = getLastPageNum(doc);
-        return getPageNumPaperColour(editor, lastPageNum);
-    }
-
-    const pageNode = getPageNodeByPageNum(doc, pageNum);
-    if (!pageNode) {
-        return commands.getDefaultPaperColour();
-    }
-
-    return getPageNodePaperColour(pageNode) ?? commands.getDefaultPaperColour();
+    return getPageAttribute(state, pageNum, () => commands.getDefaultPaperColour(), getPageNodePaperColour);
 };
 
 /**
- * Get the paper colour of a particular page in the document when we only have the state (no editor).
- * If page num is out of range, will warn and use the last page colour. If page colour is not set,
- * will use the default 'default paper colour'.
- * @param state - The current editor state
- * @param pageNum - The page number to find the paper colour for
- * @returns {string} The paper colour of the specified page or the default paper colour.
+ * Retrieves the paper color of a specific page using only the editor state.
+ * Falls back to the default paper color if the page number is invalid.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to retrieve the paper color for.
+ * @returns {string} The paper color of the specified page or default.
  */
 export const getPageNumPaperColourFromState = (state: EditorState, pageNum: number): string => {
-    if (!doesDocHavePageNodes(state)) {
-        return DEFAULT_PAPER_COLOUR;
-    }
-
-    const { doc } = state;
-
-    if (!isPageNumInRange(doc, pageNum)) {
-        console.warn("Page number:", pageNum, "is out of range for the document. Using last page colour.");
-        const lastPageNum = getLastPageNum(doc);
-        return getPageNumPaperColourFromState(state, lastPageNum);
-    }
-
-    const pageNode = getPageNodeByPageNum(doc, pageNum);
-    if (!pageNode) {
-        return DEFAULT_PAPER_COLOUR;
-    }
-
-    return getPageNodePaperColour(pageNode) ?? DEFAULT_PAPER_COLOUR;
+    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_COLOUR, getPageNodePaperColour);
 };
 
 /**
