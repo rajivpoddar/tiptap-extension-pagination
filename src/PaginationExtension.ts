@@ -6,7 +6,7 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR } from "./constants/paper";
+import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
 import { PaperSize } from "./types/paper";
@@ -75,6 +75,13 @@ declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         page: {
             /**
+             * Get the default paper size
+             * @example editor.commands.getDefaultPaperSize()
+             * @returns The default paper size
+             */
+            getDefaultPaperSize: () => PaperSize;
+
+            /**
              * Set the paper size
              * @param paperSize The paper size
              * @example editor.commands.setDocumentPaperSize("A4")
@@ -139,7 +146,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
     addOptions() {
         return {
             defaultPaperSize: DEFAULT_PAPER_SIZE,
-            defaultPaperColour: LIGHT_PAPER_COLOUR,
+            defaultPaperColour: DEFAULT_PAPER_COLOUR,
             useDeviceThemeForPaperColour: false,
         };
     },
@@ -394,6 +401,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
     addCommands() {
         return {
+            getDefaultPaperSize: () => this.options.defaultPaperSize,
+
             setDocumentPaperSize:
                 (paperSize: PaperSize) =>
                 ({ tr, dispatch }) => {
