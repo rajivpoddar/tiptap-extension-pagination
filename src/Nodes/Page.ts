@@ -26,10 +26,10 @@ const PageNode = Node.create({
     addAttributes() {
         return {
             paperSize: {
-                default: this.options.defaultPaperSize,
+                default: this.options.defaultPaperSize, // To fix
             },
             paperColour: {
-                default: this.options.defaultPaperColour,
+                default: this.options.defaultPaperColour, // To fix
             },
         };
     },

@@ -34,7 +34,14 @@ import {
 } from "./utils/selection";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
-import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperColour, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
+import {
+    getDeviceThemePaperColour,
+    isValidPaperSize,
+    pageNodeHasPageSize,
+    setPageNodePosPaperColour,
+    setPageNodePosPaperSize,
+    setPagePaperSize,
+} from "./utils/paper";
 
 export interface PaginationOptions {
     /**
@@ -54,6 +61,14 @@ export interface PaginationOptions {
      * @example "#f0f0f0"
      */
     defaultPaperColour: string;
+
+    /**
+     * Whether to use the device theme to set the paper colour.
+     * If enabled, the default paper colour will be ignored.
+     * @default false
+     * @example true
+     */
+    useDeviceThemeForPaperColour: boolean;
 }
 
 declare module "@tiptap/core" {
@@ -88,6 +103,13 @@ declare module "@tiptap/core" {
             checkPaperSizes: () => ReturnType;
 
             /**
+             * Get the default paper colour
+             * @example editor.commands.getDefaultPaperColour()
+             * @returns The default paper colour
+             */
+            getDefaultPaperColour: () => string;
+
+            /**
              * Set the paper colour for the document
              * @param paperColour The paper colour
              * @example editor.commands.setDocumentPaperColour("#fff")
@@ -118,6 +140,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
         return {
             defaultPaperSize: DEFAULT_PAPER_SIZE,
             defaultPaperColour: LIGHT_PAPER_COLOUR,
+            useDeviceThemeForPaperColour: false,
         };
     },
 
@@ -424,6 +447,14 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     return paperSizeUpdates.some((update) => update);
                 },
 
+            getDefaultPaperColour: () => {
+                if (this.options.useDeviceThemeForPaperColour) {
+                    return getDeviceThemePaperColour();
+                } else {
+                    return this.options.defaultPaperColour;
+                }
+            },
+
             setDocumentPaperColour:
                 (paperColour: string) =>
                 ({ tr, dispatch }) => {
@@ -437,8 +468,11 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperColour:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPaperColour(this.options.defaultPaperColour),
+                ({ editor }) => {
+                    const { commands } = editor;
+                    const defaultPaperColour = commands.getDefaultPaperColour();
+                    return commands.setDocumentPaperColour(defaultPaperColour);
+                },
 
             setPagePaperColour:
                 (pageNum: number, paperColour: string) =>
