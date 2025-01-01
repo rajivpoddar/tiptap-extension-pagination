@@ -7,7 +7,7 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { DEFAULT_PAPER_PADDING } from "../constants/paper";
+import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_PADDING, DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { getPageNodePaperColour, getPageNodePaperSize, getPaperDimensions } from "../utils/paper";
 import { isPageNode } from "../utils/page";
@@ -25,10 +25,10 @@ const PageNode = Node.create({
     addAttributes() {
         return {
             paperSize: {
-                default: this.options.defaultPaperSize, // To fix
+                default: DEFAULT_PAPER_SIZE,
             },
             paperColour: {
-                default: this.options.defaultPaperColour, // To fix
+                default: DEFAULT_PAPER_COLOUR,
             },
         };
     },
@@ -42,9 +42,9 @@ const PageNode = Node.create({
 
                     // Prevent nested page nodes
                     if (parent && parent.hasAttribute(dataPageAttribute)) {
-                        debugger;
                         return false;
                     }
+
                     return {};
                 },
             },
