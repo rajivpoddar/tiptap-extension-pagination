@@ -87,7 +87,7 @@ export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
  * @returns {Nullable<PaperSize>} The paper size of the specified page or null
  * if the paper size is not set.
  */
-const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
+export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
     const { attrs } = pageNode;
     return attrs[PAGE_NODE_PAPER_SIZE_ATTR];
 };
@@ -98,7 +98,7 @@ const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
  * @returns {Nullable<string>} The paper colour of the specified page or null
  * if the paper colour is not set.
  */
-const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
+export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
     const { attrs } = pageNode;
     return attrs[PAGE_NODE_PAPER_COLOUR_ATTR];
 };
