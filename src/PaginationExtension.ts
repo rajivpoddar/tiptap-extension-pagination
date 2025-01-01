@@ -35,6 +35,26 @@ import { PaperSize } from "./types/paper";
 import { pageNodeHasPageSize, setDocumentPaperColour, setDocumentPaperSize, setPageNumPaperSize, setPagePaperSize } from "./utils/paper";
 import { getPageNodeByPageNum, isPageNode } from "./utils/page";
 
+export interface PaginationOptions {
+    /**
+     * The default paper size for the document. Note this is only the default
+     * so you can have settings in your editor which change the paper size.
+     * This is only the setting for new documents.
+     * @default "A4"
+     * @example "A3"
+     */
+    defaultPaperSize: PaperSize;
+
+    /**
+     * The default paper colour for the document. Note this is only the default
+     * so you can have settings in your editor which change the paper colour.
+     * This is only the setting for new documents.
+     * @default "#fff"
+     * @example "#f0f0f0"
+     */
+    defaultPaperColour: string;
+}
+
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         page: {
@@ -82,7 +102,7 @@ declare module "@tiptap/core" {
     }
 }
 
-const PaginationExtension = Extension.create({
+const PaginationExtension = Extension.create<PaginationOptions>({
     name: "pagination",
 
     addOptions() {
