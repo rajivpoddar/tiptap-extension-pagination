@@ -14,7 +14,7 @@ import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
-import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodeAttribute } from "./page";
+import { getPageNodeByPageNum, isPageNode, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 
@@ -109,27 +109,6 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
 };
 
 /**
- * Set the paper size for a particular page in the document.
- * @param tr - The transaction to apply the change to.
- * @param dispatch - The dispatch function to apply the transaction.
- * @param pageNum - The page number to set the paper size for.
- * @param paperSize - The paper size to set.
- * @returns {boolean} True if the paper size was set, false otherwise.
- */
-export const setPageNumPaperSize = (tr: Transaction, dispatch: Dispatch, pageNum: number, paperSize: PaperSize): boolean => {
-    const { doc } = tr;
-
-    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-    if (!pageNodePos) {
-        return false;
-    }
-
-    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-    return setPageNodePosPaperSize(tr, dispatch, pagePos, pageNode, paperSize);
-};
-
-/**
  * Set the paper size for a page node at the specified position.
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
@@ -156,7 +135,13 @@ export const setPagePaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: n
  * @param paperSize - The paper size to set.
  * @returns {boolean} True if the paper size was set, false otherwise.
  */
-const setPageNodePosPaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: number, pageNode: PMNode, paperSize: PaperSize): boolean => {
+export const setPageNodePosPaperSize = (
+    tr: Transaction,
+    dispatch: Dispatch,
+    pagePos: number,
+    pageNode: PMNode,
+    paperSize: PaperSize
+): boolean => {
     if (!dispatch) return false;
 
     if (!isValidPaperSize(paperSize)) {

@@ -32,9 +32,9 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { isValidPaperSize, pageNodeHasPageSize, setPageNumPaperSize, setPagePaperSize } from "./utils/paper";
-import { getPageNodeByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
-import { PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
+import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
+import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 
 export interface PaginationOptions {
     /**
@@ -394,8 +394,18 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setPagePaperSize:
                 (pageNum: number, paperSize: PaperSize) =>
-                ({ tr, dispatch }) =>
-                    setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperSize(tr, dispatch, pagePos, pageNode, paperSize);
+                },
 
             checkPaperSizes:
                 () =>
