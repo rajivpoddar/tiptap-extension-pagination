@@ -5,7 +5,7 @@
  */
 
 import { Transaction } from "@tiptap/pm/state";
-import { Dispatch } from "@tiptap/core";
+import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DARK_PAPER_COLOUR, DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
@@ -14,7 +14,7 @@ import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
-import { getPageNodeByPageNum, isPageNode, isPageNumInRange, setPageNodeAttribute } from "./page";
+import { getLastPageNum, getPageNodeByPageNum, isPageNode, isPageNumInRange, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 import { isValidColour } from "./colour";
@@ -127,25 +127,29 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
 };
 
 /**
- * Get the paper colour of a particular page in the document.
- * @param doc - The current document
+ * Get the paper colour of a particular page in the document. If page num is out of range,
+ * will warn and use the last page colour. If page colour is not set, will use the default paper colour.
+ * @param editor - The current editor
  * @param pageNum - The page number to find the paper colour for
  * @returns {string} The paper colour of the specified page or the default paper colour.
  */
-export const getPageNumPaperColour = (doc: PMNode, pageNum: number): string => {
-    if (isPageNumInRange(doc, pageNum)) {
-        const pageNode = getPageNodeByPageNum(doc, pageNum);
-        if (!pageNode) {
-            console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
-            return LIGHT_PAPER_COLOUR;
-        }
+export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
+    const { state } = editor;
+    const { doc } = state;
 
-        if (pageNodeHasPaperColour(pageNode)) {
-            return getPageNodePaperColour(pageNode) || LIGHT_PAPER_COLOUR;
-        }
+    if (!isPageNumInRange(doc, pageNum)) {
+        console.warn("Page number:", pageNum, "is out of range for the document. Using last page colour.");
+        const lastPageNum = getLastPageNum(doc);
+        return getPageNumPaperColour(editor, lastPageNum);
     }
 
-    return LIGHT_PAPER_COLOUR;
+    const pageNode = getPageNodeByPageNum(doc, pageNum);
+    if (!pageNode) {
+        console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
+        return editor.commands.getDefaultPaperColour();
+    }
+
+    return getPageNodePaperColour(pageNode) || editor.commands.getDefaultPaperColour();
 };
 
 /**
