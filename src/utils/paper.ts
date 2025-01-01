@@ -17,6 +17,7 @@ import { getDeviceTheme } from "./theme";
 import { getPageNodeByPageNum, isPageNode, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
+import { isValidColour } from "./colour";
 
 /**
  * Check if the given paper size is valid.
@@ -171,6 +172,45 @@ export const setPageNodePosPaperSize = (
     }
 
     setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+
+    dispatch(tr);
+    return true;
+};
+
+/**
+ * Set the paper colour for a page node at the specified position.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the paper colour for.
+ * @param pageNode - The page node to set the paper colour for.
+ * @param paperColour - The paper colour to set.
+ * @returns {boolean} True if the paper colour was set, false otherwise.
+ */
+export const setPageNodePosPaperColour = (
+    tr: Transaction,
+    dispatch: Dispatch,
+    pagePos: number,
+    pageNode: PMNode,
+    paperColour: string
+): boolean => {
+    if (!dispatch) return false;
+
+    if (!isValidColour(paperColour)) {
+        console.warn(`Invalid paper colour: ${paperColour}`);
+        return false;
+    }
+
+    if (!isPageNode(pageNode)) {
+        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
+        return false;
+    }
+
+    if (getPageNodePaperColour(pageNode) === paperColour) {
+        // Paper colour is already set
+        return false;
+    }
+
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
 
     dispatch(tr);
     return true;
