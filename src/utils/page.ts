@@ -31,7 +31,7 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
  * @param node - The node to check.
  * @returns {boolean} True if the node is a page node, false otherwise.
  */
-const isPageNumInRange = (doc: PMNode, pageNum: number): boolean => {
+export const isPageNumInRange = (doc: PMNode, pageNum: number): boolean => {
     const numPagesInDoc = doc.childCount;
     return inRange(pageNum, 0, numPagesInDoc - 1);
 };

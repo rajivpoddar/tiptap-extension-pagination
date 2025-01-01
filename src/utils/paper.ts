@@ -14,7 +14,7 @@ import { PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getDeviceTheme } from "./theme";
-import { getPageNodeByPageNum, isPageNode, setPageNodeAttribute } from "./page";
+import { getPageNodeByPageNum, isPageNode, isPageNumInRange, setPageNodeAttribute } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 import { isValidColour } from "./colour";
@@ -111,10 +111,7 @@ const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
  * if the page could not be found.
  */
 export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<PaperSize> => {
-    const { children } = doc;
-    const numPagesInDoc = children.length;
-
-    if (pageNum < numPagesInDoc) {
+    if (isPageNumInRange(doc, pageNum)) {
         const pageNode = getPageNodeByPageNum(doc, pageNum);
         if (!pageNode) {
             console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
@@ -136,10 +133,7 @@ export const getPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<Pape
  * @returns {string} The paper colour of the specified page or the default paper colour.
  */
 export const getPageNumPaperColour = (doc: PMNode, pageNum: number): string => {
-    const { children } = doc;
-    const numPagesInDoc = children.length;
-
-    if (pageNum < numPagesInDoc) {
+    if (isPageNumInRange(doc, pageNum)) {
         const pageNode = getPageNodeByPageNum(doc, pageNum);
         if (!pageNode) {
             console.error("Unexpected! Doc child num:", pageNum, "is not a page node!");
