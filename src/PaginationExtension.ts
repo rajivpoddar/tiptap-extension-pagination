@@ -32,7 +32,7 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
+import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperColour, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paper";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
 import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 
@@ -440,7 +440,20 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 ({ editor }) =>
                     editor.commands.setDocumentPaperColour(this.options.defaultPaperColour),
 
-          
+            setPagePaperColour:
+                (pageNum: number, paperColour: string) =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperColour(tr, dispatch, pagePos, pageNode, paperColour);
+                },
         };
     },
 });
