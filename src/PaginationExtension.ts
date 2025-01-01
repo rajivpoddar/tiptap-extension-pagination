@@ -6,7 +6,7 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR } from "./constants/paper";
 import PaginationPlugin from "./Plugins/Pagination";
 import {
     isHighlighting,
@@ -32,14 +32,7 @@ import {
 } from "./utils/pagination";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { PaperSize } from "./types/paper";
-import {
-    getDefaultPaperColour,
-    pageNodeHasPageSize,
-    setDocumentPaperColour,
-    setDocumentPaperSize,
-    setPageNumPaperSize,
-    setPagePaperSize,
-} from "./utils/paper";
+import { pageNodeHasPageSize, setDocumentPaperColour, setDocumentPaperSize, setPageNumPaperSize, setPagePaperSize } from "./utils/paper";
 import { getPageNodeByPageNum, isPageNode } from "./utils/page";
 
 declare module "@tiptap/core" {
@@ -95,7 +88,7 @@ const PaginationExtension = Extension.create({
     addOptions() {
         return {
             defaultPaperSize: DEFAULT_PAPER_SIZE,
-            defaultPaperColour: getDefaultPaperColour(),
+            defaultPaperColour: LIGHT_PAPER_COLOUR,
         };
     },
 

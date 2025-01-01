@@ -14,8 +14,6 @@ export type { PaperSize } from "./types/paper";
 // === Constants ===
 export { DEFAULT_PAPER_SIZE, paperSizes, paperDimensions } from "./constants/paper";
 
-export { getDefaultPaperColour } from "./utils/paper";
-
 // === Nodes ===
 import PageNode from "./Nodes/Page";
 

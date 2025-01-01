@@ -7,7 +7,7 @@
 import { Transaction } from "@tiptap/pm/state";
 import { Dispatch } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
+import { DARK_PAPER_COLOUR, DEFAULT_PAPER_SIZE, LIGHT_PAPER_COLOUR, paperDimensions } from "../constants/paper";
 import { DARK_THEME } from "../constants/theme";
 import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperDimensions, PaperSize } from "../types/paper";
@@ -55,11 +55,11 @@ export const calculatePagePixelDimensions = (paperSize: PaperSize): PagePixelDim
 };
 
 /**
- * Get the default paper colour based on the device theme
- * @returns {string} The default paper colour
+ * Get the paper colour based on the device theme.
+ * @returns {string} The paper colour based on the device theme.
  */
-export const getDefaultPaperColour = (): string => {
-    return getDeviceTheme() === DARK_THEME ? "#222" : "#fff";
+export const getDeviceThemePaperColour = (): string => {
+    return getDeviceTheme() === DARK_THEME ? DARK_PAPER_COLOUR : LIGHT_PAPER_COLOUR;
 };
 
 /**
