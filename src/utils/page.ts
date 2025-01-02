@@ -140,7 +140,7 @@ export const getPageNodePosByPageNum = (doc: PMNode, pageNum: number): Nullable<
 export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): void => {
     const { doc } = tr;
 
-    doc.descendants((node, pos) => {
+    doc.forEach((node, pos) => {
         setPageNodeAttribute(tr, pos, node, attr, value);
     });
 };

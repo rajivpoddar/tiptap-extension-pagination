@@ -444,7 +444,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 ({ tr, dispatch }) => {
                     const { doc } = tr;
                     const paperSizeUpdates: boolean[] = [];
-                    doc.descendants((node, pos) => {
+                    doc.forEach((node, pos) => {
                         if (isPageNode(node)) {
                             if (!pageNodeHasPageSize(node)) {
                                 paperSizeUpdates.push(setPagePaperSize(tr, dispatch, pos, this.options.defaultPaperSize));
