@@ -39,6 +39,7 @@ export { getPageNumber } from "./utils/pagination";
 export { getPageNumPaperSize } from "./utils/paperSize";
 export { getPageNumPaperColour } from "./utils/paperColour";
 export { getPageNumPaperOrientation } from "./utils/paperOrientation";
+export { getPageNumPaperMargins } from "./utils/paperMargins";
 
 // === Exports ===
 export { PageNode };
