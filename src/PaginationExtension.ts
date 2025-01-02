@@ -6,10 +6,10 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { PaperSize } from "./types/paper";
+import { Orientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -60,9 +60,18 @@ export interface PaginationOptions {
      * Whether to use the device theme to set the paper colour.
      * If enabled, the default paper colour will be ignored.
      * @default false
-     * @example true
+     * @example true | false
      */
     useDeviceThemeForPaperColour: boolean;
+
+    /**
+     * The default paper orientation for the document. Note this is only the default
+     * so you can have settings in your editor which change the paper orientation.
+     * This is only the setting for new documents.
+     * @default "portrait"
+     * @example "portrait" | "landscape"
+     */
+    defaultPaperOrientation: Orientation;
 }
 
 declare module "@tiptap/core" {
@@ -130,6 +139,13 @@ declare module "@tiptap/core" {
              * @example editor.commands.setPagePaperColour(0, "#fff")
              */
             setPagePaperColour: (pageNum: number, paperColour: string) => ReturnType;
+
+            /**
+             * Get the default paper orientation
+             * @example editor.commands.getDefaultPaperOrientation()
+             * @returns The default paper orientation
+             */
+            getDefaultPaperOrientation: () => Orientation;
         };
     }
 }
@@ -142,6 +158,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             defaultPaperSize: DEFAULT_PAPER_SIZE,
             defaultPaperColour: DEFAULT_PAPER_COLOUR,
             useDeviceThemeForPaperColour: false,
+            defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
         };
     },
 
@@ -491,6 +508,10 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
                     return setPageNodePosPaperColour(tr, dispatch, pagePos, pageNode, paperColour);
                 },
+
+            getDefaultPaperOrientation: () => {
+                return this.options.defaultPaperOrientation;
+            },
         };
     },
 });
