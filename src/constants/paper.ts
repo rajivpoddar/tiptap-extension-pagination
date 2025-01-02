@@ -102,4 +102,6 @@ export const LIGHT_PAPER_COLOUR: string = "#fff";
 export const DARK_PAPER_COLOUR: string = "#222";
 export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
 
+export const paperOrientations: Orientation[] = ["portrait", "landscape"];
+
 export const DEFAULT_PAPER_ORIENTATION: Orientation = "portrait";

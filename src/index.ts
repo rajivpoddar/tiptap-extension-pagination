@@ -12,7 +12,14 @@ import PaginationExtension from "./PaginationExtension";
 export type { PaperSize } from "./types/paper";
 
 // === Constants ===
-export { DEFAULT_PAPER_SIZE, paperSizes, paperDimensions, LIGHT_PAPER_COLOUR, DARK_PAPER_COLOUR } from "./constants/paper";
+export {
+    DEFAULT_PAPER_SIZE,
+    paperSizes,
+    paperDimensions,
+    LIGHT_PAPER_COLOUR,
+    DARK_PAPER_COLOUR,
+    paperOrientations,
+} from "./constants/paper";
 
 // === Nodes ===
 import PageNode from "./Nodes/Page";
