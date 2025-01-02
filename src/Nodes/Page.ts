@@ -17,6 +17,7 @@ import {
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
+import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -72,7 +73,8 @@ const PageNode = Node.create({
             dom.classList.add(PAGE_NODE_NAME);
 
             const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
-            const { width, height } = getPaperDimensions(paperSize);
+            const paperOrientation = getPageNodePaperOrientation(node) ?? DEFAULT_PAPER_ORIENTATION;
+            const { width, height } = getPaperDimensions(paperSize, paperOrientation);
             dom.style.width = `${width}mm`;
             dom.style.height = `${height}mm`;
             dom.style.padding = `${DEFAULT_PAPER_PADDING}mm`;

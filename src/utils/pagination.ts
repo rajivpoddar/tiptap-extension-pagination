@@ -25,6 +25,7 @@ import { inRange } from "./math";
 import { calculatePagePixelDimensions, getPageNumPaperSizeFromState } from "./paperSize";
 import { getPageNumPaperColourFromState } from "./paperColour";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
+import { getPageNumPaperOrientationFromState } from "./paperOrientation";
 
 /**
  * Check if the given node is a paragraph node.
@@ -657,8 +658,8 @@ export const buildNewDocument = (
     const pages: PMNode[] = [];
     let paperSize = getPageNumPaperSizeFromState(state, pageNum);
     let paperColour = getPageNumPaperColourFromState(state, pageNum);
-    let currentPageContent: PMNode[] = [];
-    let currentHeight = 0;
+    let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+    let { pageHeight } = calculatePagePixelDimensions(paperSize, paperOrientation);
 
     const getPageNodeAttributes = () => ({ paperSize, paperColour });
     const addPage = (currentPageContent: PMNode[]): PMNode => {
@@ -668,7 +669,8 @@ export const buildNewDocument = (
         return pageNode;
     };
 
-    const { pageHeight } = calculatePagePixelDimensions(paperSize);
+    let currentPageContent: PMNode[] = [];
+    let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
     let cumulativeNewDocPos = 0;
@@ -686,6 +688,8 @@ export const buildNewDocument = (
             if (isPageNumInRange(doc, pageNum)) {
                 paperSize = getPageNumPaperSizeFromState(state, pageNum);
                 paperColour = getPageNumPaperColourFromState(state, pageNum);
+                paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+                ({ pageHeight } = calculatePagePixelDimensions(paperSize, paperOrientation));
             }
         }
 
