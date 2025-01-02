@@ -20,7 +20,8 @@ import PageNode from "./Nodes/Page";
 // === Utils ===
 export { isPageNode } from "./utils/page";
 export { getPageNumber } from "./utils/pagination";
-export { getPageNumPaperSize, getPageNumPaperColour } from "./utils/paper";
+export { getPageNumPaperSize } from "./utils/paperSize";
+export { getPageNumPaperColour } from "./utils/paperColour";
 
 // === Exports ===
 export { PageNode };

@@ -22,7 +22,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { calculatePagePixelDimensions, getPageNumPaperColourFromState, getPageNumPaperSizeFromState } from "./paper";
+import { calculatePagePixelDimensions, getPageNumPaperSizeFromState } from "./paperSize";
+import { getPageNumPaperColourFromState } from "./paperColour";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
 
 /**

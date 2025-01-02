@@ -34,14 +34,8 @@ import {
 } from "./utils/selection";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
 import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
-import {
-    getDeviceThemePaperColour,
-    isValidPaperSize,
-    pageNodeHasPageSize,
-    setPageNodePosPaperColour,
-    setPageNodePosPaperSize,
-    setPagePaperSize,
-} from "./utils/paper";
+import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paperSize";
+import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/paperColour";
 
 export interface PaginationOptions {
     /**

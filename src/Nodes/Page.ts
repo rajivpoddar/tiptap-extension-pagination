@@ -9,7 +9,8 @@ import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_PADDING, DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
-import { getPageNodePaperColour, getPageNodePaperSize, getPaperDimensions } from "../utils/paper";
+import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
+import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
 
 const baseElement = "div" as const;
