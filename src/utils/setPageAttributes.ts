@@ -13,14 +13,17 @@ import { isPageNode } from "./page";
  * @param tr - The transaction to apply the change to.
  * @param attr - The attribute to set.
  * @param value - The value to set the attribute to.
- * @returns {void}
+ * @returns {boolean} True if any attribute was changed, false otherwise.
  */
-export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): void => {
+export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): boolean => {
     const { doc } = tr;
+    const transactions: boolean[] = [];
 
     doc.forEach((node, pos) => {
-        setPageNodeAttribute(tr, pos, node, attr, value);
+        transactions.push(setPageNodeAttribute(tr, pos, node, attr, value));
     });
+
+    return transactions.some((changed) => changed);
 };
 
 /**
@@ -30,15 +33,18 @@ export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any)
  * @param node - The node to set the attribute for.
  * @param attr - The attribute to set.
  * @param value - The value to set the attribute to.
- * @returns {void}
+ * @returns {boolean} True if the attribute was changed, false otherwise.
  */
-export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): void => {
+export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): boolean => {
     if (!isPageNode(node)) {
-        return;
+        return false;
     }
 
     const nodeAttr = node.attrs[attr];
-    if (nodeAttr !== value) {
+    const isDifferent = nodeAttr !== value;
+    if (isDifferent) {
         tr.setNodeAttribute(pos, attr, value);
     }
+
+    return isDifferent;
 };
