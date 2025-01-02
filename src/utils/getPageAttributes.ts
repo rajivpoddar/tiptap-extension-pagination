@@ -5,10 +5,11 @@
  */
 
 import { EditorState } from "@tiptap/pm/state";
-import { PageNodeAttributes } from "../types/page";
-import { getPageNumPaperSizeFromState } from "./paperSize";
-import { getPageNumPaperColourFromState } from "./paperColour";
-import { getPageNumPaperOrientationFromState } from "./paperOrientation";
+import { PageNodeAttributes, PageContentPixelDimensions } from "../types/page";
+import { calculatePageContentPixelDimensions, getPageNumPaperSize } from "./paperSize";
+import { getPageNumPaperColour } from "./paperColour";
+import { getPageNumPaperOrientation } from "./paperOrientation";
+import { getPageNumPaperMargins } from "./paperMargins";
 
 /**
  * Retrieves page attributes from the editor state.
@@ -16,10 +17,25 @@ import { getPageNumPaperOrientationFromState } from "./paperOrientation";
  * @param pageNum - The page number to retrieve the attributes for.
  * @returns {PageNodeAttributes} The attributes of the specified page.
  */
-export const getPageAttributesFromState = (state: EditorState, pageNum: number): PageNodeAttributes => {
-    let paperSize = getPageNumPaperSizeFromState(state, pageNum);
-    let paperColour = getPageNumPaperColourFromState(state, pageNum);
-    let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+export const getPageNodeAttributes = (state: EditorState, pageNum: number): PageNodeAttributes => {
+    const paperSize = getPageNumPaperSize(state, pageNum);
+    const paperColour = getPageNumPaperColour(state, pageNum);
+    const paperOrientation = getPageNumPaperOrientation(state, pageNum);
+    const pageMargins = getPageNumPaperMargins(state, pageNum);
 
-    return { paperSize, paperColour, paperOrientation };
+    return { paperSize, paperColour, paperOrientation, pageMargins };
+};
+
+/**
+ * Retrieves the page node attributes and calculates the pixel dimensions of the page.
+ * @param pageNodeAttributes - The attributes of the page node.
+ * @returns { PageNodeAttributes, PagePixelDimensions } The attributes of the page node and the pixel dimensions of the page.
+ */
+export const getCalculatedPageNodeAttributes = (
+    state: EditorState,
+    pageNum: number
+): { pageNodeAttributes: PageNodeAttributes; pagePixelDimensions: PageContentPixelDimensions } => {
+    const pageNodeAttributes = getPageNodeAttributes(state, pageNum);
+    const pagePixelDimensions = calculatePageContentPixelDimensions(pageNodeAttributes);
+    return { pageNodeAttributes, pagePixelDimensions };
 };

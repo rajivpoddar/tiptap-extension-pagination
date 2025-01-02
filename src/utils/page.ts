@@ -10,6 +10,7 @@ import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePos, NodePosArray } from "../types/node";
 import { Nullable } from "../types/record";
 import { inRange } from "./math";
+import { Editor } from "@tiptap/core";
 
 /**
  * Check if the given node is a page node.
@@ -147,18 +148,20 @@ const handleOutOfRangePageNum = <T>(state: EditorState, pageNum: number, fallbac
 /**
  * Retrieves a specific attribute of a given page number.
  * Falls back to defaults if the page number is invalid or the attribute is missing.
- * @param state - The current editor state.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the attribute for.
  * @param getDefault - A function to get the default value for the attribute.
  * @param getNodeAttribute - A function to extract the attribute from the page node.
  * @returns {T} The attribute of the specified page or default.
  */
 export const getPageAttribute = <T>(
-    state: EditorState,
+    context: Editor | EditorState,
     pageNum: number,
     getDefault: () => T,
     getNodeAttribute: (node: PMNode) => Nullable<T>
 ): T => {
+    const state = context instanceof Editor ? context.state : context;
+
     if (!doesDocHavePageNodes(state)) {
         return getDefault();
     }

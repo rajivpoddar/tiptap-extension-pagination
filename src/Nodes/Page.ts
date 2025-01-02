@@ -7,17 +7,13 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_PADDING, DEFAULT_PAPER_SIZE } from "../constants/paper";
-import {
-    PAGE_NODE_NAME,
-    PAGE_NODE_PAPER_COLOUR_ATTR,
-    PAGE_NODE_PAPER_ORIENTATION_ATTR,
-    PAGE_NODE_PAPER_SIZE_ATTR,
-} from "../constants/page";
+import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "../constants/paper";
+import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
 import { getPageNodePaperOrientation } from "../utils/paperOrientation";
+import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -31,14 +27,17 @@ const PageNode = Node.create({
 
     addAttributes() {
         return {
-            [PAGE_NODE_PAPER_SIZE_ATTR]: {
+            [PAGE_NODE_ATTR_KEYS.paperSize]: {
                 default: DEFAULT_PAPER_SIZE,
             },
-            [PAGE_NODE_PAPER_COLOUR_ATTR]: {
+            [PAGE_NODE_ATTR_KEYS.paperColour]: {
                 default: DEFAULT_PAPER_COLOUR,
             },
-            [PAGE_NODE_PAPER_ORIENTATION_ATTR]: {
+            [PAGE_NODE_ATTR_KEYS.paperOrientation]: {
                 default: DEFAULT_PAPER_ORIENTATION,
+            },
+            [PAGE_NODE_ATTR_KEYS.pageMargins]: {
+                default: DEFAULT_MARGIN_CONFIG,
             },
         };
     },
@@ -74,10 +73,12 @@ const PageNode = Node.create({
 
             const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
             const paperOrientation = getPageNodePaperOrientation(node) ?? DEFAULT_PAPER_ORIENTATION;
+            const paperMargins = getPageNodePaperMargins(node) ?? DEFAULT_MARGIN_CONFIG;
             const { width, height } = getPaperDimensions(paperSize, paperOrientation);
+
             dom.style.width = `${width}mm`;
             dom.style.height = `${height}mm`;
-            dom.style.padding = `${DEFAULT_PAPER_PADDING}mm`;
+            dom.style.padding = calculatePagePadding(paperMargins);
 
             dom.style.border = "1px solid #ccc";
 

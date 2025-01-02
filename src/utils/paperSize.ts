@@ -8,14 +8,14 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
-import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
-import { PagePixelDimensions } from "../types/page";
+import { PageNodeAttributes, PageContentPixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 import { setPageNodeAttribute } from "./setPageAttributes";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 
 /**
  * Check if the given paper size is valid.
@@ -55,17 +55,19 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
 };
 
 /**
- * Calculates the pixel width and height of a given paper size.
- * @param paperSize - The paper size to calculate the dimensions for.
- * @param orientation - The orientation of the paper.
- * @returns {PagePixelDimensions} The height and width of the page in pixels.
+ * Calculates the pixel width and height of a given paper size. Excludes page
+ * margins as we are only calculating the area where content can be added.
+ * @param pageNodeAttributes - The attributes of the page node.
+ * @returns {PageContentPixelDimensions} The height and width of the page in pixels.
  */
-export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: PaperOrientation): PagePixelDimensions => {
-    const { width, height } = getPaperDimensions(paperSize, orientation);
-    const pageHeight = mmToPixels(height);
-    const pageWidth = mmToPixels(width);
+export const calculatePageContentPixelDimensions = (pageNodeAttributes: PageNodeAttributes): PageContentPixelDimensions => {
+    const { paperSize, paperOrientation, pageMargins } = pageNodeAttributes;
+    const { top, right, bottom, left } = pageMargins;
+    const { width, height } = getPaperDimensions(paperSize, paperOrientation);
+    const pageHeight = mmToPixels(height - (top + bottom));
+    const pageWidth = mmToPixels(width - (left + right));
 
-    return { pageHeight, pageWidth };
+    return { pageContentHeight: pageHeight, pageContentWidth: pageWidth };
 };
 
 /**
@@ -74,7 +76,7 @@ export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: 
  * @returns {boolean} True if the page node has a paper size attribute, false otherwise.
  */
 export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
-    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_SIZE_ATTR);
+    return nodeHasAttribute(pageNode, PAGE_NODE_ATTR_KEYS.paperSize);
 };
 
 /**
@@ -85,30 +87,19 @@ export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
  */
 export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_SIZE_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperSize];
 };
 
 /**
  * Retrieves the paper size of a specific page using the editor instance.
  * Falls back to the default paper size if the page number is invalid.
- * @param editor - The current editor instance.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper size for.
  * @returns {PaperSize} The paper size of the specified page or default.
  */
-export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize => {
-    const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, commands.getDefaultPaperSize, getPageNodePaperSize);
-};
-
-/**
- * Retrieves the paper size of a specific page using only the editor state.
- * Falls back to the default paper size if the page number is invalid.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the paper size for.
- * @returns {PaperSize} The paper size of the specified page or default.
- */
-export const getPageNumPaperSizeFromState = (state: EditorState, pageNum: number): PaperSize => {
-    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_SIZE, getPageNodePaperSize);
+export const getPageNumPaperSize = (context: Editor | EditorState, pageNum: number): PaperSize => {
+    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperSize : () => DEFAULT_PAPER_SIZE;
+    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperSize);
 };
 
 /**
@@ -162,7 +153,7 @@ export const setPageNodePosPaperSize = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperSize, paperSize);
 
     dispatch(tr);
     return true;

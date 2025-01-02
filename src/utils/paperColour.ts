@@ -8,7 +8,7 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_COLOUR, DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../constants/paper";
-import { PAGE_NODE_PAPER_COLOUR_ATTR } from "../constants/page";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { DARK_THEME } from "../constants/theme";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
@@ -31,7 +31,7 @@ export const getDeviceThemePaperColour = (): string => {
  * @returns {boolean} True if the page node has a paper colour attribute, false otherwise.
  */
 export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
-    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_COLOUR_ATTR);
+    return nodeHasAttribute(pageNode, PAGE_NODE_ATTR_KEYS.paperColour);
 };
 
 /**
@@ -42,30 +42,19 @@ export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
  */
 export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_COLOUR_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperColour];
 };
 
 /**
  * Retrieves the paper color of a specific page using the editor instance.
  * Falls back to the default paper color if the page number is invalid.
- * @param editor - The current editor instance.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper color for.
  * @returns {string} The paper color of the specified page or default.
  */
-export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
-    const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, commands.getDefaultPaperColour, getPageNodePaperColour);
-};
-
-/**
- * Retrieves the paper color of a specific page using only the editor state.
- * Falls back to the default paper color if the page number is invalid.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the paper color for.
- * @returns {string} The paper color of the specified page or default.
- */
-export const getPageNumPaperColourFromState = (state: EditorState, pageNum: number): string => {
-    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_COLOUR, getPageNodePaperColour);
+export const getPageNumPaperColour = (context: Editor | EditorState, pageNum: number): string => {
+    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperColour : () => DEFAULT_PAPER_COLOUR;
+    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperColour);
 };
 
 /**
@@ -87,7 +76,7 @@ export const setPageNodePosPaperColour = (
     if (!dispatch) return false;
 
     if (!isValidColour(paperColour)) {
-        console.warn(`Invalid paper colour: ${paperColour}`);
+        console.warn("Invalid paper colour:", paperColour);
         return false;
     }
 
@@ -101,7 +90,7 @@ export const setPageNodePosPaperColour = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperColour, paperColour);
 
     dispatch(tr);
     return true;

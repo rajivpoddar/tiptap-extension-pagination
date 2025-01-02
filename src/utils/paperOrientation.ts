@@ -7,7 +7,7 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { PAGE_NODE_PAPER_ORIENTATION_ATTR } from "../constants/page";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
 import { Nullable } from "../types/record";
 import { PaperOrientation } from "../types/paper";
@@ -22,30 +22,19 @@ import { setPageNodeAttribute } from "./setPageAttributes";
  */
 export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<PaperOrientation> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_ORIENTATION_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperOrientation];
 };
 
 /**
  * Retrieves the paper orientation of a specific page using the editor instance.
  * Falls back to the default paper orientation if the page number is invalid.
- * @param editor - The current editor instance.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper orientation for.
  * @returns {PaperOrientation} The paper orientation of the specified page or default.
  */
-export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): PaperOrientation => {
-    const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, commands.getDefaultPaperOrientation, getPageNodePaperOrientation);
-};
-
-/**
- * Retrieves the paper orientation of a specific page using only the editor state.
- * Falls back to the default paper orientation if the page number is invalid.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the paper orientation for.
- * @returns {string} The paper orientation of the specified page or default.
- */
-export const getPageNumPaperOrientationFromState = (state: EditorState, pageNum: number): PaperOrientation => {
-    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_ORIENTATION, getPageNodePaperOrientation);
+export const getPageNumPaperOrientation = (context: Editor | EditorState, pageNum: number): PaperOrientation => {
+    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperOrientation : () => DEFAULT_PAPER_ORIENTATION;
+    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperOrientation);
 };
 
 /**
@@ -76,7 +65,7 @@ export const setPageNodePosPaperOrientation = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_ORIENTATION_ATTR, paperOrientation);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperOrientation, paperOrientation);
 
     dispatch(tr);
     return true;

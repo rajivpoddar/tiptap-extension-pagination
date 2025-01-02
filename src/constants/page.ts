@@ -4,8 +4,11 @@
  * @description Constants for page nodes in the editor.
  */
 
-export const PAGE_NODE_PAPER_SIZE_ATTR = "paperSize" as const;
-export const PAGE_NODE_PAPER_COLOUR_ATTR = "paperColour" as const;
-export const PAGE_NODE_PAPER_ORIENTATION_ATTR = "paperOrientation" as const;
+export const PAGE_NODE_ATTR_KEYS = {
+    paperSize: "paperSize",
+    paperColour: "paperColour",
+    paperOrientation: "paperOrientation",
+    pageMargins: "pageMargins",
+} as const;
 
 export const PAGE_NODE_NAME = "page" as const;
