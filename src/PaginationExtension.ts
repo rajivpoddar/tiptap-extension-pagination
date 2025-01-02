@@ -635,7 +635,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                         return false;
                     }
 
-                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.paperMargins, paperMargins);
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.pageMargins, paperMargins);
 
                     dispatch(tr);
                     return true;

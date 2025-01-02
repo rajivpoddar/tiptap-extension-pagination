@@ -36,7 +36,7 @@ const PageNode = Node.create({
             [PAGE_NODE_ATTR_KEYS.paperOrientation]: {
                 default: DEFAULT_PAPER_ORIENTATION,
             },
-            [PAGE_NODE_ATTR_KEYS.paperMargins]: {
+            [PAGE_NODE_ATTR_KEYS.pageMargins]: {
                 default: DEFAULT_MARGIN_CONFIG,
             },
         };

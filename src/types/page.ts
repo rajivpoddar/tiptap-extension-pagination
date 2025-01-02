@@ -19,5 +19,5 @@ export type PageNodeAttributes = {
     paperSize: PaperSize;
     paperColour: string;
     paperOrientation: PaperOrientation;
-    margins: MarginConfig;
+    pageMargins: MarginConfig;
 };

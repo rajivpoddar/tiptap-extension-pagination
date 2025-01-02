@@ -18,12 +18,12 @@ import { getPageNumPaperMargins } from "./paperMargins";
  * @returns {PageNodeAttributes} The attributes of the specified page.
  */
 export const getPageNodeAttributes = (state: EditorState, pageNum: number): PageNodeAttributes => {
-    let paperSize = getPageNumPaperSize(state, pageNum);
-    let paperColour = getPageNumPaperColour(state, pageNum);
-    let paperOrientation = getPageNumPaperOrientation(state, pageNum);
-    let margins = getPageNumPaperMargins(state, pageNum);
+    const paperSize = getPageNumPaperSize(state, pageNum);
+    const paperColour = getPageNumPaperColour(state, pageNum);
+    const paperOrientation = getPageNumPaperOrientation(state, pageNum);
+    const pageMargins = getPageNumPaperMargins(state, pageNum);
 
-    return { paperSize, paperColour, paperOrientation, margins };
+    return { paperSize, paperColour, paperOrientation, pageMargins };
 };
 
 /**

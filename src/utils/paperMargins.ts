@@ -41,7 +41,7 @@ export const isValidPaperMargins = (paperMargins: MarginConfig): boolean => {
  */
 export const getPageNodePaperMargins = (pageNode: PMNode): Nullable<MarginConfig> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_ATTR_KEYS.paperMargins];
+    return attrs[PAGE_NODE_ATTR_KEYS.pageMargins];
 };
 
 /**
@@ -104,7 +104,7 @@ export const setPageNodePosPaperMargins = (
         return false;
     }
 
-    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperMargins, paperMargins);
+    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageMargins, paperMargins);
     if (success) {
         dispatch(tr);
     }
@@ -149,5 +149,5 @@ export const updatePaperMargin = (tr: Transaction, pagePos: number, pageNode: PM
         }
     }
 
-    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperMargins, updatedMargins);
+    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageMargins, updatedMargins);
 };

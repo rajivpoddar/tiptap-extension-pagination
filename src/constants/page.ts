@@ -8,7 +8,7 @@ export const PAGE_NODE_ATTR_KEYS = {
     paperSize: "paperSize",
     paperColour: "paperColour",
     paperOrientation: "paperOrientation",
-    paperMargins: "paperMargins",
+    pageMargins: "pageMargins",
 } as const;
 
 export const PAGE_NODE_NAME = "page" as const;
