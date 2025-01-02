@@ -57,12 +57,12 @@ const PageNode = Node.create({
 
     addNodeView() {
         return (props: NodeViewRendererProps) => {
-            const { node, editor } = props;
+            const { node } = props;
             const dom = document.createElement(baseElement);
             dom.setAttribute(dataPageAttribute, String(true));
             dom.classList.add(PAGE_NODE_NAME);
 
-            const paperSize = getPageNodePaperSize(node) ?? editor.commands.getDefaultPaperSize();
+            const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
             const { width, height } = getPaperDimensions(paperSize);
             dom.style.width = `${width}mm`;
             dom.style.height = `${height}mm`;
@@ -70,7 +70,7 @@ const PageNode = Node.create({
 
             dom.style.border = "1px solid #ccc";
 
-            const paperColour = getPageNodePaperColour(node) ?? editor.commands.getDefaultPaperColour();
+            const paperColour = getPageNodePaperColour(node) ?? DEFAULT_PAPER_COLOUR;
             dom.style.background = paperColour;
 
             dom.style.overflow = "hidden";
