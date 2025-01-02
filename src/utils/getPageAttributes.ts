@@ -9,6 +9,7 @@ import { PageNodeAttributes } from "../types/page";
 import { getPageNumPaperSize } from "./paperSize";
 import { getPageNumPaperColour } from "./paperColour";
 import { getPageNumPaperOrientation } from "./paperOrientation";
+import { getPageNumPaperMargins } from "./paperMargins";
 
 /**
  * Retrieves page attributes from the editor state.
@@ -20,6 +21,7 @@ export const getPageNodeAttributes = (state: EditorState, pageNum: number): Page
     let paperSize = getPageNumPaperSize(state, pageNum);
     let paperColour = getPageNumPaperColour(state, pageNum);
     let paperOrientation = getPageNumPaperOrientation(state, pageNum);
+    let margins = getPageNumPaperMargins(state, pageNum);
 
-    return { paperSize, paperColour, paperOrientation };
+    return { paperSize, paperColour, paperOrientation, margins };
 };
