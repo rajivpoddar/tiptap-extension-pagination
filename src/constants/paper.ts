@@ -13,6 +13,7 @@ import {
     PaperSize,
     PaperOrientation,
     PaperOrientationSelect,
+    MarginConfig,
 } from "../types/paper";
 import { titleCase } from "../utils/string";
 
@@ -125,3 +126,13 @@ export const paperOrientationsSelect: PaperOrientationSelect[] = paperOrientatio
 }));
 
 export const DEFAULT_PAPER_ORIENTATION: PaperOrientation = "portrait";
+
+/**
+ * Standard margins are 1 inch or 25.4mm on all sides.
+ */
+export const DEFAULT_MARGIN_CONFIG: MarginConfig = {
+    top: 25.4,
+    right: 25.4,
+    bottom: 25.4,
+    left: 25.4,
+};

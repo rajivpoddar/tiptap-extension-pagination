@@ -9,7 +9,7 @@ import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { PaperOrientation, PaperSize } from "./types/paper";
+import { MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -74,6 +74,15 @@ export interface PaginationOptions {
      * @example "portrait" | "landscape"
      */
     defaultPaperOrientation: PaperOrientation;
+
+    /**
+     * The default margin configuration for the document. Note this is only the default
+     * so you can have settings in your editor which change the margin configuration.
+     * This is only the setting for new documents.
+     * @default { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 }
+     * @example { top: 10, right: 10, bottom: 10, left: 10 }
+     */
+    defaultMarginConfig: MarginConfig;
 }
 
 declare module "@tiptap/core" {
@@ -169,6 +178,13 @@ declare module "@tiptap/core" {
              * @example editor.commands.setPagePaperOrientation(0, "portrait") | editor.commands.setPagePaperOrientation(0, "landscape")
              */
             setPagePaperOrientation: (pageNum: number, paperOrientation: PaperOrientation) => ReturnType;
+
+            /**
+             * Get the default paper margins
+             * @example editor.commands.getDefaultPaperMargins()
+             * @returns The default paper margins
+             */
+            getDefaultPaperMargins: () => MarginConfig;
         };
     }
 }
@@ -182,6 +198,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             defaultPaperColour: DEFAULT_PAPER_COLOUR,
             useDeviceThemeForPaperColour: false,
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
+            defaultMarginConfig: DEFAULT_MARGIN_CONFIG,
         };
     },
 
@@ -566,6 +583,10 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
                     return setPageNodePosPaperOrientation(tr, dispatch, pagePos, pageNode, paperOrientation);
                 },
+
+            getDefaultPaperMargins: () => {
+                return this.options.defaultMarginConfig;
+            },
         };
     },
 });

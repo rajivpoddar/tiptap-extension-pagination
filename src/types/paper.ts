@@ -76,6 +76,9 @@ export type PaperSize = APaperSize | BPaperSize | CPaperSize | USPaperSize;
 export type PaperOrientation = "portrait" | "landscape";
 export type PaperOrientationSelect = { orientation: PaperOrientation; label: string };
 
+/**
+ * Margins on the page in millimeters.
+ */
 export type MarginConfig = {
     top: number;
     right: number;
