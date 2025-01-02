@@ -26,6 +26,7 @@ export {
     DARK_PAPER_COLOUR,
     DEFAULT_PAPER_COLOUR,
     DEFAULT_MARGIN_CONFIG,
+    commonMarginConfigs,
 } from "./constants/paper";
 
 // === Nodes ===

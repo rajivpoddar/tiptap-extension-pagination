@@ -137,4 +137,14 @@ export const DEFAULT_MARGIN_CONFIG: MarginConfig = {
     left: 25.4,
 };
 
+/**
+ * Common margin configurations for different margin sizes.
+ */
+export const commonMarginConfigs: Record<string, MarginConfig> = {
+    normal: { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 },
+    narrow: { top: 12.7, right: 12.7, bottom: 12.7, left: 12.7 },
+    moderate: { top: 25.4, right: 19.1, bottom: 25.4, left: 19.1 },
+    wide: { top: 25.4, right: 50.8, bottom: 25.4, left: 50.8 },
+};
+
 export const marginSides: Margin[] = ["top", "right", "bottom", "left"];
