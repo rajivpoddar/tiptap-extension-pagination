@@ -7,12 +7,22 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG } from "../constants/paper";
+import { DEFAULT_MARGIN_CONFIG, marginSides } from "../constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { MarginConfig } from "../types/paper";
+import { Margin, MarginConfig, MarginSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
 import { setPageNodeAttribute } from "./setPageAttributes";
+
+/**
+ * Checks if a (single) margin is valid.
+ * Margins must be non-negative and finite to be considered valid.
+ * @param margin - The margin to check.
+ * @returns {boolean} True if the margin is valid, false otherwise.
+ */
+export const isMarginValid = (margin: number): boolean => {
+    return margin >= 0 && isFinite(margin);
+};
 
 /**
  * Checks if the paper margins are valid.
@@ -21,7 +31,7 @@ import { setPageNodeAttribute } from "./setPageAttributes";
  * @returns {boolean} True if the paper margins are valid, false otherwise.
  */
 export const isValidPaperMargins = (paperMargins: MarginConfig): boolean => {
-    return Object.values(paperMargins).every((margin) => margin >= 0 && isFinite(margin));
+    return Object.values(paperMargins).every(isMarginValid);
 };
 
 /**
@@ -78,8 +88,50 @@ export const setPageNodePosPaperMargins = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperMargins, paperMargins);
+    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperMargins, paperMargins);
+    if (success) {
+        dispatch(tr);
+    }
 
-    dispatch(tr);
-    return true;
+    return success;
+};
+
+/**
+ * Updates the margin on the given page. Does not dispatch the transaction.
+ * @param tr - The transaction to apply the change to.
+ * @param pagePos - The position of the page node to update the margin for.
+ * @param pageNode - The page node to update the margin for.
+ * @param margin - The margin to update.
+ * @param value - The new value of the margin.
+ * @returns {boolean} True if the margin was updated, false otherwise.
+ */
+export const updatePaperMargin = (tr: Transaction, pagePos: number, pageNode: PMNode, margin: Margin, value: number): boolean => {
+    if (!isPageNode(pageNode)) {
+        return false;
+    }
+
+    const existingMargins = getPageNodePaperMargins(pageNode);
+    let updatedMargins: MarginConfig = { ...DEFAULT_MARGIN_CONFIG };
+    if (existingMargins && isValidPaperMargins(existingMargins)) {
+        updatedMargins = { ...existingMargins };
+    } else {
+        if (marginSides.includes(margin)) {
+            updatedMargins[margin as MarginSide] = value;
+        } else {
+            switch (margin) {
+                case "x":
+                    updatedMargins.left = value;
+                    updatedMargins.right = value;
+                    break;
+                case "y":
+                    updatedMargins.top = value;
+                    updatedMargins.bottom = value;
+                    break;
+                default:
+                    console.error("Unhanded margin side", margin);
+            }
+        }
+    }
+
+    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperMargins, updatedMargins);
 };

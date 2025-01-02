@@ -14,6 +14,7 @@ import {
     PaperOrientation,
     PaperOrientationSelect,
     MarginConfig,
+    Margin,
 } from "../types/paper";
 import { titleCase } from "../utils/string";
 
@@ -136,3 +137,5 @@ export const DEFAULT_MARGIN_CONFIG: MarginConfig = {
     bottom: 25.4,
     left: 25.4,
 };
+
+export const marginSides: Margin[] = ["top", "right", "bottom", "left"];

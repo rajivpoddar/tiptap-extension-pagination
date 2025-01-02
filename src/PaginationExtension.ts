@@ -9,7 +9,7 @@ import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
+import { Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -38,6 +38,7 @@ import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPage
 import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/paperColour";
 import { setPageNodesAttribute } from "./utils/setPageAttributes";
 import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
+import { isMarginValid, isValidPaperMargins, setPageNodePosPaperMargins, updatePaperMargin } from "./utils/paperMargins";
 
 export interface PaginationOptions {
     /**
@@ -185,6 +186,42 @@ declare module "@tiptap/core" {
              * @returns The default paper margins
              */
             getDefaultPaperMargins: () => MarginConfig;
+
+            /**
+             * Set the paper margins for the document
+             * @param paperMargins The paper margins (top, right, bottom, left)
+             * @example editor.commands.setDocumentPaperMargins({ top: 10, right: 15, bottom: 10, left: 15 })
+             */
+            setDocumentPaperMargins: (paperMargins: MarginConfig) => ReturnType;
+
+            /**
+             * Set the default paper margins
+             * @example editor.commands.setDocumentDefaultPaperMargins()
+             */
+            setDocumentDefaultPaperMargins: () => ReturnType;
+
+            /**
+             * Set the paper margins for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param paperMargins The paper margins
+             * @example editor.commands.setPagePaperMargins(0, { top: 10, right: 15, bottom: 10, left: 15 })
+             */
+            setPagePaperMargins: (pageNum: number, paperMargins: MarginConfig) => ReturnType;
+
+            /**
+             * Set a margin for the document on a specific side
+             * @param margin The margin to set (top, right, bottom, left, x, y, all)
+             * @param value The value to set the margin to
+             */
+            setDocumentPaperMargin: (margin: Margin, value: number) => ReturnType;
+
+            /**
+             * Set a margin for a specific page on a specific side
+             * @param pageNum The page number (0-indexed)
+             * @param margin The margin to set (top, right, bottom, left, x, y, all)
+             * @param value The value to set the margin to
+             */
+            setPagePaperMargin: (pageNum: number, margin: Margin, value: number) => ReturnType;
         };
     }
 }
@@ -587,6 +624,104 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             getDefaultPaperMargins: () => {
                 return this.options.defaultMarginConfig;
             },
+
+            setDocumentPaperMargins:
+                (paperMargins: MarginConfig) =>
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    if (!isValidPaperMargins(paperMargins)) {
+                        console.warn("Invalid paper margins", paperMargins);
+                        return false;
+                    }
+
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.paperMargins, paperMargins);
+
+                    dispatch(tr);
+                    return true;
+                },
+
+            setDocumentDefaultPaperMargins:
+                () =>
+                ({ editor }) =>
+                    editor.commands.setDocumentPaperMargins(this.options.defaultMarginConfig),
+
+            setPagePaperMargins:
+                (pageNum: number, paperMargins: MarginConfig) =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperMargins(tr, dispatch, pagePos, pageNode, paperMargins);
+                },
+
+            setDocumentPaperMargin:
+                (margin: Margin, value: number) =>
+                ({ tr, dispatch, editor }) => {
+                    if (!dispatch) return false;
+
+                    if (margin === "all") {
+                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
+                        return editor.commands.setDocumentPaperMargins(marginConfig);
+                    }
+
+                    if (!isMarginValid(value)) {
+                        console.warn("Invalid margin value", value);
+                        return false;
+                    }
+
+                    const { doc } = tr;
+                    const transactions: boolean[] = [];
+
+                    doc.forEach((node, pos) => {
+                        transactions.push(updatePaperMargin(tr, pos, node, margin, value));
+                    });
+
+                    const success = transactions.some((changed) => changed);
+                    if (success) {
+                        dispatch(tr);
+                    }
+
+                    return success;
+                },
+
+            setPagePaperMargin:
+                (pageNum: number, margin: Margin, value: number) =>
+                ({ tr, dispatch, editor }) => {
+                    if (!dispatch) return false;
+
+                    if (margin === "all") {
+                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
+                        return editor.commands.setPagePaperMargins(pageNum, marginConfig);
+                    }
+
+                    if (!isMarginValid(value)) {
+                        console.warn("Invalid margin value", value);
+                        return false;
+                    }
+
+                    const { doc } = tr;
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    const success = updatePaperMargin(tr, pagePos, pageNode, margin, value);
+
+                    if (success) {
+                        dispatch(tr);
+                    }
+
+                    return success;
+                },
         };
     },
 });
