@@ -25,6 +25,7 @@ export {
     LIGHT_PAPER_COLOUR,
     DARK_PAPER_COLOUR,
     DEFAULT_PAPER_COLOUR,
+    DEFAULT_PAGE_MARGIN_NAME,
     DEFAULT_MARGIN_CONFIG,
     commonMarginConfigs,
 } from "./constants/paper";
