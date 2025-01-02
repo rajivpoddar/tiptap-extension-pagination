@@ -60,8 +60,7 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
  * @returns {PagePixelDimensions} The height and width of the page in pixels.
  */
 export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: Orientation): PagePixelDimensions => {
-    const paperDimensions = getPaperDimensions(paperSize, orientation);
-    const { width, height } = paperDimensions;
+    const { width, height } = getPaperDimensions(paperSize, orientation);
     const pageHeight = mmToPixels(height);
     const pageWidth = mmToPixels(width);
 
