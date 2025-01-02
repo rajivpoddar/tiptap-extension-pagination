@@ -6,18 +6,10 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import {
-    isHighlighting,
-    getResolvedPosition,
-    setSelectionAtPos,
-    setSelection,
-    moveToNextTextBlock,
-    moveToNearestTextSelection,
-    moveToPreviousTextBlock,
-    setSelectionToEndOfParagraph,
-} from "./utils/selection";
+import { PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -30,37 +22,81 @@ import {
     isPositionWithinParagraph,
     isTextNode,
 } from "./utils/pagination";
-import { appendAndReplaceNode, deleteNode } from "./utils/node";
-import { PaperSize } from "./types/paper";
 import {
-    getDefaultPaperColour,
+    isHighlighting,
+    getResolvedPosition,
+    setSelectionAtPos,
+    setSelection,
+    moveToNextTextBlock,
+    moveToNearestTextSelection,
+    moveToPreviousTextBlock,
+    setSelectionToEndOfParagraph,
+} from "./utils/selection";
+import { appendAndReplaceNode, deleteNode } from "./utils/node";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
+import {
+    getDeviceThemePaperColour,
+    isValidPaperSize,
     pageNodeHasPageSize,
-    setDocumentPaperColour,
-    setDocumentPaperSize,
-    setPageNumPaperSize,
+    setPageNodePosPaperColour,
+    setPageNodePosPaperSize,
     setPagePaperSize,
 } from "./utils/paper";
-import { getPageNodeByPageNum, isPageNode } from "./utils/page";
+
+export interface PaginationOptions {
+    /**
+     * The default paper size for the document. Note this is only the default
+     * so you can have settings in your editor which change the paper size.
+     * This is only the setting for new documents.
+     * @default "A4"
+     * @example "A3"
+     */
+    defaultPaperSize: PaperSize;
+
+    /**
+     * The default paper colour for the document. Note this is only the default
+     * so you can have settings in your editor which change the paper colour.
+     * This is only the setting for new documents.
+     * @default "#fff"
+     * @example "#f0f0f0"
+     */
+    defaultPaperColour: string;
+
+    /**
+     * Whether to use the device theme to set the paper colour.
+     * If enabled, the default paper colour will be ignored.
+     * @default false
+     * @example true
+     */
+    useDeviceThemeForPaperColour: boolean;
+}
 
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         page: {
             /**
+             * Get the default paper size
+             * @example editor.commands.getDefaultPaperSize()
+             * @returns The default paper size
+             */
+            getDefaultPaperSize: () => PaperSize;
+
+            /**
              * Set the paper size
              * @param paperSize The paper size
-             * @example editor.commands.setPaperSize("A4")
+             * @example editor.commands.setDocumentPaperSize("A4")
              */
             setDocumentPaperSize: (paperSize: PaperSize) => ReturnType;
 
             /**
              * Set the default paper size
-             * @example editor.commands.setDefaultPaperSize()
+             * @example editor.commands.setDocumentDefaultPaperSize()
              */
             setDocumentDefaultPaperSize: () => ReturnType;
 
             /**
              * Set the paper size for a specific page
-             * @param pageNum The page number
+             * @param pageNum The page number (0-indexed)
              * @param paperSize The paper size
              * @example editor.commands.setPagePaperSize(0, "A4")
              */
@@ -74,28 +110,44 @@ declare module "@tiptap/core" {
             checkPaperSizes: () => ReturnType;
 
             /**
-             * Set the paper colour
-             * @param paperColour The paper colour
-             * @example editor.commands.setPaperColour("#fff")
+             * Get the default paper colour
+             * @example editor.commands.getDefaultPaperColour()
+             * @returns The default paper colour
              */
-            setPaperColour: (paperColour: string) => ReturnType;
+            getDefaultPaperColour: () => string;
+
+            /**
+             * Set the paper colour for the document
+             * @param paperColour The paper colour
+             * @example editor.commands.setDocumentPaperColour("#fff")
+             */
+            setDocumentPaperColour: (paperColour: string) => ReturnType;
 
             /**
              * Set the default paper colour
-             * @example editor.commands.setDefaultPaperColour()
+             * @example editor.commands.setDocumentDefaultPaperColour()
              */
-            setDefaultPaperColour: () => ReturnType;
+            setDocumentDefaultPaperColour: () => ReturnType;
+
+            /**
+             * Set the paper colour for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param paperColour The paper colour
+             * @example editor.commands.setPagePaperColour(0, "#fff")
+             */
+            setPagePaperColour: (pageNum: number, paperColour: string) => ReturnType;
         };
     }
 }
 
-const PaginationExtension = Extension.create({
+const PaginationExtension = Extension.create<PaginationOptions>({
     name: "pagination",
 
     addOptions() {
         return {
             defaultPaperSize: DEFAULT_PAPER_SIZE,
-            defaultPaperColour: getDefaultPaperColour(),
+            defaultPaperColour: DEFAULT_PAPER_COLOUR,
+            useDeviceThemeForPaperColour: false,
         };
     },
 
@@ -349,24 +401,50 @@ const PaginationExtension = Extension.create({
 
     addCommands() {
         return {
+            getDefaultPaperSize: () => this.options.defaultPaperSize,
+
             setDocumentPaperSize:
                 (paperSize: PaperSize) =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperSize(tr, dispatch, paperSize),
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    if (!isValidPaperSize(paperSize)) {
+                        console.warn(`Invalid paper size: ${paperSize}`);
+                        return false;
+                    }
+
+                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+
+                    dispatch(tr);
+                    return true;
+                },
+
             setDocumentDefaultPaperSize:
                 () =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperSize(tr, dispatch, this.options.defaultPaperSize),
+                ({ editor }) =>
+                    editor.commands.setDocumentPaperSize(this.options.defaultPaperSize),
+
             setPagePaperSize:
                 (pageNum: number, paperSize: PaperSize) =>
-                ({ tr, dispatch }) =>
-                    setPageNumPaperSize(tr, dispatch, pageNum, paperSize),
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperSize(tr, dispatch, pagePos, pageNode, paperSize);
+                },
+
             checkPaperSizes:
                 () =>
                 ({ tr, dispatch }) => {
                     const { doc } = tr;
                     const paperSizeUpdates: boolean[] = [];
-                    doc.descendants((node, pos) => {
+                    doc.forEach((node, pos) => {
                         if (isPageNode(node)) {
                             if (!pageNodeHasPageSize(node)) {
                                 paperSizeUpdates.push(setPagePaperSize(tr, dispatch, pos, this.options.defaultPaperSize));
@@ -377,14 +455,48 @@ const PaginationExtension = Extension.create({
                     // If any page sizes were updated
                     return paperSizeUpdates.some((update) => update);
                 },
-            setPaperColour:
+
+            getDefaultPaperColour: () => {
+                if (this.options.useDeviceThemeForPaperColour) {
+                    return getDeviceThemePaperColour();
+                } else {
+                    return this.options.defaultPaperColour;
+                }
+            },
+
+            setDocumentPaperColour:
                 (paperColour: string) =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperColour(tr, dispatch, paperColour),
-            setDefaultPaperColour:
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
+
+                    dispatch(tr);
+                    return true;
+                },
+
+            setDocumentDefaultPaperColour:
                 () =>
-                ({ tr, dispatch }) =>
-                    setDocumentPaperColour(tr, dispatch, this.options.defaultPaperColour),
+                ({ editor }) => {
+                    const { commands } = editor;
+                    const defaultPaperColour = commands.getDefaultPaperColour();
+                    return commands.setDocumentPaperColour(defaultPaperColour);
+                },
+
+            setPagePaperColour:
+                (pageNum: number, paperColour: string) =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperColour(tr, dispatch, pagePos, pageNode, paperColour);
+                },
         };
     },
 });

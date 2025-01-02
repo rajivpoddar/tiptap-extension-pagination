@@ -8,7 +8,6 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
-import { DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
@@ -23,9 +22,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paper";
-import { collectPageNodes, isPageNode } from "./page";
-import { PaperSize } from "../types/paper";
+import { calculatePagePixelDimensions, getPageNumPaperColourFromState, getPageNumPaperSizeFromState } from "./paper";
+import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
 
 /**
  * Check if the given node is a paragraph node.
@@ -589,27 +587,6 @@ export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndex
 };
 
 /**
- * Check if the document has page nodes.
- * @param state - The editor state.
- * @returns {boolean} True if the document has page nodes, false otherwise.
- */
-export const doesDocHavePageNodes = (state: EditorState): boolean => {
-    const { schema } = state;
-    const pageType = schema.nodes.page;
-
-    let hasPageNodes = false;
-
-    state.doc.forEach((node) => {
-        if (node.type === pageType) {
-            hasPageNodes = true;
-            return false;
-        }
-    });
-
-    return hasPageNodes;
-};
-
-/**
  * Collect content nodes and their old positions
  * @param state - The editor state.
  * @returns {NodePosArray} The content nodes and their positions.
@@ -665,31 +642,30 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
  * @param state - The editor state.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
- * @param hasPageNodes - Whether the existing document has page nodes.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 export const buildNewDocument = (
     state: EditorState,
     contentNodes: NodePosArray,
-    nodeHeights: number[],
-    hasPageNodes: boolean
+    nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
-    const wrapGetPageNumPaperSize = (doc: PMNode, pageNum: number): Nullable<PaperSize> => {
-        if (hasPageNodes) {
-            return getPageNumPaperSize(doc, pageNum);
-        } else {
-            return DEFAULT_PAPER_SIZE;
-        }
-    };
-
     const { schema, doc } = state;
     let pageNum = 0;
 
     const pageType = schema.nodes.page;
-    const pages = [];
-    let paperSize = wrapGetPageNumPaperSize(doc, pageNum) ?? DEFAULT_PAPER_SIZE;
+    const pages: PMNode[] = [];
+    let paperSize = getPageNumPaperSizeFromState(state, pageNum);
+    let paperColour = getPageNumPaperColourFromState(state, pageNum);
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
+
+    const getPageNodeAttributes = () => ({ paperSize, paperColour });
+    const addPage = (currentPageContent: PMNode[]): PMNode => {
+        const pageNodeAttributes = getPageNodeAttributes();
+        const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
+        pages.push(pageNode);
+        return pageNode;
+    };
 
     const { pageHeight } = calculatePagePixelDimensions(paperSize);
 
@@ -701,13 +677,15 @@ export const buildNewDocument = (
         const nodeHeight = nodeHeights[i];
 
         if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
-            const pageNode = pageType.create({ paperSize }, currentPageContent);
-            pages.push(pageNode);
+            const pageNode = addPage(currentPageContent);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
             pageNum++;
-            paperSize = wrapGetPageNumPaperSize(doc, pageNum) ?? paperSize;
+            if (isPageNumInRange(doc, pageNum)) {
+                paperSize = getPageNumPaperSizeFromState(state, pageNum);
+                paperColour = getPageNumPaperColourFromState(state, pageNum);
+            }
         }
 
         if (currentPageContent.length === 0) {
@@ -724,8 +702,7 @@ export const buildNewDocument = (
 
     if (currentPageContent.length > 0) {
         // Add final page (may not be full)
-        const pageNode = pageType.create({ paperSize }, currentPageContent);
-        pages.push(pageNode);
+        addPage(currentPageContent);
     } else {
         pageNum--;
     }

@@ -7,11 +7,10 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { DEFAULT_PAPER_SIZE, DEFAULT_PAPER_PADDING } from "../constants/paper";
-import { PaperSize } from "../types/paper";
-import { getDefaultPaperColour, getPaperDimensions } from "../utils/paper";
-import { isPageNode } from "../utils/page";
+import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_PADDING, DEFAULT_PAPER_SIZE } from "../constants/paper";
 import { PAGE_NODE_NAME } from "../constants/page";
+import { getPageNodePaperColour, getPageNodePaperSize, getPaperDimensions } from "../utils/paper";
+import { isPageNode } from "../utils/page";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -26,10 +25,10 @@ const PageNode = Node.create({
     addAttributes() {
         return {
             paperSize: {
-                default: this.options.defaultPaperSize,
+                default: DEFAULT_PAPER_SIZE,
             },
             paperColour: {
-                default: this.options.defaultPaperColour,
+                default: DEFAULT_PAPER_COLOUR,
             },
         };
     },
@@ -43,9 +42,9 @@ const PageNode = Node.create({
 
                     // Prevent nested page nodes
                     if (parent && parent.hasAttribute(dataPageAttribute)) {
-                        debugger;
                         return false;
                     }
+
                     return {};
                 },
             },
@@ -63,7 +62,7 @@ const PageNode = Node.create({
             dom.setAttribute(dataPageAttribute, String(true));
             dom.classList.add(PAGE_NODE_NAME);
 
-            const paperSize = (node.attrs.paperSize as PaperSize) || DEFAULT_PAPER_SIZE;
+            const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
             const { width, height } = getPaperDimensions(paperSize);
             dom.style.width = `${width}mm`;
             dom.style.height = `${height}mm`;
@@ -71,7 +70,7 @@ const PageNode = Node.create({
 
             dom.style.border = "1px solid #ccc";
 
-            const paperColour = (node.attrs.paperColour as string) || getDefaultPaperColour();
+            const paperColour = getPageNodePaperColour(node) ?? DEFAULT_PAPER_COLOUR;
             dom.style.background = paperColour;
 
             dom.style.overflow = "hidden";

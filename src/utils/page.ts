@@ -5,7 +5,7 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { Transaction } from "@tiptap/pm/state";
+import { EditorState, Transaction } from "@tiptap/pm/state";
 import { NodePos, NodePosArray } from "../types/node";
 import { Nullable } from "../types/record";
 import { inRange } from "./math";
@@ -26,14 +26,32 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
 };
 
 /**
+ * Get the page number of the given node.
+ * @param node - The node to get the page number for.
+ * @returns {Nullable<number>} The page number of the node or null if the node is not a page node.
+ */
+export const getNumPagesInDoc = (doc: PMNode): number => {
+    return doc.childCount;
+};
+
+/**
+ * Get the last page number in the document.
+ * @param doc - The current document.
+ * @returns {number} The last page number in the document.
+ */
+export const getLastPageNum = (doc: PMNode): number => {
+    return getNumPagesInDoc(doc) - 1;
+};
+
+/**
  * Check if the given node is a page node.
  * @param doc - The current document.
  * @param node - The node to check.
  * @returns {boolean} True if the node is a page node, false otherwise.
  */
-const isPageNumInRange = (doc: PMNode, pageNum: number): boolean => {
-    const numPagesInDoc = doc.childCount;
-    return inRange(pageNum, 0, numPagesInDoc - 1);
+export const isPageNumInRange = (doc: PMNode, pageNum: number): boolean => {
+    const lastPageNum = getLastPageNum(doc);
+    return inRange(pageNum, 0, lastPageNum);
 };
 
 /**
@@ -56,6 +74,27 @@ export const getPageNodeByPageNum = (doc: PMNode, pageNum: number): Nullable<PMN
     }
 
     return pageNode;
+};
+
+/**
+ * Check if the document has page nodes.
+ * @param state - The editor state.
+ * @returns {boolean} True if the document has page nodes, false otherwise.
+ */
+export const doesDocHavePageNodes = (state: EditorState): boolean => {
+    const { schema } = state;
+    const pageType = schema.nodes.page;
+
+    let hasPageNodes = false;
+
+    state.doc.forEach((node) => {
+        if (node.type === pageType) {
+            hasPageNodes = true;
+            return false;
+        }
+    });
+
+    return hasPageNodes;
 };
 
 /**
@@ -101,7 +140,7 @@ export const getPageNodePosByPageNum = (doc: PMNode, pageNum: number): Nullable<
 export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): void => {
     const { doc } = tr;
 
-    doc.descendants((node, pos) => {
+    doc.forEach((node, pos) => {
         setPageNodeAttribute(tr, pos, node, attr, value);
     });
 };
