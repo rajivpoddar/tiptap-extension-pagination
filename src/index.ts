@@ -16,11 +16,12 @@ export {
     DEFAULT_PAPER_SIZE,
     paperSizes,
     paperDimensions,
+    DEFAULT_PAPER_ORIENTATION,
+    paperOrientationsSelect,
     LIGHT_PAPER_COLOUR,
     DARK_PAPER_COLOUR,
-    paperOrientationsSelect,
     DEFAULT_PAPER_COLOUR,
-    DEFAULT_PAPER_ORIENTATION,
+    DEFAULT_MARGIN_CONFIG,
 } from "./constants/paper";
 
 // === Nodes ===
