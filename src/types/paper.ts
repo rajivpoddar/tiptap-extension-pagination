@@ -88,3 +88,5 @@ export type Margin = MarginSide | Axis | "all";
 export type MarginConfig = {
     [key in MarginSide]: number;
 };
+
+export type CommonMarginName = "normal" | "narrow" | "moderate" | "wide";

@@ -15,6 +15,7 @@ import {
     PaperOrientationSelect,
     MarginConfig,
     Margin,
+    CommonMarginName,
 } from "../types/paper";
 import { titleCase } from "../utils/string";
 
@@ -140,7 +141,7 @@ export const DEFAULT_MARGIN_CONFIG: MarginConfig = {
 /**
  * Common margin configurations for different margin sizes.
  */
-export const commonMarginConfigs: Record<string, MarginConfig> = {
+export const commonMarginConfigs: Record<CommonMarginName, MarginConfig> = {
     normal: { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 },
     narrow: { top: 12.7, right: 12.7, bottom: 12.7, left: 12.7 },
     moderate: { top: 25.4, right: 19.1, bottom: 25.4, left: 19.1 },
