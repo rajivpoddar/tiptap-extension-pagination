@@ -4,7 +4,7 @@
  * @description This file contains type definitions for page sizes.
  */
 
-import { PaperOrientation, PaperSize } from "./paper";
+import { MarginConfig, PaperOrientation, PaperSize } from "./paper";
 
 /**
  * The dimensions of a page in pixels. Deliberately not using PaperDimensions
@@ -19,4 +19,5 @@ export type PageNodeAttributes = {
     paperSize: PaperSize;
     paperColour: string;
     paperOrientation: PaperOrientation;
+    margins: MarginConfig;
 };

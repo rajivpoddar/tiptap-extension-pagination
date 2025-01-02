@@ -75,3 +75,10 @@ export type PaperSize = APaperSize | BPaperSize | CPaperSize | USPaperSize;
 
 export type PaperOrientation = "portrait" | "landscape";
 export type PaperOrientationSelect = { orientation: PaperOrientation; label: string };
+
+export type MarginConfig = {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+};
