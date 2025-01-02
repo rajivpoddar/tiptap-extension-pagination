@@ -4,7 +4,7 @@
  * @description This file contains type definitions for paper sizes.
  */
 
-export type Orientation = "portrait" | "landscape";
+export type PaperOrientation = "portrait" | "landscape";
 export type PaperDimensions = { width: number; height: number };
 
 export type APaperSize =

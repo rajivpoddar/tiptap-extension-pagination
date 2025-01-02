@@ -4,14 +4,14 @@
  * @description TypeScript types for the package
  */
 
-import type { Orientation, PaperSize } from "./types/paper";
+import type { PaperOrientation, PaperSize } from "./types/paper";
 import type { Extension, Node } from "@tiptap/core";
 
 declare module "tiptap-extension-pagination" {
     export interface PaginationOptions {
         paperSize: PaperSize;
         paperColour: string;
-        paperOrientation: Orientation;
+        paperOrientation: PaperOrientation;
     }
 
     export const PageNode: Node;

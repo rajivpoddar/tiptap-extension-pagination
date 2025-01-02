@@ -10,17 +10,17 @@ import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_PAPER_ORIENTATION_ATTR } from "../constants/page";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
 import { Nullable } from "../types/record";
-import { Orientation } from "../types/paper";
+import { PaperOrientation } from "../types/paper";
 import { getPageAttribute, isPageNode } from "./page";
 import { setPageNodeAttribute } from "./setPageAttributes";
 
 /**
  * Get the paper orientation of a particular page node in the document.
  * @param pageNode - The page node to find the paper orientation for
- * @returns {Nullable<Orientation>} The paper orientation of the specified page or null
+ * @returns {Nullable<PaperOrientation>} The paper orientation of the specified page or null
  * if the paper orientation is not set.
  */
-export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<Orientation> => {
+export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<PaperOrientation> => {
     const { attrs } = pageNode;
     return attrs[PAGE_NODE_PAPER_ORIENTATION_ATTR];
 };
@@ -30,9 +30,9 @@ export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<Orientat
  * Falls back to the default paper orientation if the page number is invalid.
  * @param editor - The current editor instance.
  * @param pageNum - The page number to retrieve the paper orientation for.
- * @returns {Orientation} The paper orientation of the specified page or default.
+ * @returns {PaperOrientation} The paper orientation of the specified page or default.
  */
-export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): Orientation => {
+export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): PaperOrientation => {
     const { state, commands } = editor;
     return getPageAttribute(state, pageNum, commands.getDefaultPaperOrientation, getPageNodePaperOrientation);
 };
@@ -44,7 +44,7 @@ export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): Ori
  * @param pageNum - The page number to retrieve the paper orientation for.
  * @returns {string} The paper orientation of the specified page or default.
  */
-export const getPageNumPaperOrientationFromState = (state: EditorState, pageNum: number): Orientation => {
+export const getPageNumPaperOrientationFromState = (state: EditorState, pageNum: number): PaperOrientation => {
     return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_ORIENTATION, getPageNodePaperOrientation);
 };
 
@@ -62,7 +62,7 @@ export const setPageNodePosPaperOrientation = (
     dispatch: Dispatch,
     pagePos: number,
     pageNode: PMNode,
-    paperOrientation: Orientation
+    paperOrientation: PaperOrientation
 ): boolean => {
     if (!dispatch) return false;
 

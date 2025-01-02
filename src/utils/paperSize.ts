@@ -9,7 +9,7 @@ import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
-import { Orientation, PaperDimensions, PaperSize } from "../types/paper";
+import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
@@ -32,7 +32,7 @@ export const isValidPaperSize = (paperSize: PaperSize): boolean => {
  * @param orientation - The orientation of the paper
  * @returns {PaperDimensions} - The dimensions of the paper
  */
-export const getPaperDimensions = (paperSize: PaperSize, orientation: Orientation): PaperDimensions => {
+export const getPaperDimensions = (paperSize: PaperSize, orientation: PaperOrientation): PaperDimensions => {
     if (!isValidPaperSize(paperSize)) {
         paperSize = DEFAULT_PAPER_SIZE;
     }
@@ -60,7 +60,7 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
  * @param orientation - The orientation of the paper.
  * @returns {PagePixelDimensions} The height and width of the page in pixels.
  */
-export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: Orientation): PagePixelDimensions => {
+export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: PaperOrientation): PagePixelDimensions => {
     const { width, height } = getPaperDimensions(paperSize, orientation);
     const pageHeight = mmToPixels(height);
     const pageWidth = mmToPixels(width);

@@ -9,7 +9,7 @@ import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
 import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_ORIENTATION_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { Orientation, PaperSize } from "./types/paper";
+import { PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -73,7 +73,7 @@ export interface PaginationOptions {
      * @default "portrait"
      * @example "portrait" | "landscape"
      */
-    defaultPaperOrientation: Orientation;
+    defaultPaperOrientation: PaperOrientation;
 }
 
 declare module "@tiptap/core" {
@@ -147,14 +147,14 @@ declare module "@tiptap/core" {
              * @example editor.commands.getDefaultPaperOrientation()
              * @returns The default paper orientation
              */
-            getDefaultPaperOrientation: () => Orientation;
+            getDefaultPaperOrientation: () => PaperOrientation;
 
             /**
              * Set the paper orientation for the document
              * @param paperOrientation The paper orientation
              * @example editor.commands.setDocumentPaperOrientation("portrait") | editor.commands.setDocumentPaperOrientation("landscape")
              */
-            setDocumentPaperOrientation: (paperOrientation: Orientation) => ReturnType;
+            setDocumentPaperOrientation: (paperOrientation: PaperOrientation) => ReturnType;
 
             /**
              * Set the default paper orientation
@@ -168,7 +168,7 @@ declare module "@tiptap/core" {
              * @param paperOrientation The paper orientation
              * @example editor.commands.setPagePaperOrientation(0, "portrait") | editor.commands.setPagePaperOrientation(0, "landscape")
              */
-            setPagePaperOrientation: (pageNum: number, paperOrientation: Orientation) => ReturnType;
+            setPagePaperOrientation: (pageNum: number, paperOrientation: PaperOrientation) => ReturnType;
         };
     }
 }
@@ -537,7 +537,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             },
 
             setDocumentPaperOrientation:
-                (paperOrientation: Orientation) =>
+                (paperOrientation: PaperOrientation) =>
                 ({ tr, dispatch }) => {
                     if (!dispatch) return false;
 
@@ -553,7 +553,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     editor.commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
 
             setPagePaperOrientation:
-                (pageNum: number, paperOrientation: Orientation) =>
+                (pageNum: number, paperOrientation: PaperOrientation) =>
                 ({ tr, dispatch }) => {
                     const { doc } = tr;
 
