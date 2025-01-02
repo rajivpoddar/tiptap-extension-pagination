@@ -113,6 +113,12 @@ export const DARK_PAPER_COLOUR: string = "#222";
 export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
 
 export const paperOrientations: PaperOrientation[] = ["portrait", "landscape"];
+
+/**
+ * A mapped version of the paper orientations where the oreintation is the key
+ * and the label is the title cased version of the orientation. E.g. can be used
+ * in a select input.
+ */
 export const paperOrientationsSelect: PaperOrientationSelect[] = paperOrientations.map((orientation) => ({
     orientation,
     label: titleCase(orientation),
