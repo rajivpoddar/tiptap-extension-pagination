@@ -76,12 +76,15 @@ export type PaperSize = APaperSize | BPaperSize | CPaperSize | USPaperSize;
 export type PaperOrientation = "portrait" | "landscape";
 export type PaperOrientationSelect = { orientation: PaperOrientation; label: string };
 
+// ====== Margins ======
+
+export type MarginSide = "top" | "right" | "bottom" | "left";
+export type Axis = "x" | "y";
+export type Margin = MarginSide | Axis | "all";
+
 /**
  * Margins on the page in millimeters.
  */
 export type MarginConfig = {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
+    [key in MarginSide]: number;
 };
