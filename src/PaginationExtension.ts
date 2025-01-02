@@ -33,9 +33,10 @@ import {
     setSelectionToEndOfParagraph,
 } from "./utils/selection";
 import { appendAndReplaceNode, deleteNode } from "./utils/node";
-import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode, setPageNodesAttribute } from "./utils/page";
+import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode } from "./utils/page";
 import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paperSize";
 import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/paperColour";
+import { setPageNodesAttribute } from "./utils/setPageAttributes";
 
 export interface PaginationOptions {
     /**

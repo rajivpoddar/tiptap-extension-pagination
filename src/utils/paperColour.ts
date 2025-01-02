@@ -10,11 +10,12 @@ import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_COLOUR, DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../constants/paper";
 import { PAGE_NODE_PAPER_COLOUR_ATTR } from "../constants/page";
 import { DARK_THEME } from "../constants/theme";
-import { getPageAttribute, isPageNode, setPageNodeAttribute } from "./page";
+import { getPageAttribute, isPageNode } from "./page";
 import { isValidColour } from "./colour";
 import { nodeHasAttribute } from "./node";
 import { getDeviceTheme } from "./theme";
 import { Nullable } from "../types/record";
+import { setPageNodeAttribute } from "./setPageAttributes";
 
 /**
  * Get the paper colour based on the device theme.

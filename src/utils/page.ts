@@ -5,15 +5,11 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { EditorState, Transaction } from "@tiptap/pm/state";
+import { EditorState } from "@tiptap/pm/state";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePos, NodePosArray } from "../types/node";
 import { Nullable } from "../types/record";
-import { PageNodeAttributes } from "../types/page";
 import { inRange } from "./math";
-import { getPageNumPaperSizeFromState } from "./paperSize";
-import { getPageNumPaperColourFromState } from "./paperColour";
-import { getPageNumPaperOrientationFromState } from "./paperOrientation";
 
 /**
  * Check if the given node is a page node.
@@ -177,53 +173,4 @@ export const getPageAttribute = <T>(
     }
 
     return getNodeAttribute(pageNode) ?? getDefault();
-};
-
-/**
- * Retrieves page attributes from the editor state.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the attributes for.
- * @returns {PageNodeAttributes} The attributes of the specified page.
- */
-export const getPageAttributesFromState = (state: EditorState, pageNum: number): PageNodeAttributes => {
-    let paperSize = getPageNumPaperSizeFromState(state, pageNum);
-    let paperColour = getPageNumPaperColourFromState(state, pageNum);
-    let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
-
-    return { paperSize, paperColour, paperOrientation };
-};
-
-/**
- * Set a page node attribute to the given value for all page nodes in the document.
- * @param tr - The transaction to apply the change to.
- * @param attr - The attribute to set.
- * @param value - The value to set the attribute to.
- * @returns {void}
- */
-export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): void => {
-    const { doc } = tr;
-
-    doc.forEach((node, pos) => {
-        setPageNodeAttribute(tr, pos, node, attr, value);
-    });
-};
-
-/**
- * Set a page node attribute to the given value.
- * @param tr - The transaction to apply the change to.
- * @param pos - The position of the node to set the attribute for.
- * @param node - The node to set the attribute for.
- * @param attr - The attribute to set.
- * @param value - The value to set the attribute to.
- * @returns {void}
- */
-export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): void => {
-    if (!isPageNode(node)) {
-        return;
-    }
-
-    const nodeAttr = node.attrs[attr];
-    if (nodeAttr !== value) {
-        tr.setNodeAttribute(pos, attr, value);
-    }
 };

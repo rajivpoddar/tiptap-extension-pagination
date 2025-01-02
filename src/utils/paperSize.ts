@@ -12,9 +12,10 @@ import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { Orientation, PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
-import { getPageAttribute, isPageNode, setPageNodeAttribute } from "./page";
+import { getPageAttribute, isPageNode } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
+import { setPageNodeAttribute } from "./setPageAttributes";
 
 /**
  * Check if the given paper size is valid.
