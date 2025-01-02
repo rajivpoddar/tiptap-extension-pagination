@@ -11,6 +11,7 @@ import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
+import { PageNodeAttributes } from "../types/page";
 import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import {
@@ -661,9 +662,8 @@ export const buildNewDocument = (
     let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
     let { pageHeight } = calculatePagePixelDimensions(paperSize, paperOrientation);
 
-    const getPageNodeAttributes = () => ({ paperSize, paperColour });
     const addPage = (currentPageContent: PMNode[]): PMNode => {
-        const pageNodeAttributes = getPageNodeAttributes();
+        const pageNodeAttributes: PageNodeAttributes = { paperSize, paperColour, paperOrientation };
         const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
         pages.push(pageNode);
         return pageNode;
