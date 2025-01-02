@@ -19,7 +19,6 @@ import {
 import { titleCase } from "../utils/string";
 
 export const DEFAULT_PAPER_SIZE: PaperSize = "A4" as const;
-export const DEFAULT_PAPER_PADDING: number = 10;
 
 const aPaperSizes: Record<APaperSize, PaperDimensions> = {
     A0: { width: 841, height: 1189 },

@@ -57,6 +57,22 @@ export const getPageNumPaperMargins = (context: Editor | EditorState, pageNum: n
 };
 
 /**
+ * Converts a margin config to a CSS string using millimeters as the unit.
+ * We actually use padding on the page but typically in a document editor,
+ * this is referred to as the margin and is hence named as such.
+ * @param paperMargins - The paper margins to convert to a CSS string.
+ * @returns {string} The CSS string representation of the paper margins. Remember MDN says
+ * order is (top, right, bottom, left). See https://developer.mozilla.org/en-US/docs/Web/CSS/padding.
+ */
+export const calculatePagePadding = (paperMargins: MarginConfig): string => {
+    const { top, right, bottom, left } = paperMargins;
+    const units = "mm";
+
+    const padding = [top, right, bottom, left].map((margin) => `${margin}${units}`).join(" ");
+    return padding;
+};
+
+/**
  * Set the paper margins of a page node.
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
