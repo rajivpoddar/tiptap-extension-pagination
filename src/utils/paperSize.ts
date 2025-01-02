@@ -9,7 +9,7 @@ import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
 import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
-import { PagePixelDimensions } from "../types/page";
+import { PageNodeAttributes, PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
 import { mmToPixels } from "./window";
@@ -55,14 +55,19 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
 };
 
 /**
- * Calculates the pixel width and height of a given paper size.
- * @param paperSize - The paper size to calculate the dimensions for.
- * @param orientation - The orientation of the paper.
+ * Calculates the pixel width and height of a given paper size. Excludes page
+ * margins as we are only calculating the area where content can be added.
+ * @param pageNodeAttributes - The attributes of the page node.
  * @returns {PagePixelDimensions} The height and width of the page in pixels.
  */
 export const calculatePagePixelDimensions = (pageNodeAttributes: PageNodeAttributes): PagePixelDimensions => {
+    const { paperSize, paperOrientation, margins } = pageNodeAttributes;
+    const { top, right, bottom, left } = margins;
+    const { width, height } = getPaperDimensions(paperSize, paperOrientation);
+    const pageHeight = mmToPixels(height - (top + bottom));
+    const pageWidth = mmToPixels(width - (left + right));
 
-    return { pageHeight, pageWidth };
+    return { pageContentHeight: pageHeight, pageContentWidth: pageWidth };
 };
 
 /**
