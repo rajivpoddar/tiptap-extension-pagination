@@ -54,7 +54,7 @@ export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
  */
 export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
     const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, () => commands.getDefaultPaperColour(), getPageNodePaperColour);
+    return getPageAttribute(state, pageNum, commands.getDefaultPaperColour, getPageNodePaperColour);
 };
 
 /**

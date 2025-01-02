@@ -622,7 +622,7 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
     const nodeHeights = contentNodes.map(({ pos, node }) => {
         const dom = view.nodeDOM(pos);
         if (dom instanceof HTMLElement) {
-            let height = dom.getBoundingClientRect().height;
+            let { height } = dom.getBoundingClientRect();
             if (height === 0) {
                 if (node.type === paragraphType || node.isTextblock) {
                     // Assign a minimum height to empty paragraphs or textblocks

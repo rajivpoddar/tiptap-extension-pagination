@@ -98,7 +98,7 @@ export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
  */
 export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize => {
     const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, () => commands.getDefaultPaperSize(), getPageNodePaperSize);
+    return getPageAttribute(state, pageNum, commands.getDefaultPaperSize, getPageNodePaperSize);
 };
 
 /**
