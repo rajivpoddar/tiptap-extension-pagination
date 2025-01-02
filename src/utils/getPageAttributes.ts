@@ -5,8 +5,8 @@
  */
 
 import { EditorState } from "@tiptap/pm/state";
-import { PageNodeAttributes, PagePixelDimensions } from "../types/page";
-import { calculatePagePixelDimensions, getPageNumPaperSize } from "./paperSize";
+import { PageNodeAttributes, PageContentPixelDimensions } from "../types/page";
+import { calculatePageContentPixelDimensions, getPageNumPaperSize } from "./paperSize";
 import { getPageNumPaperColour } from "./paperColour";
 import { getPageNumPaperOrientation } from "./paperOrientation";
 import { getPageNumPaperMargins } from "./paperMargins";
@@ -34,8 +34,8 @@ export const getPageNodeAttributes = (state: EditorState, pageNum: number): Page
 export const getCalculatedPageNodeAttributes = (
     state: EditorState,
     pageNum: number
-): { pageNodeAttributes: PageNodeAttributes; pagePixelDimensions: PagePixelDimensions } => {
+): { pageNodeAttributes: PageNodeAttributes; pagePixelDimensions: PageContentPixelDimensions } => {
     const pageNodeAttributes = getPageNodeAttributes(state, pageNum);
-    const pagePixelDimensions = calculatePagePixelDimensions(pageNodeAttributes);
+    const pagePixelDimensions = calculatePageContentPixelDimensions(pageNodeAttributes);
     return { pageNodeAttributes, pagePixelDimensions };
 };
