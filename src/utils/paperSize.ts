@@ -8,7 +8,6 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
-import { PAGE_NODE_PAPER_SIZE_ATTR } from "../constants/page";
 import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
 import { PagePixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
@@ -16,6 +15,7 @@ import { getPageAttribute, isPageNode } from "./page";
 import { mmToPixels } from "./window";
 import { nodeHasAttribute } from "./node";
 import { setPageNodeAttribute } from "./setPageAttributes";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 
 /**
  * Check if the given paper size is valid.
@@ -74,7 +74,7 @@ export const calculatePagePixelDimensions = (paperSize: PaperSize, orientation: 
  * @returns {boolean} True if the page node has a paper size attribute, false otherwise.
  */
 export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
-    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_SIZE_ATTR);
+    return nodeHasAttribute(pageNode, PAGE_NODE_ATTR_KEYS.paperSize);
 };
 
 /**
@@ -85,7 +85,7 @@ export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
  */
 export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_SIZE_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperSize];
 };
 
 /**
@@ -151,7 +151,7 @@ export const setPageNodePosPaperSize = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperSize, paperSize);
 
     dispatch(tr);
     return true;
