@@ -653,11 +653,19 @@ export const buildNewDocument = (
     let pageNum = 0;
 
     const pageType = schema.nodes.page;
-    const pages = [];
+    const pages: PMNode[] = [];
     let paperSize = getPageNumPaperSizeFromState(state, pageNum);
     let paperColour = getPageNumPaperColourFromState(state, pageNum);
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
+
+    const getPageNodeAttributes = () => ({ paperSize, paperColour });
+    const addPage = (currentPageContent: PMNode[]): PMNode => {
+        const pageNodeAttributes = getPageNodeAttributes();
+        const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
+        pages.push(pageNode);
+        return pageNode;
+    };
 
     const { pageHeight } = calculatePagePixelDimensions(paperSize);
 
@@ -669,9 +677,7 @@ export const buildNewDocument = (
         const nodeHeight = nodeHeights[i];
 
         if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
-            const pageNodeAttributes = { paperSize, paperColour };
-            const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
-            pages.push(pageNode);
+            const pageNode = addPage(currentPageContent);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
@@ -696,8 +702,7 @@ export const buildNewDocument = (
 
     if (currentPageContent.length > 0) {
         // Add final page (may not be full)
-        const pageNode = pageType.create({ paperSize }, currentPageContent);
-        pages.push(pageNode);
+        addPage(currentPageContent);
     } else {
         pageNum--;
     }
