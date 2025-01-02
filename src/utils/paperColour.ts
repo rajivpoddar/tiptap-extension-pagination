@@ -76,7 +76,7 @@ export const setPageNodePosPaperColour = (
     if (!dispatch) return false;
 
     if (!isValidColour(paperColour)) {
-        console.warn(`Invalid paper colour: ${paperColour}`);
+        console.warn("Invalid paper colour:", paperColour);
         return false;
     }
 
