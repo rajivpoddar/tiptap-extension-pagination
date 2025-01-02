@@ -121,7 +121,13 @@ export const setPageNodePosPaperMargins = (
  * @param value - The new value of the margin.
  * @returns {boolean} True if the margin was updated, false otherwise.
  */
-export const updatePaperMargin = (tr: Transaction, pagePos: number, pageNode: PMNode, margin: Margin, value: number): boolean => {
+export const updatePaperMargin = (
+    tr: Transaction,
+    pagePos: number,
+    pageNode: PMNode,
+    margin: Exclude<Margin, "all">,
+    value: number
+): boolean => {
     if (!isPageNode(pageNode)) {
         return false;
     }
