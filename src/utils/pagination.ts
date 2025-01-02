@@ -22,9 +22,8 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { calculatePagePixelDimensions } from "./paperSize";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
-import { getPageNodeAttributes } from "./getPageAttributes";
+import { getCalculatedPageNodeAttributes } from "./getPageAttributes";
 
 /**
  * Check if the given node is a paragraph node.
@@ -655,8 +654,7 @@ export const buildNewDocument = (
 
     const pageType = schema.nodes.page;
     const pages: PMNode[] = [];
-    let pageNodeAttributes = getPageNodeAttributes(state, pageNum);
-    let { pageHeight } = calculatePagePixelDimensions(pageNodeAttributes.paperSize, pageNodeAttributes.paperOrientation);
+    let { pageNodeAttributes, pagePixelDimensions } = getCalculatedPageNodeAttributes(state, pageNum);
 
     const addPage = (currentPageContent: PMNode[]): PMNode => {
         const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
@@ -674,15 +672,14 @@ export const buildNewDocument = (
         const { node, pos: oldPos } = contentNodes[i];
         const nodeHeight = nodeHeights[i];
 
-        if (currentHeight + nodeHeight > pageHeight && currentPageContent.length > 0) {
+        if (currentHeight + nodeHeight > pagePixelDimensions.pageContentHeight && currentPageContent.length > 0) {
             const pageNode = addPage(currentPageContent);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
             pageNum++;
             if (isPageNumInRange(doc, pageNum)) {
-                pageNodeAttributes = getPageNodeAttributes(state, pageNum);
-                ({ pageHeight } = calculatePagePixelDimensions(pageNodeAttributes.paperSize, pageNodeAttributes.paperOrientation));
+                ({ pageNodeAttributes, pagePixelDimensions } = getCalculatedPageNodeAttributes(state, pageNum));
             }
         }
 
