@@ -7,7 +7,7 @@
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
-import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
+import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_ORIENTATION_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
 import { Orientation, PaperSize } from "./types/paper";
 import {
@@ -37,6 +37,7 @@ import { getPageNodeByPageNum, getPageNodePosByPageNum, isPageNode } from "./uti
 import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/paperSize";
 import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/paperColour";
 import { setPageNodesAttribute } from "./utils/setPageAttributes";
+import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
 
 export interface PaginationOptions {
     /**
@@ -147,6 +148,27 @@ declare module "@tiptap/core" {
              * @returns The default paper orientation
              */
             getDefaultPaperOrientation: () => Orientation;
+
+            /**
+             * Set the paper orientation for the document
+             * @param paperOrientation The paper orientation
+             * @example editor.commands.setDocumentPaperOrientation("portrait") | editor.commands.setDocumentPaperOrientation("landscape")
+             */
+            setDocumentPaperOrientation: (paperOrientation: Orientation) => ReturnType;
+
+            /**
+             * Set the default paper orientation
+             * @example editor.commands.setDocumentDefaultPaperOrientation()
+             */
+            setDocumentDefaultPaperOrientation: () => ReturnType;
+
+            /**
+             * Set the paper orientation for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param paperOrientation The paper orientation
+             * @example editor.commands.setPagePaperOrientation(0, "portrait") | editor.commands.setPagePaperOrientation(0, "landscape")
+             */
+            setPagePaperOrientation: (pageNum: number, paperOrientation: Orientation) => ReturnType;
         };
     }
 }
@@ -513,6 +535,37 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             getDefaultPaperOrientation: () => {
                 return this.options.defaultPaperOrientation;
             },
+
+            setDocumentPaperOrientation:
+                (paperOrientation: Orientation) =>
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_ORIENTATION_ATTR, paperOrientation);
+
+                    dispatch(tr);
+                    return true;
+                },
+
+            setDocumentDefaultPaperOrientation:
+                () =>
+                ({ editor }) =>
+                    editor.commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
+
+            setPagePaperOrientation:
+                (pageNum: number, paperOrientation: Orientation) =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPaperOrientation(tr, dispatch, pagePos, pageNode, paperOrientation);
+                },
         };
     },
 });

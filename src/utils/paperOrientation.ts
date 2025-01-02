@@ -4,14 +4,15 @@
  * @description Utility functions for paper orientations.
  */
 
-import { Editor } from "@tiptap/core";
-import { EditorState } from "@tiptap/pm/state";
+import { Dispatch, Editor } from "@tiptap/core";
+import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_PAPER_ORIENTATION_ATTR } from "../constants/page";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
 import { Nullable } from "../types/record";
 import { Orientation } from "../types/paper";
-import { getPageAttribute } from "./page";
+import { getPageAttribute, isPageNode } from "./page";
+import { setPageNodeAttribute } from "./setPageAttributes";
 
 /**
  * Get the paper orientation of a particular page node in the document.
@@ -45,4 +46,38 @@ export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): Ori
  */
 export const getPageNumPaperOrientationFromState = (state: EditorState, pageNum: number): Orientation => {
     return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_ORIENTATION, getPageNodePaperOrientation);
+};
+
+/**
+ * Set the paper orientation of a page node to the given value.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the paper colour for.
+ * @param pageNode - The page node to set the paper colour for.
+ * @param paperOrientation - The paper orientation to set.
+ * @returns {boolean} True if the paper colour was set, false otherwise.
+ */
+export const setPageNodePosPaperOrientation = (
+    tr: Transaction,
+    dispatch: Dispatch,
+    pagePos: number,
+    pageNode: PMNode,
+    paperOrientation: Orientation
+): boolean => {
+    if (!dispatch) return false;
+
+    if (!isPageNode(pageNode)) {
+        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
+        return false;
+    }
+
+    if (getPageNodePaperOrientation(pageNode) === paperOrientation) {
+        // Paper colour is already set
+        return false;
+    }
+
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_ORIENTATION_ATTR, paperOrientation);
+
+    dispatch(tr);
+    return true;
 };
