@@ -19,6 +19,8 @@ export {
     LIGHT_PAPER_COLOUR,
     DARK_PAPER_COLOUR,
     paperOrientations,
+    DEFAULT_PAPER_COLOUR,
+    DEFAULT_PAPER_ORIENTATION,
 } from "./constants/paper";
 
 // === Nodes ===
