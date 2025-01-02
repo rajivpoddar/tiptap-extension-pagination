@@ -5,11 +5,11 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { EditorState, Transaction } from "@tiptap/pm/state";
+import { EditorState } from "@tiptap/pm/state";
+import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePos, NodePosArray } from "../types/node";
 import { Nullable } from "../types/record";
 import { inRange } from "./math";
-import { PAGE_NODE_NAME } from "../constants/page";
 
 /**
  * Check if the given node is a page node.
@@ -131,36 +131,46 @@ export const getPageNodePosByPageNum = (doc: PMNode, pageNum: number): Nullable<
 };
 
 /**
- * Set a page node attribute to the given value for all page nodes in the document.
- * @param tr - The transaction to apply the change to.
- * @param attr - The attribute to set.
- * @param value - The value to set the attribute to.
- * @returns {void}
+ * Handles cases where the given page number is out of range.
+ * Logs a warning and falls back to the last page number.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to validate.
+ * @param fallbackFn - A function to determine the fallback value based on the last page number.
+ * @returns {T} The result of the fallback function.
  */
-export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): void => {
-    const { doc } = tr;
-
-    doc.forEach((node, pos) => {
-        setPageNodeAttribute(tr, pos, node, attr, value);
-    });
+const handleOutOfRangePageNum = <T>(state: EditorState, pageNum: number, fallbackFn: (state: EditorState, pageNum: number) => T): T => {
+    console.warn("Page number:", pageNum, "is out of range for the document. Using last page.");
+    const lastPageNum = getLastPageNum(state.doc);
+    return fallbackFn(state, lastPageNum);
 };
 
 /**
- * Set a page node attribute to the given value.
- * @param tr - The transaction to apply the change to.
- * @param pos - The position of the node to set the attribute for.
- * @param node - The node to set the attribute for.
- * @param attr - The attribute to set.
- * @param value - The value to set the attribute to.
- * @returns {void}
+ * Retrieves a specific attribute of a given page number.
+ * Falls back to defaults if the page number is invalid or the attribute is missing.
+ * @param state - The current editor state.
+ * @param pageNum - The page number to retrieve the attribute for.
+ * @param getDefault - A function to get the default value for the attribute.
+ * @param getNodeAttribute - A function to extract the attribute from the page node.
+ * @returns {T} The attribute of the specified page or default.
  */
-export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): void => {
-    if (!isPageNode(node)) {
-        return;
+export const getPageAttribute = <T>(
+    state: EditorState,
+    pageNum: number,
+    getDefault: () => T,
+    getNodeAttribute: (node: PMNode) => Nullable<T>
+): T => {
+    if (!doesDocHavePageNodes(state)) {
+        return getDefault();
     }
 
-    const nodeAttr = node.attrs[attr];
-    if (nodeAttr !== value) {
-        tr.setNodeAttribute(pos, attr, value);
+    if (!isPageNumInRange(state.doc, pageNum)) {
+        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttribute(s, p, getDefault, getNodeAttribute));
     }
+
+    const pageNode = getPageNodeByPageNum(state.doc, pageNum);
+    if (!pageNode) {
+        return getDefault();
+    }
+
+    return getNodeAttribute(pageNode) ?? getDefault();
 };

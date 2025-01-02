@@ -11,6 +11,7 @@ import { MIN_PARAGRAPH_HEIGHT } from "../constants/tiptap";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
+import { PageNodeAttributes } from "../types/page";
 import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import {
@@ -22,8 +23,10 @@ import {
     setSelectionAtEndOfDocument,
 } from "./selection";
 import { inRange } from "./math";
-import { calculatePagePixelDimensions, getPageNumPaperColourFromState, getPageNumPaperSizeFromState } from "./paper";
+import { calculatePagePixelDimensions, getPageNumPaperSizeFromState } from "./paperSize";
+import { getPageNumPaperColourFromState } from "./paperColour";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
+import { getPageNumPaperOrientationFromState } from "./paperOrientation";
 
 /**
  * Check if the given node is a paragraph node.
@@ -621,7 +624,7 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
     const nodeHeights = contentNodes.map(({ pos, node }) => {
         const dom = view.nodeDOM(pos);
         if (dom instanceof HTMLElement) {
-            let height = dom.getBoundingClientRect().height;
+            let { height } = dom.getBoundingClientRect();
             if (height === 0) {
                 if (node.type === paragraphType || node.isTextblock) {
                     // Assign a minimum height to empty paragraphs or textblocks
@@ -656,18 +659,18 @@ export const buildNewDocument = (
     const pages: PMNode[] = [];
     let paperSize = getPageNumPaperSizeFromState(state, pageNum);
     let paperColour = getPageNumPaperColourFromState(state, pageNum);
-    let currentPageContent: PMNode[] = [];
-    let currentHeight = 0;
+    let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+    let { pageHeight } = calculatePagePixelDimensions(paperSize, paperOrientation);
 
-    const getPageNodeAttributes = () => ({ paperSize, paperColour });
     const addPage = (currentPageContent: PMNode[]): PMNode => {
-        const pageNodeAttributes = getPageNodeAttributes();
+        const pageNodeAttributes: PageNodeAttributes = { paperSize, paperColour, paperOrientation };
         const pageNode = pageType.create(pageNodeAttributes, currentPageContent);
         pages.push(pageNode);
         return pageNode;
     };
 
-    const { pageHeight } = calculatePagePixelDimensions(paperSize);
+    let currentPageContent: PMNode[] = [];
+    let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
     let cumulativeNewDocPos = 0;
@@ -685,6 +688,8 @@ export const buildNewDocument = (
             if (isPageNumInRange(doc, pageNum)) {
                 paperSize = getPageNumPaperSizeFromState(state, pageNum);
                 paperColour = getPageNumPaperColourFromState(state, pageNum);
+                paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+                ({ pageHeight } = calculatePagePixelDimensions(paperSize, paperOrientation));
             }
         }
 

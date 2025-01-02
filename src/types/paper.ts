@@ -72,3 +72,6 @@ export type USPaperSize =
     | "Arch E3";
 
 export type PaperSize = APaperSize | BPaperSize | CPaperSize | USPaperSize;
+
+export type PaperOrientation = "portrait" | "landscape";
+export type PaperOrientationSelect = { orientation: PaperOrientation; label: string };
