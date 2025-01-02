@@ -6,9 +6,9 @@
 
 import { EditorState } from "@tiptap/pm/state";
 import { PageNodeAttributes } from "../types/page";
-import { getPageNumPaperSizeFromState } from "./paperSize";
-import { getPageNumPaperColourFromState } from "./paperColour";
-import { getPageNumPaperOrientationFromState } from "./paperOrientation";
+import { getPageNumPaperSize } from "./paperSize";
+import { getPageNumPaperColour } from "./paperColour";
+import { getPageNumPaperOrientation } from "./paperOrientation";
 
 /**
  * Retrieves page attributes from the editor state.
@@ -16,10 +16,10 @@ import { getPageNumPaperOrientationFromState } from "./paperOrientation";
  * @param pageNum - The page number to retrieve the attributes for.
  * @returns {PageNodeAttributes} The attributes of the specified page.
  */
-export const getPageAttributesFromState = (state: EditorState, pageNum: number): PageNodeAttributes => {
-    let paperSize = getPageNumPaperSizeFromState(state, pageNum);
-    let paperColour = getPageNumPaperColourFromState(state, pageNum);
-    let paperOrientation = getPageNumPaperOrientationFromState(state, pageNum);
+export const getPageNodeAttributes = (state: EditorState, pageNum: number): PageNodeAttributes => {
+    let paperSize = getPageNumPaperSize(state, pageNum);
+    let paperColour = getPageNumPaperColour(state, pageNum);
+    let paperOrientation = getPageNumPaperOrientation(state, pageNum);
 
     return { paperSize, paperColour, paperOrientation };
 };

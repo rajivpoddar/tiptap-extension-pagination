@@ -48,24 +48,13 @@ export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
 /**
  * Retrieves the paper color of a specific page using the editor instance.
  * Falls back to the default paper color if the page number is invalid.
- * @param editor - The current editor instance.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper color for.
  * @returns {string} The paper color of the specified page or default.
  */
-export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
-    const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, commands.getDefaultPaperColour, getPageNodePaperColour);
-};
-
-/**
- * Retrieves the paper color of a specific page using only the editor state.
- * Falls back to the default paper color if the page number is invalid.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the paper color for.
- * @returns {string} The paper color of the specified page or default.
- */
-export const getPageNumPaperColourFromState = (state: EditorState, pageNum: number): string => {
-    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_COLOUR, getPageNodePaperColour);
+export const getPageNumPaperColour = (context: Editor | EditorState, pageNum: number): string => {
+    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperColour : () => DEFAULT_PAPER_COLOUR;
+    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperColour);
 };
 
 /**

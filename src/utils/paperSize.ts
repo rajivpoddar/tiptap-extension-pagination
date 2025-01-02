@@ -91,24 +91,13 @@ export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
 /**
  * Retrieves the paper size of a specific page using the editor instance.
  * Falls back to the default paper size if the page number is invalid.
- * @param editor - The current editor instance.
+ * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper size for.
  * @returns {PaperSize} The paper size of the specified page or default.
  */
-export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize => {
-    const { state, commands } = editor;
-    return getPageAttribute(state, pageNum, commands.getDefaultPaperSize, getPageNodePaperSize);
-};
-
-/**
- * Retrieves the paper size of a specific page using only the editor state.
- * Falls back to the default paper size if the page number is invalid.
- * @param state - The current editor state.
- * @param pageNum - The page number to retrieve the paper size for.
- * @returns {PaperSize} The paper size of the specified page or default.
- */
-export const getPageNumPaperSizeFromState = (state: EditorState, pageNum: number): PaperSize => {
-    return getPageAttribute(state, pageNum, () => DEFAULT_PAPER_SIZE, getPageNodePaperSize);
+export const getPageNumPaperSize = (context: Editor | EditorState, pageNum: number): PaperSize => {
+    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperSize : () => DEFAULT_PAPER_SIZE;
+    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperSize);
 };
 
 /**
