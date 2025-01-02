@@ -12,6 +12,9 @@ import { PaperOrientation, PaperSize } from "./paper";
  */
 export type PagePixelDimensions = { pageHeight: number; pageWidth: number };
 
+/**
+ * Attributes for a page node.
+ */
 export type PageNodeAttributes = {
     paperSize: PaperSize;
     paperColour: string;
