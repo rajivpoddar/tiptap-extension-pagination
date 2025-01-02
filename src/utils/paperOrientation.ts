@@ -4,14 +4,14 @@
  * @description Utility functions for paper orientations.
  */
 
+import { Editor } from "@tiptap/core";
 import { EditorState } from "@tiptap/pm/state";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_PAPER_ORIENTATION_ATTR } from "../constants/page";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
 import { Nullable } from "../types/record";
-import { getPageAttribute } from "./paper";
-import { Editor } from "@tiptap/core";
 import { Orientation } from "../types/paper";
+import { getPageAttribute } from "./page";
 
 /**
  * Get the paper orientation of a particular page node in the document.
