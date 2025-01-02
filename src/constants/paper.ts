@@ -4,7 +4,16 @@
  * @description Constants for the paper sizes
  */
 
-import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions, PaperSize, PaperOrientation } from "../types/paper";
+import {
+    APaperSize,
+    BPaperSize,
+    CPaperSize,
+    USPaperSize,
+    PaperDimensions,
+    PaperSize,
+    PaperOrientation,
+    PaperOrientationSelect,
+} from "../types/paper";
 import { titleCase } from "../utils/string";
 
 export const DEFAULT_PAPER_SIZE: PaperSize = "A4" as const;
@@ -104,6 +113,9 @@ export const DARK_PAPER_COLOUR: string = "#222";
 export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
 
 export const paperOrientations: PaperOrientation[] = ["portrait", "landscape"];
-export const paperOrientationsSelect = paperOrientations.map((orientation) => ({ orientation, label: titleCase(orientation) }));
+export const paperOrientationsSelect: PaperOrientationSelect[] = paperOrientations.map((orientation) => ({
+    orientation,
+    label: titleCase(orientation),
+}));
 
 export const DEFAULT_PAPER_ORIENTATION: PaperOrientation = "portrait";

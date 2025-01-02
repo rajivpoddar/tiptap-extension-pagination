@@ -9,7 +9,7 @@ import PaginationExtension from "./PaginationExtension";
 
 // === Types ===
 
-export type { PaperSize, PaperOrientation } from "./types/paper";
+export type { PaperSize, PaperOrientation, PaperOrientationSelect } from "./types/paper";
 
 // === Constants ===
 export {

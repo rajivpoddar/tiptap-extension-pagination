@@ -4,7 +4,6 @@
  * @description This file contains type definitions for paper sizes.
  */
 
-export type PaperOrientation = "portrait" | "landscape";
 export type PaperDimensions = { width: number; height: number };
 
 export type APaperSize =
@@ -73,3 +72,6 @@ export type USPaperSize =
     | "Arch E3";
 
 export type PaperSize = APaperSize | BPaperSize | CPaperSize | USPaperSize;
+
+export type PaperOrientation = "portrait" | "landscape";
+export type PaperOrientationSelect = { orientation: PaperOrientation; label: string };
