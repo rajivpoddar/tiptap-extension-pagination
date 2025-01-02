@@ -4,7 +4,7 @@
  * @description Constants for the paper sizes
  */
 
-import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions, PaperSize } from "../types/paper";
+import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions, PaperSize, Orientation } from "../types/paper";
 
 export const DEFAULT_PAPER_SIZE: PaperSize = "A4" as const;
 export const DEFAULT_PAPER_PADDING: number = 10;
@@ -101,3 +101,5 @@ export const paperSizes: PaperSize[] = Object.keys(paperDimensions) as PaperSize
 export const LIGHT_PAPER_COLOUR: string = "#fff";
 export const DARK_PAPER_COLOUR: string = "#222";
 export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
+
+export const DEFAULT_PAPER_ORIENTATION: Orientation = "portrait";
