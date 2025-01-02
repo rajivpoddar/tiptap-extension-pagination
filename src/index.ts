@@ -18,7 +18,7 @@ export {
     paperDimensions,
     LIGHT_PAPER_COLOUR,
     DARK_PAPER_COLOUR,
-    paperOrientations,
+    paperOrientationsSelect,
     DEFAULT_PAPER_COLOUR,
     DEFAULT_PAPER_ORIENTATION,
 } from "./constants/paper";
