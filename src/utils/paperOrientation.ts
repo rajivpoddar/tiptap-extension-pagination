@@ -7,7 +7,7 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { PAGE_NODE_PAPER_ORIENTATION_ATTR } from "../constants/page";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
 import { Nullable } from "../types/record";
 import { PaperOrientation } from "../types/paper";
@@ -22,7 +22,7 @@ import { setPageNodeAttribute } from "./setPageAttributes";
  */
 export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<PaperOrientation> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_ORIENTATION_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperOrientation];
 };
 
 /**
@@ -65,7 +65,7 @@ export const setPageNodePosPaperOrientation = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_ORIENTATION_ATTR, paperOrientation);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperOrientation, paperOrientation);
 
     dispatch(tr);
     return true;

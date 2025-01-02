@@ -8,7 +8,7 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_COLOUR, DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../constants/paper";
-import { PAGE_NODE_PAPER_COLOUR_ATTR } from "../constants/page";
+import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { DARK_THEME } from "../constants/theme";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
@@ -31,7 +31,7 @@ export const getDeviceThemePaperColour = (): string => {
  * @returns {boolean} True if the page node has a paper colour attribute, false otherwise.
  */
 export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
-    return nodeHasAttribute(pageNode, PAGE_NODE_PAPER_COLOUR_ATTR);
+    return nodeHasAttribute(pageNode, PAGE_NODE_ATTR_KEYS.paperColour);
 };
 
 /**
@@ -42,7 +42,7 @@ export const pageNodeHasPaperColour = (pageNode: PMNode): boolean => {
  */
 export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
     const { attrs } = pageNode;
-    return attrs[PAGE_NODE_PAPER_COLOUR_ATTR];
+    return attrs[PAGE_NODE_ATTR_KEYS.paperColour];
 };
 
 /**
@@ -90,7 +90,7 @@ export const setPageNodePosPaperColour = (
         return false;
     }
 
-    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
+    setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.paperColour, paperColour);
 
     dispatch(tr);
     return true;

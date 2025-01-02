@@ -6,8 +6,8 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
-import { PAGE_NODE_PAPER_COLOUR_ATTR, PAGE_NODE_PAPER_ORIENTATION_ATTR, PAGE_NODE_PAPER_SIZE_ATTR } from "./constants/page";
+import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
+import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
 import { PaperOrientation, PaperSize } from "./types/paper";
 import {
@@ -447,7 +447,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                         return false;
                     }
 
-                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_SIZE_ATTR, paperSize);
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.paperSize, paperSize);
 
                     dispatch(tr);
                     return true;
@@ -503,7 +503,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 ({ tr, dispatch }) => {
                     if (!dispatch) return false;
 
-                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_COLOUR_ATTR, paperColour);
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.paperColour, paperColour);
 
                     dispatch(tr);
                     return true;
@@ -541,7 +541,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 ({ tr, dispatch }) => {
                     if (!dispatch) return false;
 
-                    setPageNodesAttribute(tr, PAGE_NODE_PAPER_ORIENTATION_ATTR, paperOrientation);
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.paperOrientation, paperOrientation);
 
                     dispatch(tr);
                     return true;
