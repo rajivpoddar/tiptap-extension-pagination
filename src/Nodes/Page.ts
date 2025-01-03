@@ -38,6 +38,15 @@ const PageNode = Node.create({
             },
             [PAGE_NODE_ATTR_KEYS.pageMargins]: {
                 default: DEFAULT_MARGIN_CONFIG,
+                parseHTML: (element) => {
+                    const margins = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageMargins);
+                    return margins ? JSON.parse(margins) : DEFAULT_MARGIN_CONFIG;
+                },
+                renderHTML: (attributes) => {
+                    return {
+                        [PAGE_NODE_ATTR_KEYS.pageMargins]: JSON.stringify(attributes.pageMargins),
+                    };
+                },
             },
         };
     },
