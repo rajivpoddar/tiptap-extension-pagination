@@ -16,7 +16,7 @@
     "license": "ISC",
     "repository": {
         "type": "git",
-        "url": "https://www.github.com/hugs7/tiptap-extension-pagination"
+        "url": "git+https://github.com/hugs7/tiptap-extension-pagination.git"
     },
     "homepage": "https://www.github.com/hugs7/tiptap-extension-pagination",
     "type": "module",
