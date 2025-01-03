@@ -35,7 +35,7 @@ import PageNode from "./Nodes/Page";
 
 // === Utils ===
 export { isPageNode } from "./utils/page";
-export { getPageNumber } from "./utils/pagination";
+export { getPageNumber, getThisPageNodePosition } from "./utils/pagination";
 export { getPageNumPaperSize } from "./utils/paperSize";
 export { getPageNumPaperColour } from "./utils/paperColour";
 export { getPageNumPaperOrientation } from "./utils/paperOrientation";
