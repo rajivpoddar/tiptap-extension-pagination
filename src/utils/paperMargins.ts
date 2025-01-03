@@ -49,7 +49,7 @@ export const getPageNodePaperMargins = (pageNode: PMNode): Nullable<MarginConfig
  * Falls back to the default paper margin config if the page number is invalid.
  * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the paper margin config for.
- * @returns {PaperOrientation} The paper margin config of the specified page or default.
+ * @returns {MarginConfig} The paper margin config of the specified page or default.
  */
 export const getPageNumPaperMargins = (context: Editor | EditorState, pageNum: number): MarginConfig => {
     const getDefault = context instanceof Editor ? context.commands.getDefaultPaperMargins : () => DEFAULT_MARGIN_CONFIG;
