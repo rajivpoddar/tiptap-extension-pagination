@@ -10,7 +10,7 @@ import { Transaction } from "@tiptap/pm/state";
 /**
  * Get the type of the node at the specified position.
  * @param $pos - The resolved position in the document.
- * @returns The type of the node at the specified position.
+ * @returns {ResolvedPos} The type of the node at the specified position.
  */
 export const getPositionNodeType = ($pos: ResolvedPos): string => {
     return $pos.parent.type.name;
@@ -21,7 +21,7 @@ export const getPositionNodeType = ($pos: ResolvedPos): string => {
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @param type - The type of the node to search for.
- * @returns The position of the parent node of the specified type.
+ * @returns {ResolvedPos} The position of the parent node of the specified type.
  */
 export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, type: string): ResolvedPos => {
     // Base case: If the position is a number, resolve it
@@ -88,10 +88,9 @@ export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
 };
 
 /**
- * Move the cursor to the next text block.
- * @param tr - The current transaction.
- * @param $pos - The resolved position in the document.
- * @returns {void}
+ * Check if the node is empty.
+ * @param node - The node to check.
+ * @returns {boolean} True if the node is empty, false otherwise.
  */
 export const isNodeEmpty = (node: Node): boolean => {
     return node.content.size === 0;
