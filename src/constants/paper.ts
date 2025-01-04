@@ -110,9 +110,13 @@ export const paperDimensions: Record<PaperSize, PaperDimensions> = {
 
 export const paperSizes: PaperSize[] = Object.keys(paperDimensions) as PaperSize[];
 
+// ====== Paper Colours ======
+
 export const LIGHT_PAPER_COLOUR: string = "#fff";
 export const DARK_PAPER_COLOUR: string = "#222";
 export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
+
+// ====== Paper Orientation ======
 
 export const paperOrientations: PaperOrientation[] = ["portrait", "landscape"];
 
@@ -127,6 +131,8 @@ export const paperOrientationsSelect: PaperOrientationSelect[] = paperOrientatio
 }));
 
 export const DEFAULT_PAPER_ORIENTATION: PaperOrientation = "portrait";
+
+// ====== Paper Margins ======
 
 /**
  * Common margin configurations for different margin sizes.
