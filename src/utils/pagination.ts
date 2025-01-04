@@ -666,13 +666,14 @@ export const buildNewDocument = (
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
-    let cumulativeNewDocPos = 0;
+    let cumulativeNewDocPos = 1; // First page position in the document
 
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldPos } = contentNodes[i];
         const nodeHeight = nodeHeights[i];
 
-        if (currentHeight + nodeHeight > pagePixelDimensions.pageContentHeight && currentPageContent.length > 0) {
+        const isPageFull = currentHeight + nodeHeight > pagePixelDimensions.pageContentHeight && currentPageContent.length > 0;
+        if (isPageFull) {
             const pageNode = addPage(currentPageContent);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
@@ -683,12 +684,13 @@ export const buildNewDocument = (
             }
         }
 
-        if (currentPageContent.length === 0) {
+        // Record the mapping from old position to new position
+        const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
+
+        if (isPageFull) {
             cumulativeNewDocPos += 1; // Start of the page node
         }
 
-        // Record the mapping from old position to new position
-        const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
         oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
         currentPageContent.push(node);
@@ -787,7 +789,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
                 if (isPosAtStartOfPage(tr.doc, newCursorPos)) {
                     selection = moveToThisTextBlock(tr, $pos);
                 } else {
-                    selection = moveToNextTextBlock(tr, $pos);
+                    selection = moveToThisTextBlock(tr, $pos);
                 }
             } else if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
                 if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
@@ -799,7 +801,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
                 selection = moveToNextTextBlock(tr, $pos);
             }
         } else if ($pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore))) {
-            selection = moveToNextTextBlock(tr, $pos);
+            selection = moveToThisTextBlock(tr, $pos);
         } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
             selection = moveToNextTextBlock(tr, $pos);
         } else {
