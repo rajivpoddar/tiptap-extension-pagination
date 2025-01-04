@@ -20,10 +20,6 @@ const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
 
 type PageNodeOptions = {
-    paperSize: string;
-    paperColour: string;
-    paperOrientation: string;
-    pageMargins: string;
     pageGap: number;
 };
 
@@ -33,6 +29,12 @@ const PageNode = Node.create<PageNodeOptions>({
     content: "block*",
     defining: true,
     isolating: false,
+
+    addOptions() {
+        return {
+            pageGap: DEFAULT_PAGE_GAP,
+        };
+    },
 
     addAttributes() {
         return {
@@ -51,7 +53,6 @@ const PageNode = Node.create<PageNodeOptions>({
                     };
                 },
             },
-            [PAGE_NODE_ATTR_KEYS.pageGap]: DEFAULT_PAGE_GAP,
         };
     },
 
