@@ -28,6 +28,7 @@ export {
     DEFAULT_PAGE_MARGIN_NAME,
     DEFAULT_MARGIN_CONFIG,
     commonMarginConfigs,
+    marginSides,
 } from "./constants/paper";
 
 // === Nodes ===
