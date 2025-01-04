@@ -13,6 +13,7 @@ import { Margin, MarginConfig, MarginSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
 import { setPageNodeAttribute } from "./setPageAttributes";
+import { mm } from "./units";
 
 /**
  * Checks if a (single) margin is valid.
@@ -66,9 +67,8 @@ export const getPageNumPaperMargins = (context: Editor | EditorState, pageNum: n
  */
 export const calculatePagePadding = (paperMargins: MarginConfig): string => {
     const { top, right, bottom, left } = paperMargins;
-    const units = "mm";
 
-    const padding = [top, right, bottom, left].map((margin) => `${margin}${units}`).join(" ");
+    const padding = [top, right, bottom, left].map(mm).join(" ");
     return padding;
 };
 

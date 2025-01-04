@@ -8,34 +8,39 @@ import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "../constants/paper";
-import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS } from "../constants/page";
+import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS, DEFAULT_PAGE_GAP } from "../constants/page";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
 import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
+import { mm, px } from "../utils/units";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
 
-const PageNode = Node.create({
+type PageNodeOptions = {
+    pageGap: number;
+};
+
+const PageNode = Node.create<PageNodeOptions>({
     name: PAGE_NODE_NAME,
     group: "block",
     content: "block*",
     defining: true,
     isolating: false,
 
+    addOptions() {
+        return {
+            pageGap: DEFAULT_PAGE_GAP,
+        };
+    },
+
     addAttributes() {
         return {
-            [PAGE_NODE_ATTR_KEYS.paperSize]: {
-                default: DEFAULT_PAPER_SIZE,
-            },
-            [PAGE_NODE_ATTR_KEYS.paperColour]: {
-                default: DEFAULT_PAPER_COLOUR,
-            },
-            [PAGE_NODE_ATTR_KEYS.paperOrientation]: {
-                default: DEFAULT_PAPER_ORIENTATION,
-            },
+            [PAGE_NODE_ATTR_KEYS.paperSize]: DEFAULT_PAPER_SIZE,
+            [PAGE_NODE_ATTR_KEYS.paperColour]: DEFAULT_PAPER_COLOUR,
+            [PAGE_NODE_ATTR_KEYS.paperOrientation]: DEFAULT_PAPER_ORIENTATION,
             [PAGE_NODE_ATTR_KEYS.pageMargins]: {
                 default: DEFAULT_MARGIN_CONFIG,
                 parseHTML: (element) => {
@@ -85,8 +90,8 @@ const PageNode = Node.create({
             const paperMargins = getPageNodePaperMargins(node) ?? DEFAULT_MARGIN_CONFIG;
             const { width, height } = getPaperDimensions(paperSize, paperOrientation);
 
-            dom.style.width = `${width}mm`;
-            dom.style.height = `${height}mm`;
+            dom.style.width = mm(width);
+            dom.style.height = mm(height);
             dom.style.padding = calculatePagePadding(paperMargins);
 
             dom.style.border = "1px solid #ccc";
@@ -96,6 +101,8 @@ const PageNode = Node.create({
 
             dom.style.overflow = "hidden";
             dom.style.position = "relative";
+
+            dom.style.marginTop = px(this.options.pageGap);
             dom.style.marginLeft = "auto";
             dom.style.marginRight = "auto";
 
