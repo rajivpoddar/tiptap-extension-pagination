@@ -453,7 +453,7 @@ export const getPreviousParagraph = (doc: PMNode, pos: number): { prevParagraphP
  * @returns {PMNode} The next paragraph node.
  */
 export const getNextParagraph = (doc: PMNode, pos: number): { nextParagraphPos: number; nextParagraphNode: Nullable<PMNode> } => {
-    const documentLength = doc.nodeSize;
+    const documentLength = doc.content.size;
     let nextParagraphPos = pos;
     let nextParagraphNode = null;
     while (nextParagraphNode === null && nextParagraphPos < documentLength) {
