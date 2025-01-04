@@ -92,7 +92,7 @@ export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: nu
  * @returns {void}
  */
 export const setSelectionToEndOfParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode): void => {
-    const paragraphEndPos = tr.doc.resolve(paragraphPos + paragraphNode.nodeSize - 1);
+    const paragraphEndPos = tr.doc.resolve(paragraphPos + paragraphNode.nodeSize);
     moveToNearestTextSelection(tr, paragraphEndPos, -1);
 };
 
