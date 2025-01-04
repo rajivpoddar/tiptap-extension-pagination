@@ -744,14 +744,13 @@ export const mapCursorPosition = (
         const nodeSize = node.nodeSize;
 
         if (oldNodePos <= oldCursorPos && oldCursorPos <= oldNodePos + nodeSize) {
-            const oldNodeTextPos = oldNodePos + 1; // Start of paragraph will always be 1 less than the start of the text
-            const offsetInNode = oldCursorPos - oldNodeTextPos;
+            const offsetInNode = oldCursorPos - oldNodePos;
             const newNodePos = oldToNewPosMap.get(oldNodePos);
             if (newNodePos === undefined) {
                 console.error("Unable to determine new node position from cursor map!");
                 newCursorPos = 0;
             } else {
-                newCursorPos = Math.min(newNodePos + offsetInNode, newDocContentSize);
+                newCursorPos = Math.min(newNodePos + offsetInNode, newDocContentSize - 1);
             }
 
             break;
