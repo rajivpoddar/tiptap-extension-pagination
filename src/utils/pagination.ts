@@ -16,7 +16,6 @@ import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node
 import {
     moveToNearestValidCursorPosition,
     moveToNextTextBlock,
-    moveToPreviousTextBlock,
     moveToThisTextBlock,
     setSelection,
     setSelectionAtEndOfDocument,
@@ -793,7 +792,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
                 }
             } else if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
                 if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
-                    selection = moveToPreviousTextBlock(tr, $pos);
+                    selection = moveToThisTextBlock(tr, $pos, -1);
                 } else {
                     selection = moveToThisTextBlock(tr, $pos);
                 }
