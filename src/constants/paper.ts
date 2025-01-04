@@ -14,8 +14,8 @@ import {
     PaperOrientation,
     PaperOrientationSelect,
     MarginConfig,
-    Margin,
     CommonMarginName,
+    MarginSide,
 } from "../types/paper";
 import { titleCase } from "../utils/string";
 
@@ -154,4 +154,4 @@ export const DEFAULT_PAGE_MARGIN_NAME: CommonMarginName = "normal";
  */
 export const DEFAULT_MARGIN_CONFIG: MarginConfig = commonMarginConfigs[DEFAULT_PAGE_MARGIN_NAME];
 
-export const marginSides: Margin[] = ["top", "right", "bottom", "left"];
+export const marginSides: MarginSide[] = ["top", "right", "bottom", "left"];

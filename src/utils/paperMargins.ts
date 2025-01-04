@@ -137,7 +137,7 @@ export const updatePaperMargin = (
     if (existingMargins && isValidPaperMargins(existingMargins)) {
         updatedMargins = { ...existingMargins };
     } else {
-        if (marginSides.includes(margin)) {
+        if ((marginSides as Margin[]).includes(margin)) {
             updatedMargins[margin as MarginSide] = value;
         } else {
             switch (margin) {
