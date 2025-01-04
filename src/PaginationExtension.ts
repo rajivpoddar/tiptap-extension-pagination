@@ -456,17 +456,13 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                         return false;
                     }
 
-                    if (!isNodeEmpty(nextParagraphNode)) {
+                    const thisNodeEmpty = isNodeEmpty(paragraphNode);
+                    const nextNodeEmpty = isNodeEmpty(nextParagraphNode);
+                    if (!nextNodeEmpty) {
                         deleteNode(tr, nextParagraphPos, nextParagraphNode);
                     }
 
                     appendAndReplaceNode(tr, paragraphPos, paragraphNode, nextParagraphNode);
-
-                    const thisNodeEmpty = isNodeEmpty(paragraphNode);
-                    const nextNodeEmpty = isNodeEmpty(nextParagraphNode);
-
-                    console.log("This node empty:", thisNodeEmpty);
-                    console.log("Next node empty:", nextNodeEmpty);
 
                     if (thisNodeEmpty) {
                         const $newPos = tr.doc.resolve(thisPos);
