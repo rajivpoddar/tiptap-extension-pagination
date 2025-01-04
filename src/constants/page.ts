@@ -12,3 +12,7 @@ export const PAGE_NODE_ATTR_KEYS = {
 } as const;
 
 export const PAGE_NODE_NAME = "page" as const;
+
+// ====== Page Gap ======
+
+export const DEFAULT_PAGE_GAP: number = 12;

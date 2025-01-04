@@ -7,7 +7,7 @@
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
 import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
-import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
+import { DEFAULT_PAGE_GAP, PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
 import { Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
@@ -84,6 +84,13 @@ export interface PaginationOptions {
      * @example { top: 10, right: 10, bottom: 10, left: 10 }
      */
     defaultMarginConfig: MarginConfig;
+
+    /**
+     * The gap between pages in the document in pixels.
+     * @default 12
+     * @example 20
+     */
+    pageGap: number;
 }
 
 declare module "@tiptap/core" {
@@ -236,6 +243,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             useDeviceThemeForPaperColour: false,
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
             defaultMarginConfig: DEFAULT_MARGIN_CONFIG,
+            pageGap: DEFAULT_PAGE_GAP,
         };
     },
 
