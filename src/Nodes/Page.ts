@@ -14,7 +14,7 @@ import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
 import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
-import { mm } from "../utils/units";
+import { mm, px } from "../utils/units";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -102,7 +102,7 @@ const PageNode = Node.create<PageNodeOptions>({
             dom.style.overflow = "hidden";
             dom.style.position = "relative";
 
-            dom.style.marginTop = mm(this.options.pageGap);
+            dom.style.marginTop = px(this.options.pageGap);
             dom.style.marginLeft = "auto";
             dom.style.marginRight = "auto";
 

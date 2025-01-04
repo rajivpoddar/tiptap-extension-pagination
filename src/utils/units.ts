@@ -13,3 +13,13 @@
 export const mm = (value: number): string => {
     return `${value}mm`;
 };
+
+/**
+ * Format a value as a pixel string.
+ * @param value - The value to format.
+ * @returns {string} The value formatted as a pixel string.
+ * @example px(10) // "10px"
+ */
+export const px = (value: number): string => {
+    return `${value}px`;
+};
