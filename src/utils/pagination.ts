@@ -729,9 +729,15 @@ const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number):
  * @param contentNodes - The content nodes and their positions.
  * @param oldCursorPos - The old cursor position.
  * @param oldToNewPosMap - The mapping from old positions to new positions.
+ * @param newDocContentSize - The size of the new document. Serves as maximum limit for cursor position.
  * @returns {number} The new cursor position.
  */
-export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap) => {
+export const mapCursorPosition = (
+    contentNodes: NodePosArray,
+    oldCursorPos: number,
+    oldToNewPosMap: CursorMap,
+    newDocContentSize: number
+) => {
     let newCursorPos: Nullable<number> = null;
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldNodePos } = contentNodes[i];
@@ -745,7 +751,7 @@ export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: numb
                 console.error("Unable to determine new node position from cursor map!");
                 newCursorPos = 0;
             } else {
-                newCursorPos = newNodePos + offsetInNode;
+                newCursorPos = Math.min(newNodePos + offsetInNode, newDocContentSize);
             }
 
             break;
