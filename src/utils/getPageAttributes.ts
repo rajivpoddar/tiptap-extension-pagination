@@ -10,6 +10,7 @@ import { calculatePageContentPixelDimensions, getPageNumPaperSize } from "./pape
 import { getPageNumPaperColour } from "./paperColour";
 import { getPageNumPaperOrientation } from "./paperOrientation";
 import { getPageNumPaperMargins } from "./paperMargins";
+import { getPageNumPageBorders } from "./pageBorders";
 
 /**
  * Retrieves page attributes from the editor state.
@@ -22,8 +23,7 @@ export const getPageNodeAttributes = (state: EditorState, pageNum: number): Page
     const paperColour = getPageNumPaperColour(state, pageNum);
     const paperOrientation = getPageNumPaperOrientation(state, pageNum);
     const pageMargins = getPageNumPaperMargins(state, pageNum);
-    // const pageBorders = getPageNumPaperBorders(state, pageNum);
-    const pageBorders = { top: 1, right: 1, bottom: 1, left: 1 };
+    const pageBorders = getPageNumPageBorders(state, pageNum);
 
     return { paperSize, paperColour, paperOrientation, pageMargins, pageBorders };
 };

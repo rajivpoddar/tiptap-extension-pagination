@@ -78,15 +78,15 @@ export type PaperOrientationSelect = { orientation: PaperOrientation; label: str
 
 // ====== Margins ======
 
-export type MarginSide = "top" | "right" | "bottom" | "left";
+export type PageSide = "top" | "right" | "bottom" | "left";
 export type Axis = "x" | "y";
-export type Margin = MarginSide | Axis | "all";
+export type MultiSide = PageSide | Axis | "all";
 
 /**
  * Margins on the page in millimeters.
  */
 export type MarginConfig = {
-    [key in MarginSide]: number;
+    [key in PageSide]: number;
 };
 
 export type CommonMarginName = "normal" | "narrow" | "moderate" | "wide";
@@ -94,5 +94,5 @@ export type CommonMarginName = "normal" | "narrow" | "moderate" | "wide";
 // ====== Page Borders ======
 
 export type BorderConfig = {
-    [key in MarginSide]: number;
+    [key in PageSide]: number;
 };
