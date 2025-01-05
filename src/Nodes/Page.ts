@@ -4,17 +4,15 @@
  * @description Custom node for creating a page in the editor.
  */
 
-import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
+import { Attributes, Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import {
-    DEFAULT_MARGIN_CONFIG,
-    DEFAULT_PAGE_BORDER_CONFIG,
-    DEFAULT_PAPER_COLOUR,
-    DEFAULT_PAPER_ORIENTATION,
-    DEFAULT_PAPER_SIZE,
-} from "../constants/paper";
-import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS, DEFAULT_PAGE_GAP } from "../constants/page";
+import { DEFAULT_PAPER_SIZE } from "../constants/paperSize";
+import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/pageBorders";
+import { DEFAULT_PAPER_COLOUR } from "../constants/paperColours";
+import { DEFAULT_PAPER_ORIENTATION } from "../constants/paperOrientation";
+import { PAGE_NODE_NAME, DEFAULT_PAGE_GAP, PAGE_ATTRIBUTES } from "../constants/page";
+import { DEFAULT_MARGIN_CONFIG } from "../constants/pageMargins";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";
@@ -22,6 +20,7 @@ import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
 import { mm, px } from "../utils/units";
 import { calculatePageBorders, getPageNodePageBorders } from "../utils/pageBorders";
+import { parseHTMLAttribute, renderHTMLAttribute } from "../utils/node";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -44,35 +43,17 @@ const PageNode = Node.create<PageNodeOptions>({
     },
 
     addAttributes() {
-        return {
-            [PAGE_NODE_ATTR_KEYS.paperSize]: DEFAULT_PAPER_SIZE,
-            [PAGE_NODE_ATTR_KEYS.paperColour]: DEFAULT_PAPER_COLOUR,
-            [PAGE_NODE_ATTR_KEYS.paperOrientation]: DEFAULT_PAPER_ORIENTATION,
-            [PAGE_NODE_ATTR_KEYS.pageMargins]: {
-                default: DEFAULT_MARGIN_CONFIG,
-                parseHTML: (element) => {
-                    const margins = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageMargins);
-                    return margins ? JSON.parse(margins) : DEFAULT_MARGIN_CONFIG;
+        return Object.entries(PAGE_ATTRIBUTES).reduce(
+            (attributes, [key, config]) => ({
+                ...attributes,
+                [key]: {
+                    default: config.default,
+                    parseHTML: parseHTMLAttribute(key, config.default),
+                    renderHTML: renderHTMLAttribute(key),
                 },
-                renderHTML: (attributes) => {
-                    return {
-                        [PAGE_NODE_ATTR_KEYS.pageMargins]: JSON.stringify(attributes.pageMargins),
-                    };
-                },
-            },
-            [PAGE_NODE_ATTR_KEYS.pageBorders]: {
-                default: DEFAULT_PAGE_BORDER_CONFIG,
-                parseHTML: (element) => {
-                    const borders = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageBorders);
-                    return borders ? JSON.parse(borders) : DEFAULT_PAGE_BORDER_CONFIG;
-                },
-                renderHTML: (attributes) => {
-                    return {
-                        [PAGE_NODE_ATTR_KEYS.pageBorders]: JSON.stringify(attributes.pageBorders),
-                    };
-                },
-            },
-        };
+            }),
+            {} as Attributes
+        );
     },
 
     parseHTML() {

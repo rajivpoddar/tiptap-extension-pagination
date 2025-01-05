@@ -7,7 +7,7 @@
 import { Node as PMNode } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
 import { Dispatch } from "@tiptap/core";
-import { pageSides } from "../constants/paper";
+import { pageSides } from "../constants/pageSides";
 import { MultiSide, PageSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageNodePosByPageNum, isPageNode } from "./page";

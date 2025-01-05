@@ -22,3 +22,7 @@ export type PageNodeAttributes = {
     pageMargins: MarginConfig;
     pageBorders: BorderConfig;
 };
+
+export type AttributeConfig<T> = {
+    default: T;
+};

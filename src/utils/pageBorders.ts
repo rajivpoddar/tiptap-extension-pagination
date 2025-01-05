@@ -8,7 +8,7 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/paper";
+import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/pageBorders";
 import { BorderConfig, MultiSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { px } from "./units";

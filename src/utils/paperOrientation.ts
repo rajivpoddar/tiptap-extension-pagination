@@ -8,7 +8,7 @@ import { Dispatch, Editor } from "@tiptap/core";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { DEFAULT_PAPER_ORIENTATION } from "../constants/paper";
+import { DEFAULT_PAPER_ORIENTATION } from "../constants/paperOrientation";
 import { Nullable } from "../types/record";
 import { PaperOrientation } from "../types/paper";
 import { getPageAttribute, isPageNode } from "./page";

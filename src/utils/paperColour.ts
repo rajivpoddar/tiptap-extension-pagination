@@ -7,7 +7,7 @@
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { DEFAULT_PAPER_COLOUR, DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../constants/paper";
+import { DEFAULT_PAPER_COLOUR, DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../constants/paperColours";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { DARK_THEME } from "../constants/theme";
 import { Nullable } from "../types/record";

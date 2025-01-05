@@ -16,20 +16,12 @@ export type * from "./types/page";
 export type * from "./types/paper";
 
 // === Constants ===
-export {
-    DEFAULT_PAPER_SIZE,
-    paperSizes,
-    paperDimensions,
-    DEFAULT_PAPER_ORIENTATION,
-    paperOrientationsSelect,
-    LIGHT_PAPER_COLOUR,
-    DARK_PAPER_COLOUR,
-    DEFAULT_PAPER_COLOUR,
-    DEFAULT_PAGE_MARGIN_NAME,
-    DEFAULT_MARGIN_CONFIG,
-    commonMarginConfigs,
-    pageSides,
-} from "./constants/paper";
+export { DEFAULT_PAPER_SIZE, paperSizes, paperDimensions } from "./constants/paperSize";
+export { LIGHT_PAPER_COLOUR, DARK_PAPER_COLOUR, DEFAULT_PAPER_COLOUR } from "./constants/paperColours";
+export { DEFAULT_PAPER_ORIENTATION, paperOrientationsSelect } from "./constants/paperOrientation";
+export { pageSides } from "./constants/pageSides";
+export { DEFAULT_PAGE_MARGIN_NAME, DEFAULT_MARGIN_CONFIG, commonMarginConfigs } from "./constants/pageMargins";
+export { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
 
 // === Nodes ===
 import PageNode from "./Nodes/Page";

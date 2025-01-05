@@ -7,8 +7,8 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG } from "../constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
+import { DEFAULT_MARGIN_CONFIG } from "../constants/pageMargins";
 import { MultiSide, MarginConfig } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute } from "./page";

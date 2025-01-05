@@ -6,13 +6,10 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import {
-    DEFAULT_MARGIN_CONFIG,
-    DEFAULT_PAGE_BORDER_CONFIG,
-    DEFAULT_PAPER_COLOUR,
-    DEFAULT_PAPER_ORIENTATION,
-    DEFAULT_PAPER_SIZE,
-} from "./constants/paper";
+import { DEFAULT_PAPER_SIZE } from "./constants/paperSize";
+import { DEFAULT_PAPER_COLOUR } from "./constants/paperColours";
+import { DEFAULT_MARGIN_CONFIG } from "./constants/pageMargins";
+import { DEFAULT_PAPER_ORIENTATION } from "./constants/paperOrientation";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
 import { BorderConfig, MultiSide, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
@@ -48,6 +45,7 @@ import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
 import { isMarginValid, isValidPaperMargins, setPageNodePosPaperMargins, updatePaperMargin } from "./utils/paperMargins";
 import { isBorderValid, isValidPageBorders, setPageNodePosPageBorders, updatePageBorder } from "./utils/pageBorders";
 import { setDocumentSideConfig, setDocumentSideValue, setPageSideConfig, setPageSideValue } from "./utils/setSideConfig";
+import { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
 
 export interface PaginationOptions {
     /**
