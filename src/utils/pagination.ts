@@ -665,7 +665,7 @@ export const buildNewDocument = (
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
-    let cumulativeNewDocPos = 1; // First page position in the document
+    let cumulativeNewDocPos = 1;
 
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldPos } = contentNodes[i];
@@ -677,6 +677,10 @@ export const buildNewDocument = (
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
+            if (pageNum > 0) {
+                cumulativeNewDocPos++; // Start of the page node
+            }
+
             pageNum++;
             if (isPageNumInRange(doc, pageNum)) {
                 ({ pageNodeAttributes, pagePixelDimensions } = getCalculatedPageNodeAttributes(state, pageNum));
@@ -685,10 +689,6 @@ export const buildNewDocument = (
 
         // Record the mapping from old position to new position
         const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
-
-        if (isPageFull) {
-            cumulativeNewDocPos += 1; // Start of the page node
-        }
 
         oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
