@@ -16,6 +16,7 @@ import {
     MarginConfig,
     CommonMarginName,
     MarginSide,
+    BorderConfig,
 } from "../types/paper";
 import { titleCase } from "../utils/string";
 
@@ -155,3 +156,7 @@ export const DEFAULT_PAGE_MARGIN_NAME: CommonMarginName = "normal";
 export const DEFAULT_MARGIN_CONFIG: MarginConfig = commonMarginConfigs[DEFAULT_PAGE_MARGIN_NAME];
 
 export const marginSides: MarginSide[] = ["top", "right", "bottom", "left"];
+
+// ====== Page Borders ======
+
+export const DEFAULT_PAGE_BORDER_CONFIG: BorderConfig = { top: 1, right: 1, bottom: 1, left: 1 };

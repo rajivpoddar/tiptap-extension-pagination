@@ -6,10 +6,16 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
+import {
+    DEFAULT_MARGIN_CONFIG,
+    DEFAULT_PAGE_BORDER_CONFIG,
+    DEFAULT_PAPER_COLOUR,
+    DEFAULT_PAPER_ORIENTATION,
+    DEFAULT_PAPER_SIZE,
+} from "./constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
+import { BorderConfig, Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -85,6 +91,16 @@ export interface PaginationOptions {
      * @example { top: 10, right: 10, bottom: 10, left: 10 }
      */
     defaultMarginConfig: MarginConfig;
+
+    /**
+     * The default border configuration for the document. This controls the thickness
+     * of the borders on the page. Note this is only the default so you can have
+     * settings in your editor which change the border configuration. This is only
+     * the setting for new documents.
+     * @default { top: 1, right: 1, bottom: 1, left: 1 }
+     * @example { top: 2, right: 2, bottom: 2, left: 2 }
+     */
+    defaultPageBorders: BorderConfig;
 }
 
 declare module "@tiptap/core" {
@@ -223,6 +239,13 @@ declare module "@tiptap/core" {
              * @param value The value to set the margin to
              */
             setPagePaperMargin: (pageNum: number, margin: Margin, value: number) => ReturnType;
+
+            /**
+             * Get the default page borders
+             * @returns {BorderConfig} The default page borders
+             * @example editor.commands.getDefaultPageBorders()
+             */
+            getDefaultPageBorders: () => BorderConfig;
         };
     }
 }
@@ -237,6 +260,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             useDeviceThemeForPaperColour: false,
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
             defaultMarginConfig: DEFAULT_MARGIN_CONFIG,
+            defaultPageBorders: DEFAULT_PAGE_BORDER_CONFIG,
         };
     },
 
@@ -722,6 +746,10 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
                     return success;
                 },
+
+            getDefaultPageBorders: () => {
+                return this.options.defaultPageBorders;
+            },
         };
     },
 });
