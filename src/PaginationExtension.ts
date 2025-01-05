@@ -108,8 +108,8 @@ declare module "@tiptap/core" {
         page: {
             /**
              * Get the default paper size
+             * @returns {PaperSize} The default paper size
              * @example editor.commands.getDefaultPaperSize()
-             * @returns The default paper size
              */
             getDefaultPaperSize: () => PaperSize;
 
@@ -143,8 +143,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper colour
+             * @returns {string} The default paper colour
              * @example editor.commands.getDefaultPaperColour()
-             * @returns The default paper colour
              */
             getDefaultPaperColour: () => string;
 
@@ -171,8 +171,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper orientation
+             * @returns {PaperOrientation} The default paper orientation
              * @example editor.commands.getDefaultPaperOrientation()
-             * @returns The default paper orientation
              */
             getDefaultPaperOrientation: () => PaperOrientation;
 
@@ -199,8 +199,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper margins
+             * @returns {MarginConfig} The default paper margins
              * @example editor.commands.getDefaultPaperMargins()
-             * @returns The default paper margins
              */
             getDefaultPaperMargins: () => MarginConfig;
 
