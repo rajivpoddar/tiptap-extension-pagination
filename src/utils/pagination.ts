@@ -679,10 +679,6 @@ export const buildNewDocument = (
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
-            if (pageNum > 0) {
-                cumulativeNewDocPos++; // Start of the page node
-            }
-
             pageNum++;
             if (isPageNumInRange(doc, pageNum)) {
                 ({ pageNodeAttributes, pagePixelDimensions } = getCalculatedPageNodeAttributes(state, pageNum));
