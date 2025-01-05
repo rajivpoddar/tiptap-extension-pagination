@@ -8,6 +8,7 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Selection, TextSelection, Transaction } from "@tiptap/pm/state";
 import { Sign } from "../constants/direction";
 import { Nullable } from "../types/record";
+import { isNodeEmpty } from "./node";
 
 /**
  * Check if the editor is currently highlighting text.
@@ -80,8 +81,14 @@ export const setSelectionAtEndOfDocument = (tr: Transaction): Transaction => {
  * @returns {void}
  */
 export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: number): void => {
-    const paragraphStartPos = tr.doc.resolve(paragraphPos + 1);
-    moveToNearestTextSelection(tr, paragraphStartPos, 1);
+    const paragraphNode = tr.doc.nodeAt(paragraphPos);
+    if (paragraphNode && isNodeEmpty(paragraphNode)) {
+        // Node will not have a text selection so move to the start of the paragraph
+        setSelectionAtPos(tr, paragraphPos); // + 1 ?
+    } else {
+        const paragraphStartPos = tr.doc.resolve(paragraphPos + 1);
+        moveToNearestTextSelection(tr, paragraphStartPos, 1);
+    }
 };
 
 /**
@@ -92,8 +99,13 @@ export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: nu
  * @returns {void}
  */
 export const setSelectionToEndOfParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode): void => {
-    const paragraphEndPos = tr.doc.resolve(paragraphPos + paragraphNode.nodeSize - 1);
-    moveToNearestTextSelection(tr, paragraphEndPos, -1);
+    if (isNodeEmpty(paragraphNode)) {
+        // Node will not have a text selection so move to the start=end of the paragraph
+        setSelectionToStartOfParagraph(tr, paragraphPos);
+    } else {
+        const paragraphEndPos = tr.doc.resolve(paragraphPos + paragraphNode.nodeSize - 1);
+        moveToNearestTextSelection(tr, paragraphEndPos, -1);
+    }
 };
 
 /**
