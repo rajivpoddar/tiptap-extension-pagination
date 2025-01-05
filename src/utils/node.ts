@@ -105,3 +105,38 @@ export const nodeHasAttribute = (node: Node, attr: string): boolean => {
     const { attrs } = node;
     return attr in attrs && attrs[attr] !== undefined && attrs[attr] !== null;
 };
+
+/**
+ * Parse the HTML attribute of the element.
+ * @param element - The element to parse the attribute from.
+ * @param attr - The attribute to parse.
+ * @param fallback - The fallback value if the attribute is not found.
+ * @returns {T} The parsed attribute value or the fallback value.
+ */
+export const parseHTMLAttribute =
+    <T>(attr: string, fallback: T) =>
+    (element: HTMLElement): T => {
+        const margins = element.getAttribute(attr);
+        return margins ? JSON.parse(margins) : fallback;
+    };
+
+/**
+ * Render the HTML attribute.
+ * @param attr - The attribute to render.
+ * @param attributes - The attributes to render.
+ * @returns {Object} The rendered attribute.
+ */
+export const renderHTMLAttribute =
+    <T extends Record<string, unknown>>(attr: keyof T) =>
+    (attributes: T): { [key in keyof T]: string } => {
+        const value = attributes[attr];
+
+        // Ensure type safety by serializing only valid JSON values
+        if (typeof value !== "object" || value === null) {
+            throw new Error(`Invalid attribute value for "${String(attr)}". Must be a non-null object.`);
+        }
+
+        return {
+            [attr]: JSON.stringify(value),
+        } as { [key in keyof T]: string };
+    };

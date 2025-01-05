@@ -22,6 +22,7 @@ import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
 import { mm, px } from "../utils/units";
 import { calculatePageBorders, getPageNodePageBorders } from "../utils/pageBorders";
+import { parseHTMLAttribute, renderHTMLAttribute } from "../utils/node";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -50,27 +51,13 @@ const PageNode = Node.create<PageNodeOptions>({
             [PAGE_NODE_ATTR_KEYS.paperOrientation]: DEFAULT_PAPER_ORIENTATION,
             [PAGE_NODE_ATTR_KEYS.pageMargins]: {
                 default: DEFAULT_MARGIN_CONFIG,
-                parseHTML: (element) => {
-                    const margins = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageMargins);
-                    return margins ? JSON.parse(margins) : DEFAULT_MARGIN_CONFIG;
-                },
-                renderHTML: (attributes) => {
-                    return {
-                        [PAGE_NODE_ATTR_KEYS.pageMargins]: JSON.stringify(attributes.pageMargins),
-                    };
-                },
+                parseHTML: parseHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins, DEFAULT_MARGIN_CONFIG),
+                renderHTML: renderHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins),
             },
             [PAGE_NODE_ATTR_KEYS.pageBorders]: {
                 default: DEFAULT_PAGE_BORDER_CONFIG,
-                parseHTML: (element) => {
-                    const borders = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageBorders);
-                    return borders ? JSON.parse(borders) : DEFAULT_PAGE_BORDER_CONFIG;
-                },
-                renderHTML: (attributes) => {
-                    return {
-                        [PAGE_NODE_ATTR_KEYS.pageBorders]: JSON.stringify(attributes.pageBorders),
-                    };
-                },
+                parseHTML: parseHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageBorders, DEFAULT_PAGE_BORDER_CONFIG),
+                renderHTML: renderHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins),
             },
         };
     },
