@@ -696,9 +696,21 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setPagePaperMargins: setPageSideConfig(setPageNodePosPaperMargins),
 
-            setDocumentPaperMargin: setDocumentSideValue(this.editor.commands.setDocumentPaperMargins, isMarginValid, updatePaperMargin),
+            setDocumentPaperMargin:
+                (margin: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setDocumentSideValue(editor.commands.setDocumentPaperMargins, isMarginValid, updatePaperMargin)(margin, value)({
+                        tr,
+                        dispatch,
+                    }),
 
-            setPagePaperMargin: setPageSideValue(this.editor.commands.setPagePaperMargins, isMarginValid, updatePaperMargin),
+            setPagePaperMargin:
+                (pageNum: number, margin: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setPageSideValue(editor.commands.setPagePaperMargins, isMarginValid, updatePaperMargin)(pageNum, margin, value)({
+                        tr,
+                        dispatch,
+                    }),
 
             getDefaultPageBorders: () => {
                 return this.options.defaultPageBorders;
@@ -714,9 +726,21 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setPageBorders: setPageSideConfig(setPageNodePosPageBorders),
 
-            setDocumentPageBorder: setDocumentSideValue(this.editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder),
+            setDocumentPageBorder:
+                (border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setDocumentSideValue(editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
+                        tr,
+                        dispatch,
+                    }),
 
-            setPagePageBorder: setPageSideValue(this.editor.commands.setPageBorders, isBorderValid, updatePageBorder),
+            setPagePageBorder:
+                (pageNum: number, border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setPageSideValue(editor.commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
+                        tr,
+                        dispatch,
+                    }),
         };
     },
 });
