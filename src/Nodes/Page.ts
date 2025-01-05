@@ -7,14 +7,12 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import {
-    DEFAULT_MARGIN_CONFIG,
-    DEFAULT_PAGE_BORDER_CONFIG,
-    DEFAULT_PAPER_COLOUR,
-    DEFAULT_PAPER_ORIENTATION,
-    DEFAULT_PAPER_SIZE,
-} from "../constants/paper";
+import { DEFAULT_PAPER_SIZE } from "../constants/paperSize";
+import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/pageBorders";
+import { DEFAULT_PAPER_COLOUR } from "../constants/paperColours";
+import { DEFAULT_PAPER_ORIENTATION } from "../constants/paperOrientation";
 import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS, DEFAULT_PAGE_GAP } from "../constants/page";
+import { DEFAULT_MARGIN_CONFIG } from "../constants/pageMargins";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
 import { isPageNode } from "../utils/page";

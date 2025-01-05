@@ -1,24 +1,10 @@
 /**
- * @file /src/constants/paper.ts
- * @name Paper
+ * @file /src/constants/paperSize.ts
+ * @name PaperSize
  * @description Constants for the paper sizes
  */
 
-import {
-    APaperSize,
-    BPaperSize,
-    CPaperSize,
-    USPaperSize,
-    PaperDimensions,
-    PaperSize,
-    PaperOrientation,
-    PaperOrientationSelect,
-    MarginConfig,
-    CommonMarginName,
-    PageSide,
-    BorderConfig,
-} from "../types/paper";
-import { titleCase } from "../utils/string";
+import { APaperSize, BPaperSize, CPaperSize, USPaperSize, PaperDimensions, PaperSize } from "../types/paper";
 
 export const DEFAULT_PAPER_SIZE: PaperSize = "A4" as const;
 
@@ -110,53 +96,3 @@ export const paperDimensions: Record<PaperSize, PaperDimensions> = {
 };
 
 export const paperSizes: PaperSize[] = Object.keys(paperDimensions) as PaperSize[];
-
-// ====== Paper Colours ======
-
-export const LIGHT_PAPER_COLOUR: string = "#fff";
-export const DARK_PAPER_COLOUR: string = "#222";
-export const DEFAULT_PAPER_COLOUR: string = LIGHT_PAPER_COLOUR;
-
-// ====== Paper Orientation ======
-
-export const paperOrientations: PaperOrientation[] = ["portrait", "landscape"];
-
-/**
- * A mapped version of the paper orientations where the oreintation is the key
- * and the label is the title cased version of the orientation. E.g. can be used
- * in a select input.
- */
-export const paperOrientationsSelect: PaperOrientationSelect[] = paperOrientations.map((orientation) => ({
-    orientation,
-    label: titleCase(orientation),
-}));
-
-export const DEFAULT_PAPER_ORIENTATION: PaperOrientation = "portrait";
-
-// ====== Paper Margins ======
-
-/**
- * Common margin configurations for different margin sizes.
- */
-export const commonMarginConfigs: Record<CommonMarginName, MarginConfig> = {
-    normal: { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 },
-    narrow: { top: 12.7, right: 12.7, bottom: 12.7, left: 12.7 },
-    moderate: { top: 25.4, right: 19.1, bottom: 25.4, left: 19.1 },
-    wide: { top: 25.4, right: 50.8, bottom: 25.4, left: 50.8 },
-};
-
-/**
- * The common margin name for the default margin configuration.
- */
-export const DEFAULT_PAGE_MARGIN_NAME: CommonMarginName = "normal";
-
-/**
- * Standard margins are 1 inch or 25.4mm on all sides.
- */
-export const DEFAULT_MARGIN_CONFIG: MarginConfig = commonMarginConfigs[DEFAULT_PAGE_MARGIN_NAME];
-
-export const pageSides: PageSide[] = ["top", "right", "bottom", "left"];
-
-// ====== Page Borders ======
-
-export const DEFAULT_PAGE_BORDER_CONFIG: BorderConfig = { top: 1, right: 1, bottom: 1, left: 1 };

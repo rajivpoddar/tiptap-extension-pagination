@@ -7,7 +7,7 @@
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paper";
+import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paperSize";
 import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
 import { PageNodeAttributes, PageContentPixelDimensions } from "../types/page";
 import { Nullable } from "../types/record";
