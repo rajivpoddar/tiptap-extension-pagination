@@ -117,8 +117,7 @@ export const parseHTMLAttribute =
     <T>(attr: string, fallback: T) =>
     (element: HTMLElement): T => {
         const margins = element.getAttribute(attr);
-        const isObject = typeof margins === "object";
-        return margins ? (isObject ? JSON.parse(margins) : margins) : fallback;
+        return margins ? JSON.parse(margins) : fallback;
     };
 
 /**
