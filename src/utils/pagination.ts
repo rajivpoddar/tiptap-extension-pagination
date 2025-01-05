@@ -13,17 +13,11 @@ import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
 import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
-import {
-    moveToNearestValidCursorPosition,
-    moveToNextTextBlock,
-    moveToPreviousTextBlock,
-    moveToThisTextBlock,
-    setSelection,
-    setSelectionAtEndOfDocument,
-} from "./selection";
+import { moveToNearestValidCursorPosition, moveToThisTextBlock, setSelection, setSelectionAtEndOfDocument } from "./selection";
 import { inRange } from "./math";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
 import { getCalculatedPageNodeAttributes } from "./getPageAttributes";
+import { MarginConfig } from "../types/paper";
 
 /**
  * Check if the given node is a paragraph node.
@@ -117,7 +111,7 @@ export const getParagraphNodeAndPosition = (
         return getParagraphNodeAndPosition(doc, doc.resolve(pos));
     }
 
-    if (isPosAtStartOfDocument(doc, pos)) {
+    if (isPosAtStartOfDocument(doc, pos, false)) {
         // Find the next paragraph node
         const { nextParagraphPos, nextParagraphNode } = getNextParagraph(doc, pos.pos);
         return { paragraphPos: nextParagraphPos, paragraphNode: nextParagraphNode };
@@ -239,7 +233,7 @@ export const getEndOfPageAndParagraphPosition = (
 };
 
 /**
- * Check if the editor is currently highlighting text.
+ * Check if the given position is at the start of the document.
  * @param state - The current editor state.
  * @returns True if text is currently highlighted, false otherwise.
  */
@@ -250,7 +244,7 @@ const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | numb
     }
 
     // Check if we are at the start of the document
-    if (isPosAtStartOfDocument(doc, $pos)) {
+    if (isPosAtStartOfDocument(doc, $pos, false)) {
         return true;
     }
 
@@ -395,12 +389,14 @@ export const isPosAtLastChildOfPage = (doc: PMNode, $pos: ResolvedPos | number):
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the start of the document, false otherwise.
  */
-export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number, allowTextBlock: boolean): boolean => {
     if (typeof $pos === "number") {
-        return isPosAtStartOfDocument(doc, doc.resolve($pos));
+        return isPosAtStartOfDocument(doc, doc.resolve($pos), allowTextBlock);
     }
 
-    return $pos.pos <= 1;
+    const maxPos = allowTextBlock ? 2 : 1;
+
+    return $pos.pos <= maxPos;
 };
 
 /**
@@ -453,7 +449,7 @@ export const getPreviousParagraph = (doc: PMNode, pos: number): { prevParagraphP
  * @returns {PMNode} The next paragraph node.
  */
 export const getNextParagraph = (doc: PMNode, pos: number): { nextParagraphPos: number; nextParagraphNode: Nullable<PMNode> } => {
-    const documentLength = doc.nodeSize;
+    const documentLength = doc.content.size;
     let nextParagraphPos = pos;
     let nextParagraphNode = null;
     while (nextParagraphNode === null && nextParagraphPos < documentLength) {
@@ -610,6 +606,21 @@ export const collectContentNodes = (state: EditorState): NodePosArray => {
 };
 
 /**
+ * Calculates the margins of the element.
+ * @param element - The element to calculate margins for.
+ * @returns {MarginConfig} The margins of the element.
+ */
+const calculateElementMargins = (element: HTMLElement): MarginConfig => {
+    const style = window.getComputedStyle(element);
+    return {
+        top: parseFloat(style.marginTop),
+        right: parseFloat(style.marginRight),
+        bottom: parseFloat(style.marginBottom),
+        left: parseFloat(style.marginLeft),
+    };
+};
+
+/**
  * Measure the heights of the content nodes.
  * @param view - The editor view.
  * @param contentNodes - The content nodes and their positions.
@@ -619,16 +630,21 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
     const paragraphType = view.state.schema.nodes.paragraph;
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
-        const dom = view.nodeDOM(pos);
-        if (dom instanceof HTMLElement) {
-            let { height } = dom.getBoundingClientRect();
+        const domNode = view.nodeDOM(pos);
+        if (domNode instanceof HTMLElement) {
+            let { height } = domNode.getBoundingClientRect();
+
+            const { top: marginTop } = calculateElementMargins(domNode);
+
             if (height === 0) {
                 if (node.type === paragraphType || node.isTextblock) {
                     // Assign a minimum height to empty paragraphs or textblocks
                     height = MIN_PARAGRAPH_HEIGHT;
                 }
             }
-            return height;
+
+            // We use top margin only because there is overlap of margins between paragraphs
+            return height + marginTop;
         }
 
         return MIN_PARAGRAPH_HEIGHT; // Default to minimum height if DOM element is not found
@@ -666,13 +682,14 @@ export const buildNewDocument = (
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
-    let cumulativeNewDocPos = 0;
+    let cumulativeNewDocPos = 1;
 
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldPos } = contentNodes[i];
         const nodeHeight = nodeHeights[i];
 
-        if (currentHeight + nodeHeight > pagePixelDimensions.pageContentHeight && currentPageContent.length > 0) {
+        const isPageFull = currentHeight + nodeHeight > pagePixelDimensions.pageContentHeight && currentPageContent.length > 0;
+        if (isPageFull) {
             const pageNode = addPage(currentPageContent);
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
@@ -683,12 +700,9 @@ export const buildNewDocument = (
             }
         }
 
-        if (currentPageContent.length === 0) {
-            cumulativeNewDocPos += 1; // Start of the page node
-        }
-
         // Record the mapping from old position to new position
         const nodeStartPosInNewDoc = cumulativeNewDocPos + currentPageContent.reduce((sum, n) => sum + n.nodeSize, 0);
+
         oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
         currentPageContent.push(node);
@@ -729,23 +743,28 @@ const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number):
  * @param contentNodes - The content nodes and their positions.
  * @param oldCursorPos - The old cursor position.
  * @param oldToNewPosMap - The mapping from old positions to new positions.
+ * @param newDocContentSize - The size of the new document. Serves as maximum limit for cursor position.
  * @returns {number} The new cursor position.
  */
-export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap) => {
+export const mapCursorPosition = (
+    contentNodes: NodePosArray,
+    oldCursorPos: number,
+    oldToNewPosMap: CursorMap,
+    newDocContentSize: number
+) => {
     let newCursorPos: Nullable<number> = null;
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldNodePos } = contentNodes[i];
         const nodeSize = node.nodeSize;
 
         if (oldNodePos <= oldCursorPos && oldCursorPos <= oldNodePos + nodeSize) {
-            const oldNodeTextPos = oldNodePos + 1; // Start of paragraph will always be 1 less than the start of the text
-            const offsetInNode = oldCursorPos - oldNodeTextPos;
+            const offsetInNode = oldCursorPos - oldNodePos;
             const newNodePos = oldToNewPosMap.get(oldNodePos);
             if (newNodePos === undefined) {
                 console.error("Unable to determine new node position from cursor map!");
                 newCursorPos = 0;
             } else {
-                newCursorPos = newNodePos + offsetInNode;
+                newCursorPos = Math.min(newNodePos + offsetInNode, newDocContentSize - 1);
             }
 
             break;
@@ -753,6 +772,26 @@ export const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: numb
     }
 
     return newCursorPos;
+};
+
+/**
+ * Check if the given position is at the start of a text block.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the start of a text block, false otherwise.
+ */
+const isNodeBeforeAvailable = ($pos: ResolvedPos): boolean => {
+    return !!$pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore));
+};
+
+/**
+ * Check if the given position is at the end of a text block.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the end of a text block, false otherwise.
+ */
+const isNodeAfterAvailable = ($pos: ResolvedPos): boolean => {
+    return !!$pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter));
 };
 
 /**
@@ -765,38 +804,8 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
 
-        const startOfParagraph = isAtStartOfParagraph(tr.doc, $pos);
-        const endOfParagraph = isAtEndOfParagraph(tr.doc, $pos);
-        console.log("Is start of paragraph", startOfParagraph);
-        console.log("Is end of paragraph", endOfParagraph);
-
-        console.log("Is parent a text block", $pos.parent.isTextblock, $pos.parent.type.name);
-        console.log("Node Before", $pos.nodeBefore);
-        console.log("Node Before type", $pos.nodeBefore?.type.name);
-
-        console.log("Node After", $pos.nodeAfter);
-        console.log("Node after type", $pos.nodeAfter?.type.name);
-
-        if ($pos.parent.isTextblock) {
-            if (isPosAtFirstChildOfPage(tr.doc, newCursorPos)) {
-                if (isPosAtStartOfPage(tr.doc, newCursorPos)) {
-                    selection = moveToThisTextBlock(tr, $pos);
-                } else {
-                    selection = moveToNextTextBlock(tr, $pos);
-                }
-            } else if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
-                if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
-                    selection = moveToPreviousTextBlock(tr, $pos);
-                } else {
-                    selection = moveToThisTextBlock(tr, $pos);
-                }
-            } else {
-                selection = moveToNextTextBlock(tr, $pos);
-            }
-        } else if ($pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore))) {
-            selection = moveToNextTextBlock(tr, $pos);
-        } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
-            selection = moveToNextTextBlock(tr, $pos);
+        if ($pos.parent.isTextblock || isNodeBeforeAvailable($pos) || isNodeAfterAvailable($pos)) {
+            selection = moveToThisTextBlock(tr, $pos);
         } else {
             selection = moveToNearestValidCursorPosition($pos);
         }

@@ -40,8 +40,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
         try {
             return getParentNodePosOfType(doc, $pos.before(), type);
         } catch (error) {
-            console.error(`Failed to determine parent node of type: '${type}'. Details: ${error}`);
-            return $pos;
+            return getParentNodePosOfType(doc, doc.resolve($pos.pos - 1), type);
         }
     }
 
@@ -73,7 +72,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
  */
 export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: Node, newNode: Node): void => {
     const newContent = existingNode.content.append(newNode.content);
-    tr.replaceWith(pos, pos + existingNode.nodeSize, newContent);
+    tr.replaceWith(pos, pos + existingNode.nodeSize - 1, newContent);
 };
 
 /**

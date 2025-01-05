@@ -55,7 +55,8 @@ const PaginationPlugin = new Plugin({
                         tr.replaceWith(0, doc.content.size, newDoc.content);
                         tr.setMeta("pagination", true);
 
-                        const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap);
+                        const newDocContentSize = newDoc.content.size;
+                        const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, newDocContentSize);
                         paginationUpdateCursorPosition(tr, newCursorPos);
                     }
 

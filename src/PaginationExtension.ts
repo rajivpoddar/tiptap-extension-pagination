@@ -6,10 +6,16 @@
 
 import { Extension, isNodeEmpty } from "@tiptap/core";
 import { keymap } from "@tiptap/pm/keymap";
-import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "./constants/paper";
+import {
+    DEFAULT_MARGIN_CONFIG,
+    DEFAULT_PAGE_BORDER_CONFIG,
+    DEFAULT_PAPER_COLOUR,
+    DEFAULT_PAPER_ORIENTATION,
+    DEFAULT_PAPER_SIZE,
+} from "./constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
+import { BorderConfig, MultiSide, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -18,6 +24,7 @@ import {
     isAtStartOrEndOfParagraph,
     isParagraphNode,
     isPosAtEndOfPage,
+    isPosAtStartOfDocument,
     isPosAtStartOfPage,
     isPositionWithinParagraph,
     isTextNode,
@@ -39,6 +46,8 @@ import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/pa
 import { setPageNodesAttribute } from "./utils/setPageAttributes";
 import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
 import { isMarginValid, isValidPaperMargins, setPageNodePosPaperMargins, updatePaperMargin } from "./utils/paperMargins";
+import { isBorderValid, isValidPageBorders, setPageNodePosPageBorders, updatePageBorder } from "./utils/pageBorders";
+import { setDocumentSideConfig, setDocumentSideValue, setPageSideConfig, setPageSideValue } from "./utils/setSideConfig";
 
 export interface PaginationOptions {
     /**
@@ -84,6 +93,16 @@ export interface PaginationOptions {
      * @example { top: 10, right: 10, bottom: 10, left: 10 }
      */
     defaultMarginConfig: MarginConfig;
+
+    /**
+     * The default border configuration for the document. This controls the thickness
+     * of the borders on the page. Note this is only the default so you can have
+     * settings in your editor which change the border configuration. This is only
+     * the setting for new documents.
+     * @default { top: 1, right: 1, bottom: 1, left: 1 }
+     * @example { top: 2, right: 2, bottom: 2, left: 2 }
+     */
+    defaultPageBorders: BorderConfig;
 }
 
 declare module "@tiptap/core" {
@@ -91,8 +110,8 @@ declare module "@tiptap/core" {
         page: {
             /**
              * Get the default paper size
+             * @returns {PaperSize} The default paper size
              * @example editor.commands.getDefaultPaperSize()
-             * @returns The default paper size
              */
             getDefaultPaperSize: () => PaperSize;
 
@@ -126,8 +145,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper colour
+             * @returns {string} The default paper colour
              * @example editor.commands.getDefaultPaperColour()
-             * @returns The default paper colour
              */
             getDefaultPaperColour: () => string;
 
@@ -154,8 +173,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper orientation
+             * @returns {PaperOrientation} The default paper orientation
              * @example editor.commands.getDefaultPaperOrientation()
-             * @returns The default paper orientation
              */
             getDefaultPaperOrientation: () => PaperOrientation;
 
@@ -182,8 +201,8 @@ declare module "@tiptap/core" {
 
             /**
              * Get the default paper margins
+             * @returns {MarginConfig} The default paper margins
              * @example editor.commands.getDefaultPaperMargins()
-             * @returns The default paper margins
              */
             getDefaultPaperMargins: () => MarginConfig;
 
@@ -213,7 +232,7 @@ declare module "@tiptap/core" {
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
              */
-            setDocumentPaperMargin: (margin: Margin, value: number) => ReturnType;
+            setDocumentPaperMargin: (margin: MultiSide, value: number) => ReturnType;
 
             /**
              * Set a margin for a specific page on a specific side
@@ -221,7 +240,50 @@ declare module "@tiptap/core" {
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
              */
-            setPagePaperMargin: (pageNum: number, margin: Margin, value: number) => ReturnType;
+            setPagePaperMargin: (pageNum: number, margin: MultiSide, value: number) => ReturnType;
+
+            /**
+             * Get the default page borders
+             * @returns {BorderConfig} The default page borders
+             * @example editor.commands.getDefaultPageBorders()
+             */
+            getDefaultPageBorders: () => BorderConfig;
+
+            /**
+             * Set the page borders for the document
+             * @param pageBorders The page borders (top, right, bottom, left)
+             * @example editor.commands.setDocumentPageBorders({ top: 2, right: 2, bottom: 2, left: 2 })
+             */
+            setDocumentPageBorders: (pageBorders: BorderConfig) => ReturnType;
+
+            /**
+             * Set the default page borders
+             * @example editor.commands.setDocumentDefaultPageBorders()
+             */
+            setDocumentDefaultPageBorders: () => ReturnType;
+
+            /**
+             * Set the page borders for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param pageBorders The page borders
+             * @example editor.commands.setPageBorders(0, { top: 2, right: 2, bottom: 2, left: 2 })
+             */
+            setPageBorders: (pageNum: number, pageBorders: BorderConfig) => ReturnType;
+
+            /**
+             * Set a border for the document on a specific side
+             * @param border The border to set (top, right, bottom, left, all)
+             * @param value The value to set the border to
+             */
+            setDocumentPageBorder: (border: MultiSide, value: number) => ReturnType;
+
+            /**
+             * Set a border for a specific page on a specific side
+             * @param pageNum The page number (0-indexed)
+             * @param border The border to set (top, right, bottom, left, all)
+             * @param value The value to set the border to
+             */
+            setPagePageBorder: (pageNum: number, border: MultiSide, value: number) => ReturnType;
         };
     }
 }
@@ -236,6 +298,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             useDeviceThemeForPaperColour: false,
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
             defaultMarginConfig: DEFAULT_MARGIN_CONFIG,
+            defaultPageBorders: DEFAULT_PAGE_BORDER_CONFIG,
         };
     },
 
@@ -331,6 +394,9 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                             tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
                             setSelectionAtPos(tr, thisNodePos - 1);
                         }
+                    } else if (isPosAtStartOfDocument(doc, $pos, true)) {
+                        // Prevent deleting the first page node
+                        return true;
                     } else if (!isPosAtStartOfPage(doc, $pos)) {
                         return false;
                     } else {
@@ -456,17 +522,13 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                         return false;
                     }
 
-                    if (!isNodeEmpty(nextParagraphNode)) {
+                    const thisNodeEmpty = isNodeEmpty(paragraphNode);
+                    const nextNodeEmpty = isNodeEmpty(nextParagraphNode);
+                    if (!nextNodeEmpty) {
                         deleteNode(tr, nextParagraphPos, nextParagraphNode);
                     }
 
                     appendAndReplaceNode(tr, paragraphPos, paragraphNode, nextParagraphNode);
-
-                    const thisNodeEmpty = isNodeEmpty(paragraphNode);
-                    const nextNodeEmpty = isNodeEmpty(nextParagraphNode);
-
-                    console.log("This node empty:", thisNodeEmpty);
-                    console.log("Next node empty:", nextNodeEmpty);
 
                     if (thisNodeEmpty) {
                         const $newPos = tr.doc.resolve(thisPos);
@@ -625,103 +687,60 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 return this.options.defaultMarginConfig;
             },
 
-            setDocumentPaperMargins:
-                (paperMargins: MarginConfig) =>
-                ({ tr, dispatch }) => {
-                    if (!dispatch) return false;
-
-                    if (!isValidPaperMargins(paperMargins)) {
-                        console.warn("Invalid paper margins", paperMargins);
-                        return false;
-                    }
-
-                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.pageMargins, paperMargins);
-
-                    dispatch(tr);
-                    return true;
-                },
+            setDocumentPaperMargins: setDocumentSideConfig(PAGE_NODE_ATTR_KEYS.pageMargins, isValidPaperMargins),
 
             setDocumentDefaultPaperMargins:
                 () =>
                 ({ editor }) =>
                     editor.commands.setDocumentPaperMargins(this.options.defaultMarginConfig),
 
-            setPagePaperMargins:
-                (pageNum: number, paperMargins: MarginConfig) =>
-                ({ tr, dispatch }) => {
-                    const { doc } = tr;
-
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
-
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    return setPageNodePosPaperMargins(tr, dispatch, pagePos, pageNode, paperMargins);
-                },
+            setPagePaperMargins: setPageSideConfig(setPageNodePosPaperMargins),
 
             setDocumentPaperMargin:
-                (margin: Margin, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
-
-                    if (margin === "all") {
-                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setDocumentPaperMargins(marginConfig);
-                    }
-
-                    if (!isMarginValid(value)) {
-                        console.warn("Invalid margin value", value);
-                        return false;
-                    }
-
-                    const { doc } = tr;
-                    const transactions: boolean[] = [];
-
-                    doc.forEach((node, pos) => {
-                        transactions.push(updatePaperMargin(tr, pos, node, margin, value));
-                    });
-
-                    const success = transactions.some((changed) => changed);
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
-                },
+                (margin: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setDocumentSideValue(editor.commands.setDocumentPaperMargins, isMarginValid, updatePaperMargin)(margin, value)({
+                        tr,
+                        dispatch,
+                    }),
 
             setPagePaperMargin:
-                (pageNum: number, margin: Margin, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
+                (pageNum: number, margin: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setPageSideValue(editor.commands.setPagePaperMargins, isMarginValid, updatePaperMargin)(pageNum, margin, value)({
+                        tr,
+                        dispatch,
+                    }),
 
-                    if (margin === "all") {
-                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setPagePaperMargins(pageNum, marginConfig);
-                    }
+            getDefaultPageBorders: () => {
+                return this.options.defaultPageBorders;
+            },
 
-                    if (!isMarginValid(value)) {
-                        console.warn("Invalid margin value", value);
-                        return false;
-                    }
+            setDocumentPageBorders: setDocumentSideConfig(PAGE_NODE_ATTR_KEYS.pageBorders, isValidPageBorders),
 
-                    const { doc } = tr;
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
-
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    const success = updatePaperMargin(tr, pagePos, pageNode, margin, value);
-
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
+            setDocumentDefaultPageBorders:
+                () =>
+                ({ editor }) => {
+                    return editor.commands.setDocumentPageBorders(this.options.defaultPageBorders);
                 },
+
+            setPageBorders: setPageSideConfig(setPageNodePosPageBorders),
+
+            setDocumentPageBorder:
+                (border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setDocumentSideValue(editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
+                        tr,
+                        dispatch,
+                    }),
+
+            setPagePageBorder:
+                (pageNum: number, border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) =>
+                    setPageSideValue(editor.commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
+                        tr,
+                        dispatch,
+                    }),
         };
     },
 });

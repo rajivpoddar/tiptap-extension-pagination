@@ -7,12 +7,12 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG, marginSides } from "../constants/paper";
+import { DEFAULT_MARGIN_CONFIG } from "../constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { Margin, MarginConfig, MarginSide } from "../types/paper";
+import { MultiSide, MarginConfig } from "../types/paper";
 import { Nullable } from "../types/record";
-import { getPageAttribute, isPageNode } from "./page";
-import { setPageNodeAttribute } from "./setPageAttributes";
+import { getPageAttribute } from "./page";
+import { setPageNodePosSideConfig, updatePageSideConfig } from "./setSideConfig";
 import { mm } from "./units";
 
 /**
@@ -88,28 +88,16 @@ export const setPageNodePosPaperMargins = (
     pageNode: PMNode,
     paperMargins: MarginConfig
 ): boolean => {
-    if (!dispatch) return false;
-
-    if (!isValidPaperMargins(paperMargins)) {
-        console.warn("Invalid paper margins", paperMargins);
-        return false;
-    }
-
-    if (!isPageNode(pageNode)) {
-        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
-        return false;
-    }
-
-    if (getPageNodePaperMargins(pageNode) === paperMargins) {
-        return false;
-    }
-
-    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageMargins, paperMargins);
-    if (success) {
-        dispatch(tr);
-    }
-
-    return success;
+    return setPageNodePosSideConfig(
+        tr,
+        dispatch,
+        pagePos,
+        pageNode,
+        paperMargins,
+        isValidPaperMargins,
+        getPageNodePaperMargins,
+        PAGE_NODE_ATTR_KEYS.pageMargins
+    );
 };
 
 /**
@@ -125,35 +113,18 @@ export const updatePaperMargin = (
     tr: Transaction,
     pagePos: number,
     pageNode: PMNode,
-    margin: Exclude<Margin, "all">,
+    margin: Exclude<MultiSide, "all">,
     value: number
 ): boolean => {
-    if (!isPageNode(pageNode)) {
-        return false;
-    }
-
-    const existingMargins = getPageNodePaperMargins(pageNode);
-    let updatedMargins: MarginConfig = { ...DEFAULT_MARGIN_CONFIG };
-    if (existingMargins && isValidPaperMargins(existingMargins)) {
-        updatedMargins = { ...existingMargins };
-    } else {
-        if (marginSides.includes(margin)) {
-            updatedMargins[margin as MarginSide] = value;
-        } else {
-            switch (margin) {
-                case "x":
-                    updatedMargins.left = value;
-                    updatedMargins.right = value;
-                    break;
-                case "y":
-                    updatedMargins.top = value;
-                    updatedMargins.bottom = value;
-                    break;
-                default:
-                    console.error("Unhanded margin side", margin);
-            }
-        }
-    }
-
-    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageMargins, updatedMargins);
+    return updatePageSideConfig(
+        tr,
+        pagePos,
+        pageNode,
+        margin,
+        value,
+        getPageNodePaperMargins,
+        isValidPaperMargins,
+        DEFAULT_MARGIN_CONFIG,
+        PAGE_NODE_ATTR_KEYS.pageMargins
+    );
 };
