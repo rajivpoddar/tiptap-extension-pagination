@@ -6,4 +6,4 @@
 
 // === Pagination ===
 
-export const MIN_PARAGRAPH_HEIGHT = 45;
+export const MIN_PARAGRAPH_HEIGHT = 40;
