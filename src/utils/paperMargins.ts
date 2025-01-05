@@ -12,7 +12,7 @@ import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
 import { MultiSide, MarginConfig } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute } from "./page";
-import { setPageNodePosSideConfig, updatePageSideConfig } from "./setPageAttributes";
+import { setPageNodePosSideConfig, updatePageSideConfig } from "./setSideConfig";
 import { mm } from "./units";
 
 /**

@@ -13,7 +13,7 @@ import { BorderConfig, MultiSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { px } from "./units";
 import { getPageAttribute } from "./page";
-import { setPageNodePosSideConfig, updatePageSideConfig } from "./setPageAttributes";
+import { setPageNodePosSideConfig, updatePageSideConfig } from "./setSideConfig";
 
 /**
  * Checks if a (single) border is valid.
