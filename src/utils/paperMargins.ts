@@ -7,12 +7,12 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG, pageSides } from "../constants/paper";
+import { DEFAULT_MARGIN_CONFIG } from "../constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { MultiSide, MarginConfig, PageSide } from "../types/paper";
+import { MultiSide, MarginConfig } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
-import { setPageNodeAttribute } from "./setPageAttributes";
+import { setPageNodeAttribute, updatePageSideConfig } from "./setPageAttributes";
 import { mm } from "./units";
 
 /**
@@ -128,32 +128,15 @@ export const updatePaperMargin = (
     margin: Exclude<MultiSide, "all">,
     value: number
 ): boolean => {
-    if (!isPageNode(pageNode)) {
-        return false;
-    }
-
-    const existingMargins = getPageNodePaperMargins(pageNode);
-    let updatedMargins: MarginConfig = { ...DEFAULT_MARGIN_CONFIG };
-    if (existingMargins && isValidPaperMargins(existingMargins)) {
-        updatedMargins = { ...existingMargins };
-    } else {
-        if ((pageSides as MultiSide[]).includes(margin)) {
-            updatedMargins[margin as PageSide] = value;
-        } else {
-            switch (margin) {
-                case "x":
-                    updatedMargins.left = value;
-                    updatedMargins.right = value;
-                    break;
-                case "y":
-                    updatedMargins.top = value;
-                    updatedMargins.bottom = value;
-                    break;
-                default:
-                    console.error("Unhanded margin side", margin);
-            }
-        }
-    }
-
-    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageMargins, updatedMargins);
+    return updatePageSideConfig(
+        tr,
+        pagePos,
+        pageNode,
+        margin,
+        value,
+        getPageNodePaperMargins,
+        isValidPaperMargins,
+        DEFAULT_MARGIN_CONFIG,
+        PAGE_NODE_ATTR_KEYS.pageMargins
+    );
 };

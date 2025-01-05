@@ -8,12 +8,12 @@ import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { DEFAULT_PAGE_BORDER_CONFIG, pageSides } from "../constants/paper";
-import { BorderConfig, MultiSide, PageSide } from "../types/paper";
+import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/paper";
+import { BorderConfig, MultiSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { px } from "./units";
 import { getPageAttribute, isPageNode } from "./page";
-import { setPageNodeAttribute } from "./setPageAttributes";
+import { setPageNodeAttribute, updatePageSideConfig } from "./setPageAttributes";
 
 /**
  * Checks if a (single) border is valid.
@@ -126,32 +126,15 @@ export const updatePageBorder = (
     border: Exclude<MultiSide, "all">,
     value: number
 ): boolean => {
-    if (!isPageNode(pageNode)) {
-        return false;
-    }
-
-    const existingBorders = getPageNodePageBorders(pageNode);
-    let updatedBorders: BorderConfig = { ...DEFAULT_PAGE_BORDER_CONFIG };
-    if (existingBorders && isValidPageBorders(existingBorders)) {
-        updatedBorders = { ...existingBorders };
-    } else {
-        if ((pageSides as MultiSide[]).includes(border)) {
-            updatedBorders[border as PageSide] = value;
-        } else {
-            switch (border) {
-                case "x":
-                    updatedBorders.left = value;
-                    updatedBorders.right = value;
-                    break;
-                case "y":
-                    updatedBorders.top = value;
-                    updatedBorders.bottom = value;
-                    break;
-                default:
-                    console.error("Unhanded border side", border);
-            }
-        }
-    }
-
-    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageBorders, updatedBorders);
+    return updatePageSideConfig(
+        tr,
+        pagePos,
+        pageNode,
+        border,
+        value,
+        getPageNodePageBorders,
+        isValidPageBorders,
+        DEFAULT_PAGE_BORDER_CONFIG,
+        PAGE_NODE_ATTR_KEYS.pageBorders
+    );
 };
