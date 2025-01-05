@@ -116,7 +116,7 @@ export const getParagraphNodeAndPosition = (
         return getParagraphNodeAndPosition(doc, doc.resolve(pos));
     }
 
-    if (isPosAtStartOfDocument(doc, pos)) {
+    if (isPosAtStartOfDocument(doc, pos, false)) {
         // Find the next paragraph node
         const { nextParagraphPos, nextParagraphNode } = getNextParagraph(doc, pos.pos);
         return { paragraphPos: nextParagraphPos, paragraphNode: nextParagraphNode };
@@ -238,7 +238,7 @@ export const getEndOfPageAndParagraphPosition = (
 };
 
 /**
- * Check if the editor is currently highlighting text.
+ * Check if the given position is at the start of the document.
  * @param state - The current editor state.
  * @returns True if text is currently highlighted, false otherwise.
  */
@@ -249,7 +249,7 @@ const isPosMatchingStartOfPageCondition = (doc: PMNode, $pos: ResolvedPos | numb
     }
 
     // Check if we are at the start of the document
-    if (isPosAtStartOfDocument(doc, $pos)) {
+    if (isPosAtStartOfDocument(doc, $pos, false)) {
         return true;
     }
 
@@ -394,12 +394,14 @@ export const isPosAtLastChildOfPage = (doc: PMNode, $pos: ResolvedPos | number):
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the start of the document, false otherwise.
  */
-export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number, allowTextBlock: boolean): boolean => {
     if (typeof $pos === "number") {
-        return isPosAtStartOfDocument(doc, doc.resolve($pos));
+        return isPosAtStartOfDocument(doc, doc.resolve($pos), allowTextBlock);
     }
 
-    return $pos.pos <= 1;
+    const maxPos = allowTextBlock ? 2 : 1;
+
+    return $pos.pos <= maxPos;
 };
 
 /**

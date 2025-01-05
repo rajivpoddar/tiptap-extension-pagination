@@ -18,6 +18,7 @@ import {
     isAtStartOrEndOfParagraph,
     isParagraphNode,
     isPosAtEndOfPage,
+    isPosAtStartOfDocument,
     isPosAtStartOfPage,
     isPositionWithinParagraph,
     isTextNode,
@@ -331,6 +332,9 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                             tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
                             setSelectionAtPos(tr, thisNodePos - 1);
                         }
+                    } else if (isPosAtStartOfDocument(doc, $pos, true)) {
+                        // Prevent deleting the first page node
+                        return true;
                     } else if (!isPosAtStartOfPage(doc, $pos)) {
                         return false;
                     } else {
