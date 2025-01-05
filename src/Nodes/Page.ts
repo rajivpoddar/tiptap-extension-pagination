@@ -7,7 +7,13 @@
 import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG, DEFAULT_PAPER_COLOUR, DEFAULT_PAPER_ORIENTATION, DEFAULT_PAPER_SIZE } from "../constants/paper";
+import {
+    DEFAULT_MARGIN_CONFIG,
+    DEFAULT_PAGE_BORDER_CONFIG,
+    DEFAULT_PAPER_COLOUR,
+    DEFAULT_PAPER_ORIENTATION,
+    DEFAULT_PAPER_SIZE,
+} from "../constants/paper";
 import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS, DEFAULT_PAGE_GAP } from "../constants/page";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
@@ -15,6 +21,7 @@ import { isPageNode } from "../utils/page";
 import { getPageNodePaperOrientation } from "../utils/paperOrientation";
 import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
 import { mm, px } from "../utils/units";
+import { calculatePageBorders, getPageNodePageBorders } from "../utils/pageBorders";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -53,6 +60,18 @@ const PageNode = Node.create<PageNodeOptions>({
                     };
                 },
             },
+            [PAGE_NODE_ATTR_KEYS.pageBorders]: {
+                default: DEFAULT_PAGE_BORDER_CONFIG,
+                parseHTML: (element) => {
+                    const borders = element.getAttribute(PAGE_NODE_ATTR_KEYS.pageBorders);
+                    return borders ? JSON.parse(borders) : DEFAULT_PAGE_BORDER_CONFIG;
+                },
+                renderHTML: (attributes) => {
+                    return {
+                        [PAGE_NODE_ATTR_KEYS.pageBorders]: JSON.stringify(attributes.pageBorders),
+                    };
+                },
+            },
         };
     },
 
@@ -88,13 +107,16 @@ const PageNode = Node.create<PageNodeOptions>({
             const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
             const paperOrientation = getPageNodePaperOrientation(node) ?? DEFAULT_PAPER_ORIENTATION;
             const paperMargins = getPageNodePaperMargins(node) ?? DEFAULT_MARGIN_CONFIG;
+            const pageBorders = getPageNodePageBorders(node) ?? DEFAULT_PAGE_BORDER_CONFIG;
             const { width, height } = getPaperDimensions(paperSize, paperOrientation);
 
             dom.style.width = mm(width);
             dom.style.height = mm(height);
             dom.style.padding = calculatePagePadding(paperMargins);
 
-            dom.style.border = "1px solid #ccc";
+            dom.style.borderWidth = calculatePageBorders(pageBorders);
+            dom.style.borderStyle = "solid";
+            dom.style.borderColor = "#ccc";
 
             const paperColour = getPageNodePaperColour(node) ?? DEFAULT_PAPER_COLOUR;
             dom.style.background = paperColour;
