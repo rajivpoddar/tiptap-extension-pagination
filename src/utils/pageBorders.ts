@@ -12,8 +12,8 @@ import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/paper";
 import { BorderConfig, MultiSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { px } from "./units";
-import { getPageAttribute, isPageNode } from "./page";
-import { setPageNodeAttribute, updatePageSideConfig } from "./setPageAttributes";
+import { getPageAttribute } from "./page";
+import { setPageNodePosSideConfig, updatePageSideConfig } from "./setPageAttributes";
 
 /**
  * Checks if a (single) border is valid.
@@ -86,28 +86,16 @@ export const setPageNodePosPageBorders = (
     pageNode: PMNode,
     pageBorders: BorderConfig
 ): boolean => {
-    if (!dispatch) return false;
-
-    if (!isValidPageBorders(pageBorders)) {
-        console.warn("Invalid page borders", pageBorders);
-        return false;
-    }
-
-    if (!isPageNode(pageNode)) {
-        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
-        return false;
-    }
-
-    if (getPageNodePageBorders(pageNode) === pageBorders) {
-        return false;
-    }
-
-    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageBorders, pageBorders);
-    if (success) {
-        dispatch(tr);
-    }
-
-    return success;
+    return setPageNodePosSideConfig(
+        tr,
+        dispatch,
+        pagePos,
+        pageNode,
+        pageBorders,
+        isValidPageBorders,
+        getPageNodePageBorders,
+        PAGE_NODE_ATTR_KEYS.pageBorders
+    );
 };
 
 /**

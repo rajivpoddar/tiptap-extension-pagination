@@ -10,6 +10,7 @@ import { isPageNode } from "./page";
 import { MultiSide, PageSide } from "../types/paper";
 import { pageSides } from "../constants/paper";
 import { Nullable } from "../types/record";
+import { Dispatch } from "@tiptap/core";
 
 /**
  * Set a page node attribute to the given value for all page nodes in the document.
@@ -50,6 +51,52 @@ export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode,
     }
 
     return isDifferent;
+};
+
+/**
+ * Set the paper side configuration of a page node.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the side config for.
+ * @param pageNode - The page node to set the side config for.
+ * @param paperMargins - The side config to set.
+ * @param isValidConfig - A function to validate the side config.
+ * @param getPageNodeSideConfig - A function to get the existing side config from the page node.
+ * @param attrKey - The key of the attribute to update.
+ * @returns {boolean} True if the side config were set, false otherwise.
+ */
+export const setPageNodePosSideConfig = <V, T extends { [key in PageSide]: V }>(
+    tr: Transaction,
+    dispatch: Dispatch,
+    pagePos: number,
+    pageNode: PMNode,
+    configObj: T,
+    isValidConfig: (config: T) => boolean,
+    getPageNodeSideConfig: (pageNode: PMNode) => Nullable<T>,
+    attrKey: string
+): boolean => {
+    if (!dispatch) return false;
+
+    if (!isValidConfig(configObj)) {
+        console.warn("Invalid paper margins", configObj);
+        return false;
+    }
+
+    if (!isPageNode(pageNode)) {
+        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
+        return false;
+    }
+
+    if (getPageNodeSideConfig(pageNode) === configObj) {
+        return false;
+    }
+
+    const success = setPageNodeAttribute(tr, pagePos, pageNode, attrKey, configObj);
+    if (success) {
+        dispatch(tr);
+    }
+
+    return success;
 };
 
 /**
