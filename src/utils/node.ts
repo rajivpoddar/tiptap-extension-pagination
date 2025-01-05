@@ -72,7 +72,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
  */
 export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: Node, newNode: Node): void => {
     const newContent = existingNode.content.append(newNode.content);
-    tr.replaceWith(pos, pos + existingNode.nodeSize, newContent);
+    tr.replaceWith(pos, pos + existingNode.nodeSize - 1, newContent);
 };
 
 /**
