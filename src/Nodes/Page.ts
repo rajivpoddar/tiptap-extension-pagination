@@ -4,14 +4,14 @@
  * @description Custom node for creating a page in the editor.
  */
 
-import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
+import { Attributes, Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DEFAULT_PAPER_SIZE } from "../constants/paperSize";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/pageBorders";
 import { DEFAULT_PAPER_COLOUR } from "../constants/paperColours";
 import { DEFAULT_PAPER_ORIENTATION } from "../constants/paperOrientation";
-import { PAGE_NODE_NAME, PAGE_NODE_ATTR_KEYS, DEFAULT_PAGE_GAP } from "../constants/page";
+import { PAGE_NODE_NAME, DEFAULT_PAGE_GAP, PAGE_ATTRIBUTES } from "../constants/page";
 import { DEFAULT_MARGIN_CONFIG } from "../constants/pageMargins";
 import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
 import { getPageNodePaperColour } from "../utils/paperColour";
@@ -43,21 +43,17 @@ const PageNode = Node.create<PageNodeOptions>({
     },
 
     addAttributes() {
-        return {
-            [PAGE_NODE_ATTR_KEYS.paperSize]: DEFAULT_PAPER_SIZE,
-            [PAGE_NODE_ATTR_KEYS.paperColour]: DEFAULT_PAPER_COLOUR,
-            [PAGE_NODE_ATTR_KEYS.paperOrientation]: DEFAULT_PAPER_ORIENTATION,
-            [PAGE_NODE_ATTR_KEYS.pageMargins]: {
-                default: DEFAULT_MARGIN_CONFIG,
-                parseHTML: parseHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins, DEFAULT_MARGIN_CONFIG),
-                renderHTML: renderHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins),
-            },
-            [PAGE_NODE_ATTR_KEYS.pageBorders]: {
-                default: DEFAULT_PAGE_BORDER_CONFIG,
-                parseHTML: parseHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageBorders, DEFAULT_PAGE_BORDER_CONFIG),
-                renderHTML: renderHTMLAttribute(PAGE_NODE_ATTR_KEYS.pageMargins),
-            },
-        };
+        return Object.entries(PAGE_ATTRIBUTES).reduce(
+            (attributes, [key, config]) => ({
+                ...attributes,
+                [key]: {
+                    default: config.default,
+                    parseHTML: parseHTMLAttribute(key, config.default),
+                    renderHTML: renderHTMLAttribute(key),
+                },
+            }),
+            {} as Attributes
+        );
     },
 
     parseHTML() {

@@ -117,7 +117,8 @@ export const parseHTMLAttribute =
     <T>(attr: string, fallback: T) =>
     (element: HTMLElement): T => {
         const margins = element.getAttribute(attr);
-        return margins ? JSON.parse(margins) : fallback;
+        const isObject = typeof margins === "object";
+        return margins ? (isObject ? JSON.parse(margins) : margins) : fallback;
     };
 
 /**
@@ -131,12 +132,9 @@ export const renderHTMLAttribute =
     (attributes: T): { [key in keyof T]: string } => {
         const value = attributes[attr];
 
-        // Ensure type safety by serializing only valid JSON values
-        if (typeof value !== "object" || value === null) {
-            throw new Error(`Invalid attribute value for "${String(attr)}". Must be a non-null object.`);
-        }
+        const isObject = typeof value === "object";
 
         return {
-            [attr]: JSON.stringify(value),
+            [attr]: isObject ? JSON.stringify(value) : value,
         } as { [key in keyof T]: string };
     };
