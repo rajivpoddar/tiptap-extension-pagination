@@ -7,9 +7,9 @@
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
-import { DEFAULT_MARGIN_CONFIG, marginSides } from "../constants/paper";
+import { DEFAULT_MARGIN_CONFIG, pageSides } from "../constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { Margin, MarginConfig, MarginSide } from "../types/paper";
+import { MultiSide, MarginConfig, PageSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { getPageAttribute, isPageNode } from "./page";
 import { setPageNodeAttribute } from "./setPageAttributes";
@@ -125,7 +125,7 @@ export const updatePaperMargin = (
     tr: Transaction,
     pagePos: number,
     pageNode: PMNode,
-    margin: Exclude<Margin, "all">,
+    margin: Exclude<MultiSide, "all">,
     value: number
 ): boolean => {
     if (!isPageNode(pageNode)) {
@@ -137,8 +137,8 @@ export const updatePaperMargin = (
     if (existingMargins && isValidPaperMargins(existingMargins)) {
         updatedMargins = { ...existingMargins };
     } else {
-        if ((marginSides as Margin[]).includes(margin)) {
-            updatedMargins[margin as MarginSide] = value;
+        if ((pageSides as MultiSide[]).includes(margin)) {
+            updatedMargins[margin as PageSide] = value;
         } else {
             switch (margin) {
                 case "x":

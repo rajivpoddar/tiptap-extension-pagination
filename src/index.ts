@@ -28,7 +28,7 @@ export {
     DEFAULT_PAGE_MARGIN_NAME,
     DEFAULT_MARGIN_CONFIG,
     commonMarginConfigs,
-    marginSides,
+    pageSides,
 } from "./constants/paper";
 
 // === Nodes ===
@@ -41,6 +41,7 @@ export { getPageNumPaperSize, getPageNodePaperSize } from "./utils/paperSize";
 export { getPageNumPaperColour, getPageNodePaperColour } from "./utils/paperColour";
 export { getPageNumPaperOrientation, getPageNodePaperOrientation } from "./utils/paperOrientation";
 export { getPageNumPaperMargins, getPageNodePaperMargins } from "./utils/paperMargins";
+export { getPageNumPageBorders, getPageNodePageBorders } from "./utils/pageBorders";
 
 // === Exports ===
 export { PageNode };

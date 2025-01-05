@@ -15,7 +15,7 @@ import {
 } from "./constants/paper";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import PaginationPlugin from "./Plugins/Pagination";
-import { BorderConfig, Margin, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
+import { BorderConfig, MultiSide, MarginConfig, PaperOrientation, PaperSize } from "./types/paper";
 import {
     getNextParagraph,
     getParagraphNodeAndPosition,
@@ -46,6 +46,7 @@ import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/pa
 import { setPageNodesAttribute } from "./utils/setPageAttributes";
 import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
 import { isMarginValid, isValidPaperMargins, setPageNodePosPaperMargins, updatePaperMargin } from "./utils/paperMargins";
+import { isBorderValid, setPageNodePosPageBorders, updatePageBorder } from "./utils/pageBorders";
 
 export interface PaginationOptions {
     /**
@@ -230,7 +231,7 @@ declare module "@tiptap/core" {
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
              */
-            setDocumentPaperMargin: (margin: Margin, value: number) => ReturnType;
+            setDocumentPaperMargin: (margin: MultiSide, value: number) => ReturnType;
 
             /**
              * Set a margin for a specific page on a specific side
@@ -238,7 +239,7 @@ declare module "@tiptap/core" {
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
              */
-            setPagePaperMargin: (pageNum: number, margin: Margin, value: number) => ReturnType;
+            setPagePaperMargin: (pageNum: number, margin: MultiSide, value: number) => ReturnType;
 
             /**
              * Get the default page borders
@@ -246,6 +247,42 @@ declare module "@tiptap/core" {
              * @example editor.commands.getDefaultPageBorders()
              */
             getDefaultPageBorders: () => BorderConfig;
+
+            /**
+             * Set the page borders for the document
+             * @param pageBorders The page borders (top, right, bottom, left)
+             * @example editor.commands.setDocumentPageBorders({ top: 2, right: 2, bottom: 2, left: 2 })
+             */
+            setDocumentPageBorders: (pageBorders: BorderConfig) => ReturnType;
+
+            /**
+             * Set the default page borders
+             * @example editor.commands.setDocumentDefaultPageBorders()
+             */
+            setDocumentDefaultPageBorders: () => ReturnType;
+
+            /**
+             * Set the page borders for a specific page
+             * @param pageNum The page number (0-indexed)
+             * @param pageBorders The page borders
+             * @example editor.commands.setPageBorders(0, { top: 2, right: 2, bottom: 2, left: 2 })
+             */
+            setPageBorders: (pageNum: number, pageBorders: BorderConfig) => ReturnType;
+
+            /**
+             * Set a border for the document on a specific side
+             * @param border The border to set (top, right, bottom, left, all)
+             * @param value The value to set the border to
+             */
+            setDocumentPageBorder: (border: MultiSide, value: number) => ReturnType;
+
+            /**
+             * Set a border for a specific page on a specific side
+             * @param pageNum The page number (0-indexed)
+             * @param border The border to set (top, right, bottom, left, all)
+             * @param value The value to set the border to
+             */
+            setPagePageBorder: (pageNum: number, border: MultiSide, value: number) => ReturnType;
         };
     }
 }
@@ -686,7 +723,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 },
 
             setDocumentPaperMargin:
-                (margin: Margin, value: number) =>
+                (margin: MultiSide, value: number) =>
                 ({ tr, dispatch, editor }) => {
                     if (!dispatch) return false;
 
@@ -716,7 +753,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 },
 
             setPagePaperMargin:
-                (pageNum: number, margin: Margin, value: number) =>
+                (pageNum: number, margin: MultiSide, value: number) =>
                 ({ tr, dispatch, editor }) => {
                     if (!dispatch) return false;
 
@@ -750,6 +787,100 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             getDefaultPageBorders: () => {
                 return this.options.defaultPageBorders;
             },
+
+            setDocumentPageBorders:
+                (pageBorders: BorderConfig) =>
+                ({ tr, dispatch }) => {
+                    if (!dispatch) return false;
+
+                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.pageBorders, pageBorders);
+
+                    dispatch(tr);
+                    return true;
+                },
+
+            setDocumentDefaultPageBorders:
+                () =>
+                ({ editor }) => {
+                    return editor.commands.setDocumentPageBorders(this.options.defaultPageBorders);
+                },
+
+            setPageBorders:
+                (pageNum: number, pageBorders: BorderConfig) =>
+                ({ tr, dispatch }) => {
+                    const { doc } = tr;
+
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    return setPageNodePosPageBorders(tr, dispatch, pagePos, pageNode, pageBorders);
+                },
+
+            setDocumentPageBorder:
+                (border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) => {
+                    if (!dispatch) return false;
+
+                    if (border === "all") {
+                        const borderConfig: BorderConfig = { top: value, right: value, bottom: value, left: value };
+                        return editor.commands.setDocumentPageBorders(borderConfig);
+                    }
+
+                    if (!isBorderValid(value)) {
+                        console.warn("Invalid border value", value);
+                        return false;
+                    }
+
+                    const { doc } = tr;
+                    const transactions: boolean[] = [];
+
+                    doc.forEach((node, pos) => {
+                        transactions.push(updatePageBorder(tr, pos, node, border, value));
+                    });
+
+                    const success = transactions.some((changed) => changed);
+                    if (success) {
+                        dispatch(tr);
+                    }
+
+                    return success;
+                },
+
+            setPagePageBorder:
+                (pageNum: number, border: MultiSide, value: number) =>
+                ({ tr, dispatch, editor }) => {
+                    if (!dispatch) return false;
+
+                    if (border === "all") {
+                        const borderConfig: BorderConfig = { top: value, right: value, bottom: value, left: value };
+                        return editor.commands.setPageBorders(pageNum, borderConfig);
+                    }
+
+                    if (!isBorderValid(value)) {
+                        console.warn("Invalid border value", value);
+                        return false;
+                    }
+
+                    const { doc } = tr;
+                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+                    if (!pageNodePos) {
+                        return false;
+                    }
+
+                    const { pos: pagePos, node: pageNode } = pageNodePos;
+
+                    const success = updatePageBorder(tr, pagePos, pageNode, border, value);
+
+                    if (success) {
+                        dispatch(tr);
+                    }
+
+                    return success;
+                },
         };
     },
 });

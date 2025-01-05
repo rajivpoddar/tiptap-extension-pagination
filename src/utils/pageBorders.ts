@@ -4,15 +4,36 @@
  * @description Utility functions for handling page borders.
  */
 
-import { EditorState } from "@tiptap/pm/state";
-import { Editor } from "@tiptap/core";
+import { EditorState, Transaction } from "@tiptap/pm/state";
+import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
-import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/paper";
-import { BorderConfig } from "../types/paper";
+import { DEFAULT_PAGE_BORDER_CONFIG, pageSides } from "../constants/paper";
+import { BorderConfig, MultiSide, PageSide } from "../types/paper";
 import { Nullable } from "../types/record";
 import { px } from "./units";
-import { getPageAttribute } from "./page";
+import { getPageAttribute, isPageNode } from "./page";
+import { setPageNodeAttribute } from "./setPageAttributes";
+
+/**
+ * Checks if a (single) border is valid.
+ * Borders must be non-negative and finite to be considered valid.
+ * @param border - The border to check.
+ * @returns {boolean} True if the border is valid, false otherwise.
+ */
+export const isBorderValid = (border: number): boolean => {
+    return border >= 0 && isFinite(border);
+};
+
+/**
+ * Checks if the page borders are valid.
+ * Borders must be non-negative and finite to be considered valid.
+ * @param pageBorder - The page borders to check.
+ * @returns {boolean} True if the page borders are valid, false otherwise.
+ */
+export const isValidPageBorders = (pageBorder: BorderConfig): boolean => {
+    return Object.values(pageBorder).every(isBorderValid);
+};
 
 /**
  * Get the page borders from a page node.
@@ -42,9 +63,95 @@ export const calculatePageBorders = (pageBorders: BorderConfig): string => {
  * Falls back to the default page border config if the page number is invalid.
  * @param context - The current editor instance or editor state.
  * @param pageNum - The page number to retrieve the page border config for.
- * @returns {MarginConfig} The page border config of the specified page or default.
+ * @returns {BorderConfig} The page border config of the specified page or default.
  */
 export const getPageNumPageBorders = (context: Editor | EditorState, pageNum: number): BorderConfig => {
     const getDefault = context instanceof Editor ? context.commands.getDefaultPageBorders : () => DEFAULT_PAGE_BORDER_CONFIG;
     return getPageAttribute(context, pageNum, getDefault, getPageNodePageBorders);
+};
+
+/**
+ * Set the page borders of a page node.
+ * @param tr - The transaction to apply the change to.
+ * @param dispatch - The dispatch function to apply the transaction.
+ * @param pagePos - The position of the page node to set the page borders for.
+ * @param pageNode - The page node to set the page borders for.
+ * @param pageBorders - The page borders to set.
+ * @returns {boolean} True if the page borders were set, false otherwise.
+ */
+export const setPageNodePosPageBorders = (
+    tr: Transaction,
+    dispatch: Dispatch,
+    pagePos: number,
+    pageNode: PMNode,
+    pageBorders: BorderConfig
+): boolean => {
+    if (!dispatch) return false;
+
+    if (!isValidPageBorders(pageBorders)) {
+        console.warn("Invalid page borders", pageBorders);
+        return false;
+    }
+
+    if (!isPageNode(pageNode)) {
+        console.error("Unexpected! Node at pos:", pagePos, "is not a page node!");
+        return false;
+    }
+
+    if (getPageNodePageBorders(pageNode) === pageBorders) {
+        return false;
+    }
+
+    const success = setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageBorders, pageBorders);
+    if (success) {
+        dispatch(tr);
+    }
+
+    return success;
+};
+
+/**
+ * Updates the border on the given page. Does not dispatch the transaction.
+ * @param tr - The transaction to apply the change to.
+ * @param pagePos - The position of the page node to update the border for.
+ * @param pageNode - The page node to update the border for.
+ * @param border - The border to update.
+ * @param value - The new value of the border.
+ * @returns {boolean} True if the border was updated, false otherwise.
+ */
+export const updatePageBorder = (
+    tr: Transaction,
+    pagePos: number,
+    pageNode: PMNode,
+    border: Exclude<MultiSide, "all">,
+    value: number
+): boolean => {
+    if (!isPageNode(pageNode)) {
+        return false;
+    }
+
+    const existingBorders = getPageNodePageBorders(pageNode);
+    let updatedBorders: BorderConfig = { ...DEFAULT_PAGE_BORDER_CONFIG };
+    if (existingBorders && isValidPageBorders(existingBorders)) {
+        updatedBorders = { ...existingBorders };
+    } else {
+        if ((pageSides as MultiSide[]).includes(border)) {
+            updatedBorders[border as PageSide] = value;
+        } else {
+            switch (border) {
+                case "x":
+                    updatedBorders.left = value;
+                    updatedBorders.right = value;
+                    break;
+                case "y":
+                    updatedBorders.top = value;
+                    updatedBorders.bottom = value;
+                    break;
+                default:
+                    console.error("Unhanded border side", border);
+            }
+        }
+    }
+
+    return setPageNodeAttribute(tr, pagePos, pageNode, PAGE_NODE_ATTR_KEYS.pageBorders, updatedBorders);
 };
