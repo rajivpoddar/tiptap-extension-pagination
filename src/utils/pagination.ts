@@ -23,6 +23,7 @@ import {
 import { inRange } from "./math";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
 import { getCalculatedPageNodeAttributes } from "./getPageAttributes";
+import { MarginConfig } from "../types/paper";
 
 /**
  * Check if the given node is a paragraph node.
@@ -611,6 +612,21 @@ export const collectContentNodes = (state: EditorState): NodePosArray => {
 };
 
 /**
+ * Calculates the margins of the element.
+ * @param element - The element to calculate margins for.
+ * @returns {MarginConfig} The margins of the element.
+ */
+const calculateElementMargins = (element: HTMLElement): MarginConfig => {
+    const style = window.getComputedStyle(element);
+    return {
+        top: parseFloat(style.marginTop),
+        right: parseFloat(style.marginRight),
+        bottom: parseFloat(style.marginBottom),
+        left: parseFloat(style.marginLeft),
+    };
+};
+
+/**
  * Measure the heights of the content nodes.
  * @param view - The editor view.
  * @param contentNodes - The content nodes and their positions.
@@ -620,16 +636,21 @@ export const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray)
     const paragraphType = view.state.schema.nodes.paragraph;
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
-        const dom = view.nodeDOM(pos);
-        if (dom instanceof HTMLElement) {
-            let { height } = dom.getBoundingClientRect();
+        const domNode = view.nodeDOM(pos);
+        if (domNode instanceof HTMLElement) {
+            let { height } = domNode.getBoundingClientRect();
+
+            const { top: marginTop } = calculateElementMargins(domNode);
+
             if (height === 0) {
                 if (node.type === paragraphType || node.isTextblock) {
                     // Assign a minimum height to empty paragraphs or textblocks
                     height = MIN_PARAGRAPH_HEIGHT;
                 }
             }
-            return height;
+
+            // We use top margin only because there is overlap of margins between paragraphs
+            return height + marginTop;
         }
 
         return MIN_PARAGRAPH_HEIGHT; // Default to minimum height if DOM element is not found
