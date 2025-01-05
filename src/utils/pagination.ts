@@ -13,13 +13,7 @@ import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
 import { Nullable } from "../types/record";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
-import {
-    moveToNearestValidCursorPosition,
-    moveToNextTextBlock,
-    moveToThisTextBlock,
-    setSelection,
-    setSelectionAtEndOfDocument,
-} from "./selection";
+import { moveToNearestValidCursorPosition, moveToThisTextBlock, setSelection, setSelectionAtEndOfDocument } from "./selection";
 import { inRange } from "./math";
 import { collectPageNodes, isPageNode, isPageNumInRange } from "./page";
 import { getCalculatedPageNodeAttributes } from "./getPageAttributes";
@@ -781,6 +775,26 @@ export const mapCursorPosition = (
 };
 
 /**
+ * Check if the given position is at the start of a text block.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the start of a text block, false otherwise.
+ */
+const isNodeBeforeAvailable = ($pos: ResolvedPos): boolean => {
+    return !!$pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore));
+};
+
+/**
+ * Check if the given position is at the end of a text block.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {boolean} True if the position is at the end of a text block, false otherwise.
+ */
+const isNodeAfterAvailable = ($pos: ResolvedPos): boolean => {
+    return !!$pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter));
+};
+
+/**
  * Sets the cursor selection after creating the new document.
  * @param tr - The current transaction.
  * @returns {void}
@@ -790,24 +804,8 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         const $pos = tr.doc.resolve(newCursorPos);
         let selection;
 
-        const startOfParagraph = isAtStartOfParagraph(tr.doc, $pos);
-        const endOfParagraph = isAtEndOfParagraph(tr.doc, $pos);
-        console.log("Is start of paragraph", startOfParagraph);
-        console.log("Is end of paragraph", endOfParagraph);
-
-        console.log("Is parent a text block", $pos.parent.isTextblock, $pos.parent.type.name);
-        console.log("Node Before", $pos.nodeBefore);
-        console.log("Node Before type", $pos.nodeBefore?.type.name);
-
-        console.log("Node After", $pos.nodeAfter);
-        console.log("Node after type", $pos.nodeAfter?.type.name);
-
-        if ($pos.parent.isTextblock) {
+        if ($pos.parent.isTextblock || isNodeBeforeAvailable($pos) || isNodeAfterAvailable($pos)) {
             selection = moveToThisTextBlock(tr, $pos);
-        } else if ($pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore))) {
-            selection = moveToThisTextBlock(tr, $pos);
-        } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
-            selection = moveToNextTextBlock(tr, $pos);
         } else {
             selection = moveToNearestValidCursorPosition($pos);
         }
