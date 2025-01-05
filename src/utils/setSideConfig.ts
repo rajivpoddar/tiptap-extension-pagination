@@ -10,8 +10,146 @@ import { Dispatch } from "@tiptap/core";
 import { pageSides } from "../constants/paper";
 import { MultiSide, PageSide } from "../types/paper";
 import { Nullable } from "../types/record";
-import { isPageNode } from "./page";
-import { setPageNodeAttribute } from "./setPageAttributes";
+import { getPageNodePosByPageNum, isPageNode } from "./page";
+import { setPageNodeAttribute, setPageNodesAttribute } from "./setPageAttributes";
+
+type SideConfig<V> = { [key in PageSide]: V };
+
+/**
+ * Generic helper to set the side configuration of a document.
+ * @param attrKey - The key of the attribute to update.
+ * @param isValidConfig - A function to validate the side configuration.
+ * @returns
+ */
+export const setDocumentSideConfig =
+    <V, T extends SideConfig<V>>(attrKey: string, isValidConfig: (config: T) => boolean) =>
+    (sideConfig: T) =>
+    ({ tr, dispatch }: { tr: Transaction; dispatch: Dispatch }): boolean => {
+        if (!dispatch) return false;
+
+        if (!isValidConfig(sideConfig)) {
+            console.warn("Invalid side config", sideConfig);
+            return false;
+        }
+
+        setPageNodesAttribute(tr, attrKey, sideConfig);
+
+        dispatch(tr);
+        return true;
+    };
+
+/**
+ * Sets the side configuration of a page node.
+ * @param setGenericPageNodePosSideConfig - A function to set the side configuration of a page node.
+ * @param pageNum - The page number to set the side configuration for.
+ * @param sideConfig - The side configuration to set.
+ * @returns {boolean} True if the side configuration was set, false otherwise.
+ */
+export const setPageSideConfig =
+    <V, T extends SideConfig<V>>(
+        setGenericPageNodePosSideConfig: (tr: Transaction, dispatch: Dispatch, pagePos: number, pageNode: PMNode, sideConfig: T) => boolean
+    ) =>
+    (pageNum: number, sideConfig: T) =>
+    ({ tr, dispatch }: { tr: Transaction; dispatch: Dispatch }): boolean => {
+        const { doc } = tr;
+
+        const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+        if (!pageNodePos) {
+            return false;
+        }
+
+        const { pos: pagePos, node: pageNode } = pageNodePos;
+
+        return setGenericPageNodePosSideConfig(tr, dispatch, pagePos, pageNode, sideConfig);
+    };
+
+/**
+ * Set one side of the document side configuration.
+ * @param setDocumentSideConfig - A function to set the document side configuration.
+ * @param isValueValid - A function to validate the value.
+ * @param updateSideConfig - A function to update the side configuration of a page node.
+ * @returns {boolean} True if the side value was set, false otherwise.
+ */
+export const setDocumentSideValue =
+    <V, T extends SideConfig<V>>(
+        setDocumentSideConfig: (sideConfig: T) => boolean,
+        isValueValid: (value: V) => boolean,
+        updateSideConfig: (tr: Transaction, pagePos: number, pageNode: PMNode, side: Exclude<MultiSide, "all">, value: V) => boolean
+    ) =>
+    (side: MultiSide, value: V) =>
+    ({ tr, dispatch }: { tr: Transaction; dispatch: Dispatch }): boolean => {
+        if (!dispatch) return false;
+
+        if (side === "all") {
+            const sideConfig = { top: value, right: value, bottom: value, left: value } as T;
+            return setDocumentSideConfig(sideConfig);
+        }
+
+        if (!isValueValid(value)) {
+            console.warn("Invalid margin value", value);
+            return false;
+        }
+
+        const { doc } = tr;
+        const transactions: boolean[] = [];
+
+        doc.forEach((node, pos) => {
+            transactions.push(updateSideConfig(tr, pos, node, side, value));
+        });
+
+        const success = transactions.some((changed) => changed);
+        if (success) {
+            dispatch(tr);
+        }
+
+        return success;
+    };
+
+/**
+ * Set one side of the page side configuration.
+ * @param setPageSideConfig - A function to set the side configuration of a page node.
+ * @param isValueValid - A function to validate the value.
+ * @param updateSideConfig - A function to update the side configuration of a page node.
+ * @param pageNum - The page number to set the side value for.
+ * @param side - The side to set the value for.
+ * @returns {boolean} True if the side value was set, false otherwise.
+ */
+export const setPageSideValue =
+    <V, T extends SideConfig<V>>(
+        setPageSideConfig: (pageNum: number, sideConfig: T) => boolean,
+        isValueValid: (value: V) => boolean,
+        updateSideConfig: (tr: Transaction, pagePos: number, pageNode: PMNode, side: Exclude<MultiSide, "all">, value: V) => boolean
+    ) =>
+    (pageNum: number, side: MultiSide, value: V) =>
+    ({ tr, dispatch }: { tr: Transaction; dispatch: Dispatch }): boolean => {
+        if (!dispatch) return false;
+
+        if (side === "all") {
+            const sideConfig: T = { top: value, right: value, bottom: value, left: value } as T;
+            return setPageSideConfig(pageNum, sideConfig);
+        }
+
+        if (!isValueValid(value)) {
+            console.warn("Invalid border value", value);
+            return false;
+        }
+
+        const { doc } = tr;
+        const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
+        if (!pageNodePos) {
+            return false;
+        }
+
+        const { pos: pagePos, node: pageNode } = pageNodePos;
+
+        const success = updateSideConfig(tr, pagePos, pageNode, side, value);
+
+        if (success) {
+            dispatch(tr);
+        }
+
+        return success;
+    };
 
 /**
  * Set the paper side configuration of a page node.
@@ -25,7 +163,7 @@ import { setPageNodeAttribute } from "./setPageAttributes";
  * @param attrKey - The key of the attribute to update.
  * @returns {boolean} True if the side config were set, false otherwise.
  */
-export const setPageNodePosSideConfig = <V, T extends { [key in PageSide]: V }>(
+export const setPageNodePosSideConfig = <V, T extends SideConfig<V>>(
     tr: Transaction,
     dispatch: Dispatch,
     pagePos: number,
@@ -73,7 +211,7 @@ export const setPageNodePosSideConfig = <V, T extends { [key in PageSide]: V }>(
  * @param attrKey - The key of the attribute to update.
  * @returns {boolean} True if the attribute was updated, false otherwise.
  */
-export const updatePageSideConfig = <V, T extends { [key in PageSide]: V }>(
+export const updatePageSideConfig = <V, T extends SideConfig<V>>(
     tr: Transaction,
     pagePos: number,
     pageNode: PMNode,

@@ -46,7 +46,8 @@ import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/pa
 import { setPageNodesAttribute } from "./utils/setPageAttributes";
 import { setPageNodePosPaperOrientation } from "./utils/paperOrientation";
 import { isMarginValid, isValidPaperMargins, setPageNodePosPaperMargins, updatePaperMargin } from "./utils/paperMargins";
-import { isBorderValid, setPageNodePosPageBorders, updatePageBorder } from "./utils/pageBorders";
+import { isBorderValid, isValidPageBorders, setPageNodePosPageBorders, updatePageBorder } from "./utils/pageBorders";
+import { setDocumentSideConfig, setDocumentSideValue, setPageSideConfig, setPageSideValue } from "./utils/setSideConfig";
 
 export interface PaginationOptions {
     /**
@@ -686,118 +687,24 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                 return this.options.defaultMarginConfig;
             },
 
-            setDocumentPaperMargins:
-                (paperMargins: MarginConfig) =>
-                ({ tr, dispatch }) => {
-                    if (!dispatch) return false;
-
-                    if (!isValidPaperMargins(paperMargins)) {
-                        console.warn("Invalid paper margins", paperMargins);
-                        return false;
-                    }
-
-                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.pageMargins, paperMargins);
-
-                    dispatch(tr);
-                    return true;
-                },
+            setDocumentPaperMargins: setDocumentSideConfig(PAGE_NODE_ATTR_KEYS.pageMargins, isValidPaperMargins),
 
             setDocumentDefaultPaperMargins:
                 () =>
                 ({ editor }) =>
                     editor.commands.setDocumentPaperMargins(this.options.defaultMarginConfig),
 
-            setPagePaperMargins:
-                (pageNum: number, paperMargins: MarginConfig) =>
-                ({ tr, dispatch }) => {
-                    const { doc } = tr;
+            setPagePaperMargins: setPageSideConfig(setPageNodePosPaperMargins),
 
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
+            setDocumentPaperMargin: setDocumentSideValue(this.editor.commands.setDocumentPaperMargins, isMarginValid, updatePaperMargin),
 
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    return setPageNodePosPaperMargins(tr, dispatch, pagePos, pageNode, paperMargins);
-                },
-
-            setDocumentPaperMargin:
-                (margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
-
-                    if (margin === "all") {
-                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setDocumentPaperMargins(marginConfig);
-                    }
-
-                    if (!isMarginValid(value)) {
-                        console.warn("Invalid margin value", value);
-                        return false;
-                    }
-
-                    const { doc } = tr;
-                    const transactions: boolean[] = [];
-
-                    doc.forEach((node, pos) => {
-                        transactions.push(updatePaperMargin(tr, pos, node, margin, value));
-                    });
-
-                    const success = transactions.some((changed) => changed);
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
-                },
-
-            setPagePaperMargin:
-                (pageNum: number, margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
-
-                    if (margin === "all") {
-                        const marginConfig: MarginConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setPagePaperMargins(pageNum, marginConfig);
-                    }
-
-                    if (!isMarginValid(value)) {
-                        console.warn("Invalid margin value", value);
-                        return false;
-                    }
-
-                    const { doc } = tr;
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
-
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    const success = updatePaperMargin(tr, pagePos, pageNode, margin, value);
-
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
-                },
+            setPagePaperMargin: setPageSideValue(this.editor.commands.setPagePaperMargins, isMarginValid, updatePaperMargin),
 
             getDefaultPageBorders: () => {
                 return this.options.defaultPageBorders;
             },
 
-            setDocumentPageBorders:
-                (pageBorders: BorderConfig) =>
-                ({ tr, dispatch }) => {
-                    if (!dispatch) return false;
-
-                    setPageNodesAttribute(tr, PAGE_NODE_ATTR_KEYS.pageBorders, pageBorders);
-
-                    dispatch(tr);
-                    return true;
-                },
+            setDocumentPageBorders: setDocumentSideConfig(PAGE_NODE_ATTR_KEYS.pageBorders, isValidPageBorders),
 
             setDocumentDefaultPageBorders:
                 () =>
@@ -805,82 +712,11 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     return editor.commands.setDocumentPageBorders(this.options.defaultPageBorders);
                 },
 
-            setPageBorders:
-                (pageNum: number, pageBorders: BorderConfig) =>
-                ({ tr, dispatch }) => {
-                    const { doc } = tr;
+            setPageBorders: setPageSideConfig(setPageNodePosPageBorders),
 
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
+            setDocumentPageBorder: setDocumentSideValue(this.editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder),
 
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    return setPageNodePosPageBorders(tr, dispatch, pagePos, pageNode, pageBorders);
-                },
-
-            setDocumentPageBorder:
-                (border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
-
-                    if (border === "all") {
-                        const borderConfig: BorderConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setDocumentPageBorders(borderConfig);
-                    }
-
-                    if (!isBorderValid(value)) {
-                        console.warn("Invalid border value", value);
-                        return false;
-                    }
-
-                    const { doc } = tr;
-                    const transactions: boolean[] = [];
-
-                    doc.forEach((node, pos) => {
-                        transactions.push(updatePageBorder(tr, pos, node, border, value));
-                    });
-
-                    const success = transactions.some((changed) => changed);
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
-                },
-
-            setPagePageBorder:
-                (pageNum: number, border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) => {
-                    if (!dispatch) return false;
-
-                    if (border === "all") {
-                        const borderConfig: BorderConfig = { top: value, right: value, bottom: value, left: value };
-                        return editor.commands.setPageBorders(pageNum, borderConfig);
-                    }
-
-                    if (!isBorderValid(value)) {
-                        console.warn("Invalid border value", value);
-                        return false;
-                    }
-
-                    const { doc } = tr;
-                    const pageNodePos = getPageNodePosByPageNum(doc, pageNum);
-                    if (!pageNodePos) {
-                        return false;
-                    }
-
-                    const { pos: pagePos, node: pageNode } = pageNodePos;
-
-                    const success = updatePageBorder(tr, pagePos, pageNode, border, value);
-
-                    if (success) {
-                        dispatch(tr);
-                    }
-
-                    return success;
-                },
+            setPagePageBorder: setPageSideValue(this.editor.commands.setPageBorders, isBorderValid, updatePageBorder),
         };
     },
 });
