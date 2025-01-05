@@ -803,15 +803,7 @@ export const paginationUpdateCursorPosition = (tr: Transaction, newCursorPos: Nu
         console.log("Node after type", $pos.nodeAfter?.type.name);
 
         if ($pos.parent.isTextblock) {
-            if (isPosAtLastChildOfPage(tr.doc, newCursorPos)) {
-                if (isPosAtEndOfPage(tr.doc, newCursorPos)) {
-                    selection = moveToThisTextBlock(tr, $pos, -1);
-                } else {
-                    selection = moveToThisTextBlock(tr, $pos);
-                }
-            } else {
-                selection = moveToThisTextBlock(tr, $pos);
-            }
+            selection = moveToThisTextBlock(tr, $pos);
         } else if ($pos.nodeBefore && (isTextNode($pos.nodeBefore) || isParagraphNode($pos.nodeBefore))) {
             selection = moveToThisTextBlock(tr, $pos);
         } else if ($pos.nodeAfter && (isTextNode($pos.nodeAfter) || isParagraphNode($pos.nodeAfter))) {
