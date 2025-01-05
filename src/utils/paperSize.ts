@@ -61,13 +61,14 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
  * @returns {PageContentPixelDimensions} The height and width of the page in pixels.
  */
 export const calculatePageContentPixelDimensions = (pageNodeAttributes: PageNodeAttributes): PageContentPixelDimensions => {
-    const { paperSize, paperOrientation, pageMargins } = pageNodeAttributes;
-    const { top, right, bottom, left } = pageMargins;
+    const { paperSize, paperOrientation, pageMargins, pageBorders } = pageNodeAttributes;
+    const { top: topMargin, right: rightMargin, bottom: bottomMargin, left: leftMargin } = pageMargins;
+    const { top: borderTop, right: borderRight, bottom: borderBottom, left: borderLeft } = pageBorders;
     const { width, height } = getPaperDimensions(paperSize, paperOrientation);
-    const pageHeight = mmToPixels(height - (top + bottom));
-    const pageWidth = mmToPixels(width - (left + right));
+    const pageContentHeight = mmToPixels(height - (topMargin + bottomMargin)) - (borderTop + borderBottom);
+    const pageContentWidth = mmToPixels(width - (leftMargin + rightMargin)) - (borderLeft + borderRight);
 
-    return { pageContentHeight: pageHeight, pageContentWidth: pageWidth };
+    return { pageContentHeight, pageContentWidth };
 };
 
 /**

@@ -90,3 +90,9 @@ export type MarginConfig = {
 };
 
 export type CommonMarginName = "normal" | "narrow" | "moderate" | "wide";
+
+// ====== Page Borders ======
+
+export type BorderConfig = {
+    [key in MarginSide]: number;
+};

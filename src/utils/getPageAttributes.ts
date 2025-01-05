@@ -22,8 +22,10 @@ export const getPageNodeAttributes = (state: EditorState, pageNum: number): Page
     const paperColour = getPageNumPaperColour(state, pageNum);
     const paperOrientation = getPageNumPaperOrientation(state, pageNum);
     const pageMargins = getPageNumPaperMargins(state, pageNum);
+    // const pageBorders = getPageNumPaperBorders(state, pageNum);
+    const pageBorders = { top: 1, right: 1, bottom: 1, left: 1 };
 
-    return { paperSize, paperColour, paperOrientation, pageMargins };
+    return { paperSize, paperColour, paperOrientation, pageMargins, pageBorders };
 };
 
 /**
