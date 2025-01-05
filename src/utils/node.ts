@@ -132,9 +132,7 @@ export const renderHTMLAttribute =
     (attributes: T): { [key in keyof T]: string } => {
         const value = attributes[attr];
 
-        const isObject = typeof value === "object";
-
         return {
-            [attr]: isObject ? JSON.stringify(value) : value,
+            [attr]: JSON.stringify(value),
         } as { [key in keyof T]: string };
     };
