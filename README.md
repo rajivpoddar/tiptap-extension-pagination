@@ -38,7 +38,9 @@ import React from "react";
 import { Stack } from "@mui/material";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Pagination from "./Extensions/Pagination";
+import Pagination, { PageNode } from "tiptap-extension-pagination";
+
+type DispatchOrFunction<T> = Dispatch<T> | ((value: T) => void);
 
 type EditorProps = {
     content: string;
