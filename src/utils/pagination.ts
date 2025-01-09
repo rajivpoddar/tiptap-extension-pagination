@@ -706,7 +706,7 @@ export const buildNewDocument = (
         oldToNewPosMap.set(oldPos, nodeStartPosInNewDoc);
 
         currentPageContent.push(node);
-        currentHeight += Math.max(nodeHeight, MIN_PARAGRAPH_HEIGHT);
+        currentHeight += nodeHeight;
     }
 
     if (currentPageContent.length > 0) {
