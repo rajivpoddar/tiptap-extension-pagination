@@ -108,6 +108,7 @@ const PageNode = Node.create<PageNodeOptions>({
             dom.style.marginTop = px(this.options.pageGap);
             dom.style.marginLeft = "auto";
             dom.style.marginRight = "auto";
+            dom.style.boxSizing = "border-box";
 
             const contentDOM = document.createElement(baseElement);
             dom.appendChild(contentDOM);
