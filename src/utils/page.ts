@@ -45,10 +45,10 @@ export const getLastPageNum = (doc: PMNode): number => {
 };
 
 /**
- * Check if the given node is a page node.
+ * Check if the page number is in range for the document.
  * @param doc - The current document.
- * @param node - The node to check.
- * @returns {boolean} True if the node is a page node, false otherwise.
+ * @param pageNum - The page number to check.
+ * @returns {boolean} True if the page number is in range, false otherwise.
  */
 export const isPageNumInRange = (doc: PMNode, pageNum: number): boolean => {
     const lastPageNum = getLastPageNum(doc);
