@@ -56,10 +56,11 @@ export const getPaginationNodeTypes = (schema: Schema): PaginationNodeTypes => {
     const pageNodeType = nodes[PAGE_NODE_NAME];
     const headerFooterNodeType = nodes[HEADER_FOOTER_NODE_NAME];
     const bodyNodeType = nodes[BODY_NODE_NAME];
+    const paragraphNodeType = nodes.paragraph;
 
     if (!pageNodeType || !headerFooterNodeType || !bodyNodeType) {
         throw new Error("Page, body, or header/footer node type not found in schema");
     }
 
-    return { pageNodeType, headerFooterNodeType, bodyNodeType };
+    return { pageNodeType, headerFooterNodeType, bodyNodeType, paragraphNodeType };
 };

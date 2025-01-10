@@ -15,6 +15,7 @@ export type PaginationNodeTypes = {
     pageNodeType: NodeType;
     headerFooterNodeType: NodeType;
     bodyNodeType: NodeType;
+    paragraphNodeType: NodeType;
 };
 
 /**
