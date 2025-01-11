@@ -21,7 +21,6 @@ import {
     getFirstParagraphInNextPageBodyAfterPos,
     getLastParagraphInPreviousPageBodyBeforePos,
     getParagraphNodeAndPosition,
-    getPreviousParagraph,
     isAtStartOrEndOfParagraph,
     isParagraphNode,
     isPositionWithinParagraph,
@@ -30,7 +29,7 @@ import { isNodeEmpty } from "@tiptap/core";
 import { appendAndReplaceNode, deleteNode } from "../utils/nodes/node";
 import { isPageNode } from "../utils/nodes/page/page";
 import { isPosAtStartOfDocument } from "../utils/nodes/document";
-import { getThisPageNodePosition } from "../utils/nodes/page/pagePosition";
+import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
 import { isPosAtEndOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
 
@@ -198,7 +197,7 @@ const KeymapPlugin = keymap({
 
         const { doc, tr, schema } = state;
         const $pos = getResolvedPosition(state);
-        const thisNodePos = $pos.pos;
+        const thisPos = $pos.pos;
 
         // Ensure that the position is within a valid block (paragraph)
         if (!isPositionWithinParagraph($pos)) {
@@ -222,7 +221,7 @@ const KeymapPlugin = keymap({
                 const newContent = paragraphNode.content.cut(0, paragraphNode.content.size - 1);
                 const newParagraph = schema.nodes.paragraph.create({}, newContent);
                 tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
-                setSelectionAtPos(tr, thisNodePos - 1);
+                setSelectionAtPos(tr, thisPos - 1);
             }
         } else if (isPosAtStartOfDocument(doc, $pos, true)) {
             // Prevent deleting the first page node
@@ -231,14 +230,17 @@ const KeymapPlugin = keymap({
             return false;
         } else {
             // Traverse $pos.path to find the nearest page node
-            const thisPageNodePos = getThisPageNodePosition(doc, $pos);
-            const firstChildPos = thisPageNodePos + 1;
-            if (firstChildPos !== thisNodePos - 1) {
-                // Not at the beginning of the page
+            const { node: thisPageNode, pos: thisPagePos } = getPageNodeAndPosition(doc, $pos);
+            if (!thisPageNode) {
+                console.warn("No current page node found");
                 return false;
             }
 
-            const prevPageChild = doc.childBefore(thisPageNodePos);
+            if (!isPosAtStartOfBody(doc, thisPos)) {
+                return false;
+            }
+
+            const prevPageChild = doc.childBefore(thisPagePos);
             const prevPageNode = prevPageChild.node;
 
             // Confirm that the previous node is a page node
@@ -260,20 +262,23 @@ const KeymapPlugin = keymap({
                 return false;
             }
 
-            const { pos: prevParagraphPos, node: prevParagraphNode } = getPreviousParagraph(doc, paragraphPos);
-            if (!prevParagraphNode) {
+            const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(
+                doc,
+                paragraphPos
+            );
+            if (!previousParagraphNode) {
                 console.warn("No previous paragraph node found");
                 return false;
             }
 
-            if (!isNodeEmpty(prevParagraphNode) || !isNodeEmpty(paragraphNode)) {
+            if (!isNodeEmpty(previousParagraphNode) || !isNodeEmpty(paragraphNode)) {
                 deleteNode(tr, paragraphPos, paragraphNode);
             }
 
-            appendAndReplaceNode(tr, prevParagraphPos, prevParagraphNode, paragraphNode);
+            appendAndReplaceNode(tr, previousParagraphPos, previousParagraphNode, paragraphNode);
 
             // Set the selection to the end of the previous paragraph
-            setSelectionToEndOfParagraph(tr, prevParagraphPos, prevParagraphNode);
+            setSelectionToEndOfParagraph(tr, previousParagraphPos, previousParagraphNode);
         }
 
         dispatch(tr);
