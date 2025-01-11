@@ -10,7 +10,7 @@ import { isPositionWithinParagraph } from "../paragraph";
 import { getStartOfBodyAndParagraphPosition, getEndOfBodyAndParagraphPosition } from "../../pagination";
 
 /**
- * Check if the given position is at the start of the body or the first child of the body.
+ * Check if the given position is exactly at the start of the first child of the body.
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the condition is met, false otherwise.
@@ -20,7 +20,7 @@ export const isPosAtStartOfBody = (doc: PMNode, $pos: ResolvedPos | number): boo
 };
 
 /**
- * Check if the given position is at the first paragraph child of the body.
+ * Check if the given position is within the first paragraph child of the body.
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the start of the body, false otherwise.
@@ -40,7 +40,7 @@ export const isPosAtEndOfBody = (doc: PMNode, $pos: ResolvedPos | number): boole
 };
 
 /**
- * Check if the given position is at the last paragraph child of the body.
+ * Check if the given position is at the end of the last paragraph child of the body.
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the end of the body, false otherwise.
