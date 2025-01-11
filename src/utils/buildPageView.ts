@@ -19,6 +19,8 @@ import { isParagraphNode } from "./nodes/paragraph";
 import { isTextNode } from "./nodes/text";
 import { getPaginationNodeTypes } from "./pagination";
 import { isPageNumInRange } from "./nodes/page/pageRange";
+import { HeaderFooter, HeaderFooterNodeAttributes } from "../types/pageRegions";
+import { getPageRegionNode } from "./pageRegion/getAttributes";
 
 /**
  * Builds a new document with paginated content.
@@ -150,18 +152,39 @@ const buildNewDocument = (
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
     const { schema, doc } = state;
+    const {
+        pageNodeType: pageType,
+        headerFooterNodeType: headerFooterType,
+        bodyNodeType: bodyType,
+        paragraphNodeType: paragraphType,
+    } = getPaginationNodeTypes(schema);
+
     let pageNum = 0;
-
-    const { pageNodeType: pageType, headerFooterNodeType: headerFooterType, bodyNodeType: bodyType } = getPaginationNodeTypes(schema);
-
     const pages: PMNode[] = [];
     let { pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum);
 
+    const constructHeaderFooter =
+        <HF extends HeaderFooter>(pageRegionType: HeaderFooter) =>
+        (headerFooterAttrs: HeaderFooterNodeAttributes<HF>): PMNode => {
+            if (existingPageNode) {
+                const hfNode = getPageRegionNode(existingPageNode, pageRegionType);
+                if (hfNode) {
+                    return hfNode;
+                }
+            }
+
+            const emptyParagraph = paragraphType.create();
+            return headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
+        };
+
+    const constructHeader = constructHeaderFooter("header");
+    const constructFooter = constructHeaderFooter("footer");
+
     const constructPageRegions = (currentPageContent: PMNode[]): PMNode[] => {
         const { header: headerAttrs, body: bodyAttrs, footer: footerAttrs } = pageRegionNodeAttributes;
-        const pageHeader = headerFooterType.create(headerAttrs, []); // TODO - Add header content
+        const pageHeader = constructHeader(headerAttrs);
         const pageBody = bodyType.create(bodyAttrs, currentPageContent);
-        const pageFooter = headerFooterType.create(footerAttrs, []); // TODO - Add footer content
+        const pageFooter = constructFooter(footerAttrs);
 
         return [pageHeader, pageBody, pageFooter];
     };
@@ -174,11 +197,12 @@ const buildNewDocument = (
     };
 
     let currentPageContent: PMNode[] = [];
+    let existingPageNode: Nullable<PMNode> = doc.maybeChild(pageNum);
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
-    const pageOffset = 1;
-    const bodyOffset = 1;
+    const pageOffset = 1,
+        bodyOffset = 1;
     let cumulativeNewDocPos = pageOffset + bodyOffset;
 
     for (let i = 0; i < contentNodes.length; i++) {
@@ -192,6 +216,7 @@ const buildNewDocument = (
             currentPageContent = [];
             currentHeight = 0;
             pageNum++;
+            existingPageNode = doc.maybeChild(pageNum);
             if (isPageNumInRange(doc, pageNum)) {
                 ({ pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum));
             }
