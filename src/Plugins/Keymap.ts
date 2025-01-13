@@ -15,6 +15,7 @@ import {
     setSelection,
     setSelectionAtPos,
     setSelectionToEndOfParagraph,
+    setSelectionToParagraph,
 } from "../utils/selection";
 
 import {
@@ -31,7 +32,7 @@ import { isPageNode } from "../utils/nodes/page/page";
 import { isPosAtStartOfDocument } from "../utils/nodes/document";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
-import { isPosAtEndOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
+import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
 
 const KeymapPlugin = keymap({
     ArrowLeft: (state, dispatch) => {
@@ -128,6 +129,107 @@ const KeymapPlugin = keymap({
         }
 
         const newSelection = moveToThisTextBlock(tr, nextParagraphPos);
+        setSelection(tr, newSelection);
+
+        dispatch(tr);
+        return true;
+    },
+    ArrowUp: (state, dispatch) => {
+        if (!dispatch) {
+            console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (isHighlighting(state)) {
+            return false;
+        }
+
+        const { doc, tr } = state;
+        const $pos = getResolvedPosition(state);
+
+        if (!isPosAtFirstChildOfBody(doc, $pos)) {
+            return false;
+        }
+
+        console.log("In first child of page body");
+
+        const thisPos = $pos.pos;
+        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
+        if (!previousParagraphNode) {
+            console.warn("No last paragraph node found in previous page.");
+            return false;
+        }
+
+        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, offsetInNode);
+
+        dispatch(tr);
+        return true;
+    },
+    ArrowDown: (state, dispatch) => {
+        if (!dispatch) {
+            console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (isHighlighting(state)) {
+            return false;
+        }
+
+        const { doc, tr } = state;
+        const $pos = getResolvedPosition(state);
+
+        if (!isPosAtLastChildOfBody(doc, $pos)) {
+            return false;
+        }
+
+        console.log("In last child of page body");
+
+        const thisPos = $pos.pos;
+        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
+        if (!nextParagraphNode) {
+            console.warn("No first paragraph node found in next page.");
+            return false;
+        }
+
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, offsetInNode);
         setSelection(tr, newSelection);
 
         dispatch(tr);

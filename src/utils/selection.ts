@@ -9,6 +9,7 @@ import { EditorState, Selection, TextSelection, Transaction } from "@tiptap/pm/s
 import { Sign } from "../types/direction";
 import { Nullable } from "../types/record";
 import { isNodeEmpty } from "./nodes/node";
+import { inRange } from "./math";
 
 /**
  * Check if the editor is currently highlighting text.
@@ -91,6 +92,30 @@ export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: nu
 };
 
 /**
+ * Set the selection to the paragraph with an optional offset.
+ * @param tr - The current transaction.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @param paragraphNode - The paragraph node.
+ * @param offsetInNode - The offset in the paragraph node. Default is 0.
+ * @returns {void}
+ */
+export const setSelectionToParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode, offsetInNode: number = 0): void => {
+    if (isNodeEmpty(paragraphNode)) {
+        // Node will not have a text selection so move to the start of the paragraph
+        setSelectionToStartOfParagraph(tr, paragraphPos, paragraphNode);
+    } else {
+        if (!inRange(offsetInNode, 0, paragraphNode.nodeSize - 1)) {
+            console.warn("Cannot set selection: Invalid offset in node. Node is of size", paragraphNode.nodeSize);
+            return;
+        }
+
+        const paragraphPosWithOffset = paragraphPos + offsetInNode;
+        const $pos = tr.doc.resolve(paragraphPosWithOffset);
+        moveToNearestTextSelection(tr, $pos, 1);
+    }
+};
+
+/**
  * Set the selection to the end of the paragraph.
  * @param tr - The current transaction.
  * @param paragraphPos - The position of the paragraph in the document.
@@ -129,17 +154,18 @@ export const moveToPreviousTextBlock = (tr: Transaction, $pos: ResolvedPos | num
  * Move the cursor to the current text block.
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
- * @param bias - The search direction.
+ * @param bias - The search direction. Default is 1 (forward).
+ * @param offsetInNode - The offset in the node. Default is 0.
  * @returns {Selection} The new selection.
  */
-export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number, bias: Sign = 1): Selection => {
+export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number, bias: Sign = 1, offsetInNode: number = 0): Selection => {
     if (typeof $pos === "number") {
-        return moveToThisTextBlock(tr, tr.doc.resolve($pos));
+        $pos = tr.doc.resolve($pos);
     }
 
-    const thisPos = $pos.pos;
-    const thisResPos = tr.doc.resolve(thisPos);
-    const selection = Selection.near(thisResPos, bias);
+    const offsetPos = $pos.pos + offsetInNode;
+    const $offsetPos = tr.doc.resolve(offsetPos);
+    const selection = Selection.near($offsetPos, bias);
     return selection;
 };
 
