@@ -213,7 +213,7 @@ const buildNewDocument = (
         const isPageFull = currentHeight + nodeHeight > bodyPixelDimensions.bodyHeight;
         if (isPageFull && currentPageContent.length > 0) {
             const pageNode = addPage(currentPageContent);
-            cumulativeNewDocPos += pageNode.nodeSize;
+            cumulativeNewDocPos += pageNode.nodeSize - currentPageHeader.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
             existingPageNode = doc.maybeChild(++pageNum);
@@ -223,6 +223,7 @@ const buildNewDocument = (
 
             // Next page header
             currentPageHeader = constructHeader(pageRegionNodeAttributes.header);
+            cumulativeNewDocPos += currentPageHeader.nodeSize;
         }
 
         // Record the mapping from old position to new position
