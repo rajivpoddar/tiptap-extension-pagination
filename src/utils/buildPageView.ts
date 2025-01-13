@@ -215,8 +215,7 @@ const buildNewDocument = (
             cumulativeNewDocPos += pageNode.nodeSize;
             currentPageContent = [];
             currentHeight = 0;
-            pageNum++;
-            existingPageNode = doc.maybeChild(pageNum);
+            existingPageNode = doc.maybeChild(++pageNum);
             if (isPageNumInRange(doc, pageNum)) {
                 ({ pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum));
             }
