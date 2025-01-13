@@ -47,42 +47,38 @@ const KeymapPlugin = keymap({
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
 
-        if (isPosAtStartOfBody(doc, $pos)) {
-            console.log("At start of page body");
-
-            const thisPos = $pos.pos;
-            const expectedTextNodePos = thisPos - 1;
-            const thisTextNode = doc.nodeAt(expectedTextNodePos);
-            if (!thisTextNode) {
-                console.warn("No node found at position", expectedTextNodePos);
-                return false;
-            }
-
-            const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
-            if (!paragraphNode) {
-                console.warn("No current paragraph node found");
-                return false;
-            }
-
-            if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
-                console.warn("Unexpected node type found at position", expectedTextNodePos);
-                return false;
-            }
-
-            const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(
-                doc,
-                paragraphPos
-            );
-            if (!previousParagraphNode) {
-                console.warn("No last paragraph node found in previous page.");
-                return false;
-            }
-
-            setSelectionToEndOfParagraph(tr, previousParagraphPos, previousParagraphNode);
-        } else {
-            const newPos = $pos.pos - 1;
-            setSelectionAtPos(tr, newPos);
+        if (!isPosAtStartOfBody(doc, $pos)) {
+            return false;
         }
+
+        console.log("At start of page body");
+
+        const thisPos = $pos.pos;
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
+        if (!previousParagraphNode) {
+            console.warn("No last paragraph node found in previous page.");
+            return false;
+        }
+
+        setSelectionToEndOfParagraph(tr, previousParagraphPos, previousParagraphNode);
 
         dispatch(tr);
         return true;
@@ -100,40 +96,39 @@ const KeymapPlugin = keymap({
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
 
-        if (isPosAtEndOfBody(doc, $pos)) {
-            console.log("At end of page body");
-
-            const thisPos = $pos.pos;
-            const expectedTextNodePos = thisPos - 1;
-            const thisTextNode = doc.nodeAt(expectedTextNodePos);
-            if (!thisTextNode) {
-                console.warn("No node found at position", expectedTextNodePos);
-                return false;
-            }
-
-            const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
-            if (!paragraphNode) {
-                console.warn("No current paragraph node found");
-                return false;
-            }
-
-            if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
-                console.warn("Unexpected node type found at position", expectedTextNodePos);
-                return false;
-            }
-
-            const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
-            if (!nextParagraphNode) {
-                console.warn("No first paragraph node found in next page.");
-                return false;
-            }
-
-            const newSelection = moveToThisTextBlock(tr, nextParagraphPos);
-            setSelection(tr, newSelection);
-        } else {
-            const newPos = $pos.pos + 1;
-            setSelectionAtPos(tr, newPos);
+        if (!isPosAtEndOfBody(doc, $pos)) {
+            return false;
         }
+
+        console.log("At end of page body");
+
+        const thisPos = $pos.pos;
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
+        if (!nextParagraphNode) {
+            console.warn("No first paragraph node found in next page.");
+            return false;
+        }
+
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos);
+        setSelection(tr, newSelection);
 
         dispatch(tr);
         return true;
