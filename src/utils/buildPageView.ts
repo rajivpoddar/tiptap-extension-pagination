@@ -181,12 +181,11 @@ const buildNewDocument = (
     const constructFooter = constructHeaderFooter("footer");
 
     const constructPageRegions = (currentPageContent: PMNode[]): PMNode[] => {
-        const { header: headerAttrs, body: bodyAttrs, footer: footerAttrs } = pageRegionNodeAttributes;
-        const pageHeader = constructHeader(headerAttrs);
+        const { body: bodyAttrs, footer: footerAttrs } = pageRegionNodeAttributes;
         const pageBody = bodyType.create(bodyAttrs, currentPageContent);
         const pageFooter = constructFooter(footerAttrs);
 
-        return [pageHeader, pageBody, pageFooter];
+        return [currentPageHeader, pageBody, pageFooter];
     };
 
     const addPage = (currentPageContent: PMNode[]): PMNode => {
@@ -196,6 +195,8 @@ const buildNewDocument = (
         return pageNode;
     };
 
+    // Header is constructed prior to the body because we need to know its node size for the cursor mapping
+    let currentPageHeader: PMNode = constructHeader(pageRegionNodeAttributes.header);
     let currentPageContent: PMNode[] = [];
     let existingPageNode: Nullable<PMNode> = doc.maybeChild(pageNum);
     let currentHeight = 0;
@@ -203,7 +204,7 @@ const buildNewDocument = (
     const oldToNewPosMap: CursorMap = new Map<number, number>();
     const pageOffset = 1,
         bodyOffset = 1;
-    let cumulativeNewDocPos = pageOffset + bodyOffset;
+    let cumulativeNewDocPos = pageOffset + currentPageHeader.nodeSize + bodyOffset;
 
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldPos } = contentNodes[i];
@@ -219,6 +220,9 @@ const buildNewDocument = (
             if (isPageNumInRange(doc, pageNum)) {
                 ({ pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum));
             }
+
+            // Next page header
+            currentPageHeader = constructHeader(pageRegionNodeAttributes.header);
         }
 
         // Record the mapping from old position to new position
