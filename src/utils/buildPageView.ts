@@ -161,6 +161,7 @@ const buildNewDocument = (
 
     let pageNum = 0;
     const pages: PMNode[] = [];
+    let existingPageNode: Nullable<PMNode> = doc.maybeChild(pageNum);
     let { pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum);
 
     const constructHeaderFooter =
@@ -198,7 +199,6 @@ const buildNewDocument = (
     // Header is constructed prior to the body because we need to know its node size for the cursor mapping
     let currentPageHeader: PMNode = constructHeader(pageRegionNodeAttributes.header);
     let currentPageContent: PMNode[] = [];
-    let existingPageNode: Nullable<PMNode> = doc.maybeChild(pageNum);
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
