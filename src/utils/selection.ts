@@ -151,6 +151,23 @@ export const moveToPreviousTextBlock = (tr: Transaction, $pos: ResolvedPos | num
 };
 
 /**
+ * Caps the offset in the node to the length of the node.
+ * @param tr - The current transaction.
+ * @param $pos - The resolved position in the document.
+ * @param offsetInNode - The offset in the node.
+ * @returns {number} The capped offset in the node.
+ */
+const capOffsetInNode = (tr: Transaction, $pos: ResolvedPos, offsetInNode: number): number => {
+    const thisNode = tr.doc.nodeAt($pos.pos);
+    if (!thisNode) {
+        console.warn(`Unable to resolve node at position ${$pos.pos}. Capping offset to 0`);
+        return offsetInNode;
+    }
+
+    return Math.min(offsetInNode, thisNode.nodeSize - 1);
+};
+
+/**
  * Move the cursor to the current text block.
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
@@ -163,7 +180,8 @@ export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number,
         $pos = tr.doc.resolve($pos);
     }
 
-    const offsetPos = $pos.pos + offsetInNode;
+    const adjustedOffset = capOffsetInNode(tr, $pos, offsetInNode);
+    const offsetPos = $pos.pos + adjustedOffset;
     const $offsetPos = tr.doc.resolve(offsetPos);
     const selection = Selection.near($offsetPos, bias);
     return selection;
