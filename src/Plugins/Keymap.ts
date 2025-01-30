@@ -189,7 +189,7 @@ const KeymapPlugin = keymap({
 
         const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
         if (!previousParagraphNode) {
-            if (!isPosAtEndOfBody(doc, $pos)) {
+            if (!isPosAtStartOfBody(doc, $pos)) {
                 // Move to the start of the current paragraph
                 setSelectionToStartOfParagraph(tr, paragraphPos, paragraphNode);
                 dispatch(tr);
