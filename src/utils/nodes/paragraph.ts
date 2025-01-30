@@ -300,6 +300,41 @@ const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<H
 };
 
 /**
+ * Measure the widths of each character in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of character widths.
+ */
+const measureTextWidths = (pDOMNode: HTMLElement): number[] => {
+    const charWidths: number[] = [];
+
+    const textContent = pDOMNode.textContent || "";
+    const computedStyles = getComputedStyle(pDOMNode);
+
+    for (let i = 0; i < textContent.length; i++) {
+        const char = textContent[i];
+
+        const span = document.createElement("span");
+        span.textContent = char;
+        span.style.position = "absolute";
+        span.style.visibility = "hidden";
+        span.style.whiteSpace = "nowrap";
+        span.style.font = computedStyles.font;
+        span.style.letterSpacing = computedStyles.letterSpacing;
+        span.style.wordSpacing = computedStyles.wordSpacing;
+        span.style.lineHeight = computedStyles.lineHeight;
+
+        document.body.appendChild(span);
+
+        const { width } = span.getBoundingClientRect();
+        charWidths.push(width);
+
+        document.body.removeChild(span);
+    }
+
+    return charWidths;
+};
+
+/**
  * Get offsets where explicit and soft line breaks occur in a paragraph.
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of offsets where line breaks occur.
@@ -324,16 +359,7 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
 
     // 3. Measure where soft-wrapped lines start and track offsets
     const textContent = pDOMNode.innerHTML || pDOMNode.textContent || "";
-    const charWidths: number[] = [];
-
-    // Measure the width of each character to estimate when wrapping occurs
-    const tempSpan = document.createElement("span");
-    document.body.appendChild(tempSpan); // Temporarily add to the DOM
-    for (let i = 0; i < textContent.length; i++) {
-        tempSpan.innerHTML = textContent[i];
-        charWidths[i] = tempSpan.getBoundingClientRect().width;
-    }
-    document.body.removeChild(tempSpan);
+    const charWidths = measureTextWidths(pDOMNode);
 
     let cumulativeWidth = 0;
     let rectIndex = 0;
@@ -348,7 +374,7 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
 
         if (cumulativeWidth >= paragraphRects[rectIndex].width) {
             // Detected a soft-wrapped line break
-            offsets.push(i);
+            offsets.push(i - 2);
             rectIndex++;
             cumulativeWidth = 0;
         }
