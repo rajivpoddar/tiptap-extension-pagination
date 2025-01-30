@@ -264,7 +264,6 @@ export const getParagraphNodeAndPosition = (doc: PMNode, pos: ResolvedPos | numb
 export const getLastParagraphInPreviousPageBodyBeforePos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const previousPageBody = getBodyBeforePos(doc, pos);
     if (!previousPageBody.node) {
-        console.warn("No previous page body node found");
         return previousPageBody;
     }
 
@@ -281,7 +280,6 @@ export const getLastParagraphInPreviousPageBodyBeforePos = (doc: PMNode, pos: Re
 export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const nextPageBody = getBodyAfterPos(doc, pos);
     if (!nextPageBody.node) {
-        console.warn("No next page body node found");
         return nextPageBody;
     }
 

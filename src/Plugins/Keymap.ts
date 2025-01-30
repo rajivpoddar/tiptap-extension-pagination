@@ -16,6 +16,7 @@ import {
     setSelectionAtPos,
     setSelectionToEndOfParagraph,
     setSelectionToParagraph,
+    setSelectionToStartOfParagraph,
 } from "../utils/selection";
 
 import {
@@ -79,8 +80,8 @@ const KeymapPlugin = keymap({
 
         const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
         if (!previousParagraphNode) {
-            console.warn("No last paragraph node found in previous page.");
-            return false;
+            // Handle to prevent cursor moving to header
+            return true;
         }
 
         setSelectionToEndOfParagraph(tr, previousParagraphPos, previousParagraphNode);
@@ -128,8 +129,8 @@ const KeymapPlugin = keymap({
 
         const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
         if (!nextParagraphNode) {
-            console.warn("No first paragraph node found in next page.");
-            return false;
+            // Handle to prevent cursor moving to footer
+            return true;
         }
 
         const newSelection = moveToThisTextBlock(tr, nextParagraphPos);
@@ -188,8 +189,15 @@ const KeymapPlugin = keymap({
 
         const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
         if (!previousParagraphNode) {
-            console.warn("No last paragraph node found in previous page.");
-            return false;
+            if (!isPosAtEndOfBody(doc, $pos)) {
+                // Move to the start of the current paragraph
+                setSelectionToStartOfParagraph(tr, paragraphPos, paragraphNode);
+                dispatch(tr);
+            } else {
+                // Handle to prevent cursor moving to header
+            }
+
+            return true;
         }
 
         const { lineCount: prevParLineCount } = getParagraphLineInfo(view, previousParagraphPos);
@@ -251,8 +259,15 @@ const KeymapPlugin = keymap({
 
         const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
         if (!nextParagraphNode) {
-            console.warn("No first paragraph node found in next page.");
-            return false;
+            if (!isPosAtEndOfBody(doc, $pos)) {
+                // Move to the end of the current paragraph
+                setSelectionToEndOfParagraph(tr, paragraphPos, paragraphNode);
+                dispatch(tr);
+            } else {
+                // Handle to prevent cursor moving to footer
+            }
+
+            return true;
         }
 
         const cursorOffset = getOffsetForDistanceInLine(view, nextParagraphPos, 0, offsetDistance) + 1;
@@ -391,8 +406,8 @@ const KeymapPlugin = keymap({
                 paragraphPos
             );
             if (!previousParagraphNode) {
-                console.warn("No previous paragraph node found");
-                return false;
+                // Handle to prevent cursor moving to header
+                return true;
             }
 
             if (!isNodeEmpty(previousParagraphNode) || !isNodeEmpty(paragraphNode)) {
@@ -455,8 +470,8 @@ const KeymapPlugin = keymap({
 
         const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
         if (!nextParagraphNode) {
-            console.warn("No first paragraph node found in next page.");
-            return false;
+            // Handle to prevent cursor moving to footer
+            return true;
         }
 
         const thisNodeEmpty = isNodeEmpty(paragraphNode);

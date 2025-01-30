@@ -88,7 +88,6 @@ export const getEndOfBodyPosition = (doc: PMNode, pos: ResolvedPos | number): nu
 export const getBodyBeforePos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const previousPage = getPageBeforePos(doc, pos);
     if (!previousPage.node) {
-        console.warn("No previous page found");
         return previousPage;
     }
 
@@ -105,7 +104,6 @@ export const getBodyBeforePos = (doc: PMNode, pos: ResolvedPos | number): Nullab
 export const getBodyAfterPos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const nextPage = getPageAfterPos(doc, pos);
     if (!nextPage.node) {
-        console.warn("No next page found");
         return nextPage;
     }
 
