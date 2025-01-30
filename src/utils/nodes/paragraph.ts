@@ -388,7 +388,15 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
     const lines: number[] = [];
     let currentLineWidths: number[] = [];
     let cumulativeLineLeft: number = rects[0]?.left || 0;
+    let cumulativeLineTop: number = rects[0]?.top || 0;
     let prevLineRight: number = 0;
+
+    const addNewLine = (width?: number) => {
+        lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
+        if (width) {
+            currentLineWidths = [width];
+        }
+    };
 
     Array.from(rects).forEach((rect, index) => {
         if (index === 0) {
@@ -398,22 +406,25 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
             if (rect.left === prevLineRight) {
                 // Next element in line
                 currentLineWidths.push(rect.width);
+            } else if (rect.left === cumulativeLineLeft && rect.top > cumulativeLineTop) {
+                // New Line
+                addNewLine(rect.width);
             } else if (rect.left >= cumulativeLineLeft) {
                 // Skip
             } else {
                 // New Line
-                lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
-                currentLineWidths = [rect.width];
+                addNewLine(rect.width);
             }
         }
 
         cumulativeLineLeft = rect.left;
+        cumulativeLineTop = rect.top;
         prevLineRight = rect.right;
     });
 
     if (currentLineWidths.length > 0) {
         // Add the last line
-        lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
+        addNewLine();
     }
 
     return lines;
