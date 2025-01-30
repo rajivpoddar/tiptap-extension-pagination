@@ -21,9 +21,13 @@ import {
 import {
     getFirstParagraphInNextPageBodyAfterPos,
     getLastParagraphInPreviousPageBodyBeforePos,
+    getOffsetForDistanceInLine,
+    getParagraphLineInfo,
     getParagraphNodeAndPosition,
     isAtStartOrEndOfParagraph,
     isParagraphNode,
+    isPosAtFirstLineOfParagraph,
+    isPosAtLastLineOfParagraph,
     isPositionWithinParagraph,
 } from "../utils/nodes/paragraph";
 import { isNodeEmpty } from "@tiptap/core";
@@ -134,9 +138,14 @@ const KeymapPlugin = keymap({
         dispatch(tr);
         return true;
     },
-    ArrowUp: (state, dispatch) => {
+    ArrowUp: (state, dispatch, view) => {
         if (!dispatch) {
             console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (!view) {
+            console.warn("No view provided");
             return false;
         }
 
@@ -154,7 +163,11 @@ const KeymapPlugin = keymap({
         console.log("In first child of page body");
 
         const thisPos = $pos.pos;
-        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        const { isAtFirstLine, offsetDistance } = isPosAtFirstLineOfParagraph(view, $pos);
+        if (!isAtFirstLine) {
+            return false;
+        }
+
         const expectedTextNodePos = thisPos - 1;
         const thisTextNode = doc.nodeAt(expectedTextNodePos);
         if (!thisTextNode) {
@@ -179,14 +192,23 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, offsetInNode);
+        const { lineCount: prevParLineCount } = getParagraphLineInfo(view, previousParagraphPos);
+        const prevParagraphLastLineNum = prevParLineCount - 1;
+        const cursorOffset = getOffsetForDistanceInLine(view, previousParagraphPos, prevParagraphLastLineNum, offsetDistance) + 1;
+
+        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, cursorOffset);
 
         dispatch(tr);
         return true;
     },
-    ArrowDown: (state, dispatch) => {
+    ArrowDown: (state, dispatch, view) => {
         if (!dispatch) {
             console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (!view) {
+            console.warn("No view provided");
             return false;
         }
 
@@ -204,7 +226,11 @@ const KeymapPlugin = keymap({
         console.log("In last child of page body");
 
         const thisPos = $pos.pos;
-        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        const { isAtLastLine, offsetDistance } = isPosAtLastLineOfParagraph(view, $pos);
+        if (!isAtLastLine) {
+            return false;
+        }
+
         const expectedTextNodePos = thisPos - 1;
         const thisTextNode = doc.nodeAt(expectedTextNodePos);
         if (!thisTextNode) {
@@ -229,7 +255,8 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, offsetInNode);
+        const cursorOffset = getOffsetForDistanceInLine(view, nextParagraphPos, 0, offsetDistance) + 1;
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, cursorOffset);
         setSelection(tr, newSelection);
 
         dispatch(tr);

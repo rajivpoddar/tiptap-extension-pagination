@@ -172,7 +172,7 @@ const capOffsetInNode = (tr: Transaction, $pos: ResolvedPos, offsetInNode: numbe
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @param bias - The search direction. Default is 1 (forward).
- * @param offsetInNode - The offset in the node. Default is 0.
+ * @param offsetInNode - The offset in the node. Default is 0. Will cap at the length of the node.
  * @returns {Selection} The new selection.
  */
 export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number, bias: Sign = 1, offsetInNode: number = 0): Selection => {
