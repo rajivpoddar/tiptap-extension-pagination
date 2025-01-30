@@ -56,3 +56,41 @@ export const binarySearch = <T>(arr: T[], target: T, compare: (a: T, b: T) => nu
 
     return high;
 };
+
+/**
+ * Find the index of the closest element in an array to a target value.
+ * @param arr - The array to search.
+ * @param target - The target value to find the closest element to.
+ * @returns The index of the closest element in the array.
+ */
+export const findClosestIndex = (arr: number[], target: number): number => {
+    let lo = 0,
+        hi = arr.length - 1;
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    while (lo <= hi) {
+        let mid = lo + Math.floor((hi - lo) / 2);
+        const currentDistance = Math.abs(arr[mid] - target);
+
+        // Update closestIndex if mid is closer to target
+        if (currentDistance < closestDistance) {
+            closestDistance = currentDistance;
+            closestIndex = mid;
+
+            // In case of a tie, prefer the larger value
+        } else if (currentDistance === closestDistance) {
+            closestIndex = Math.max(closestIndex, mid);
+        }
+
+        if (arr[mid] === target) {
+            return mid; // If we find an exact match
+        } else if (arr[mid] < target) {
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+
+    return closestIndex;
+};

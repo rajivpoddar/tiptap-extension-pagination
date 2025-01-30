@@ -10,7 +10,7 @@ import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
-import { binarySearch, inRange } from "../math";
+import { binarySearch, findClosestIndex, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
 import { ParagraphLineInfo } from "../../types/paragraph";
 import { measureCumulativeTextWidths, measureText } from "./text";
@@ -372,18 +372,9 @@ export const getOffsetForDistanceInLine = (
     const computedStyles = getComputedStyle(pDOMNode);
     const charWidths = measureCumulativeTextWidths(textContent, computedStyles);
 
-    let closestLineOffset = 0;
-    let closestDistanceDiff = Math.abs(charWidths[0] - targetDistance);
+    const closestIndex = findClosestIndex(charWidths, targetDistance);
 
-    for (let i = 0; i < charWidths.length; i++) {
-        const currentDistanceDiff = Math.abs(charWidths[i] - targetDistance);
-        if (currentDistanceDiff <= closestDistanceDiff) {
-            closestLineOffset = i + (i < charWidths.length ? 1 : 0);
-            closestDistanceDiff = currentDistanceDiff;
-        }
-    }
-
-    return thisLineOffset + closestLineOffset;
+    return thisLineOffset + closestIndex + 1;
 };
 
 /**
