@@ -293,7 +293,8 @@ export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: Resolv
  * @param paragraphPos - The position of the paragraph in the document.
  * @returns {Node} The paragraph DOM node.
  */
-const getTextDomNode = (view: EditorView, paragraphPos: number): Nullable<Node> => {
+const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<Node> => {
+    // DOM nodes are offsetted by 1 for some reason.
     const paragraphTextPos = paragraphPos + 1;
     return view.domAtPos(paragraphTextPos).node ?? null;
 };
@@ -305,7 +306,7 @@ const getTextDomNode = (view: EditorView, paragraphPos: number): Nullable<Node> 
  * @returns {Nullable<DOMRectList>} The list of DOMRects for each line in the paragraph.
  */
 const getParagraphLineRects = (view: EditorView, paragraphPos: number): Nullable<DOMRectList> => {
-    const paragraphNode = getTextDomNode(view, paragraphPos);
+    const paragraphNode = getParagraphDOMNode(view, paragraphPos);
     if (!paragraphNode) {
         console.warn("Invalid paragraph node.");
         return null;
@@ -338,8 +339,8 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
     if (!paragraphRects) return returnDefaultLineInfo();
 
     const lineCount = paragraphRects.length;
-    const textDOMNode = getTextDomNode(view, paragraphPos);
-    if (!textDOMNode) return returnDefaultLineInfo();
+    const pDomNode = getParagraphDOMNode(view, paragraphPos);
+    if (!pDomNode) return returnDefaultLineInfo();
 
     // Find which line the given position is in
     const { offset: domPos } = view.domAtPos(pos);
@@ -349,8 +350,8 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
         for (let i = 0; i < lineCount; i++) {
             // Create a range for each line and check if the position falls within it
             const lineRange = document.createRange();
-            lineRange.setStart(textDOMNode, 0);
-            lineRange.setEnd(textDOMNode, domPos + 1);
+            lineRange.setStart(pDomNode, 0);
+            lineRange.setEnd(pDomNode, domPos + 1);
 
             const lineRects = lineRange.getClientRects();
             if (lineRects.length > 0 && paragraphRects[i].top === lineRects[lineRects.length - 1].top) {
