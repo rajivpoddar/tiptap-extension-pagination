@@ -540,10 +540,11 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     const lineCount = lineBreakOffsets.length - brTagOffsets.length;
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
-    let { offset } = view.domAtPos(pos - atEndOfParagraphOffset);
-    const pPos = pos - offset;
-    const paragraph = view.domAtPos(pPos);
-    const previousOffset = getTextLengthFromElement(view, paragraph.node as HTMLElement);
+    let { node, offset } = view.domAtPos(pos - atEndOfParagraphOffset);
+    const paragraphNode = node.parentNode;
+    if (!paragraphNode) return returnDefaultLineInfo();
+
+    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement);
     offset += previousOffset + atEndOfParagraphOffset;
 
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
