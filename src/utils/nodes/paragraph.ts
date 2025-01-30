@@ -464,16 +464,6 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
 };
 
 /**
- * Get offsets where explicit line breaks occur in a paragraph.
- * @param pDOMNode - The paragraph DOM node.
- * @returns {number[]} An array of offsets where explicit line breaks occur.
- */
-const getExplicitBreakOffsets = (pDOMNode: HTMLElement): number[] => {
-    const brTags = Array.from(pDOMNode.querySelectorAll("br"));
-    return brTags.map((br) => br.previousSibling?.textContent?.length || 0);
-};
-
-/**
  * Get the line number for a given position within a paragraph using binary search.
  * @param lineBreakOffsets - The offsets where line breaks occur.
  * @param offset - The position within the paragraph.
@@ -549,8 +539,7 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     if (!pDOMNode) return returnDefaultLineInfo();
 
     const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
-    const brTagOffsets = getExplicitBreakOffsets(pDOMNode);
-    const lineCount = lineBreakOffsets.length - brTagOffsets.length;
+    const lineCount = lineBreakOffsets.length;
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
     let { node, offset } = view.domAtPos(pos - atEndOfParagraphOffset);
