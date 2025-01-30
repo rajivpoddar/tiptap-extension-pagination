@@ -13,6 +13,7 @@ import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
 import { binarySearch, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
 import { ParagraphLineInfo } from "../../types/paragraph";
+import { measureText } from "./text";
 
 /**
  * Check if the given node is a paragraph node.
@@ -312,23 +313,8 @@ const measureTextWidths = (pDOMNode: HTMLElement): number[] => {
 
     for (let i = 0; i < textContent.length; i++) {
         const char = textContent[i];
-
-        const span = document.createElement("span");
-        span.textContent = char;
-        span.style.position = "absolute";
-        span.style.visibility = "hidden";
-        span.style.whiteSpace = "nowrap";
-        span.style.font = computedStyles.font;
-        span.style.letterSpacing = computedStyles.letterSpacing;
-        span.style.wordSpacing = computedStyles.wordSpacing;
-        span.style.lineHeight = computedStyles.lineHeight;
-
-        document.body.appendChild(span);
-
-        const { width } = span.getBoundingClientRect();
+        const { width } = measureText(char, computedStyles);
         charWidths.push(width);
-
-        document.body.removeChild(span);
     }
 
     return charWidths;
