@@ -385,7 +385,38 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
     range.selectNodeContents(pDOMNode);
     const rects = range.getClientRects();
 
-    return Array.from(rects).map((rect) => rect.width);
+    const lines: number[] = [];
+    let currentLineWidths: number[] = [];
+    let cumulativeLineLeft: number = rects[0]?.left || 0;
+    let prevLineRight: number = 0;
+
+    Array.from(rects).forEach((rect, index) => {
+        if (index === 0) {
+            // First line
+            currentLineWidths.push(rect.width);
+        } else {
+            if (rect.left === prevLineRight) {
+                // Next element in line
+                currentLineWidths.push(rect.width);
+            } else if (rect.left >= cumulativeLineLeft) {
+                // Skip
+            } else {
+                // New Line
+                lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
+                currentLineWidths = [rect.width];
+            }
+        }
+
+        cumulativeLineLeft = rect.left;
+        prevLineRight = rect.right;
+    });
+
+    if (currentLineWidths.length > 0) {
+        // Add the last line
+        lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
+    }
+
+    return lines;
 };
 
 /**
@@ -394,21 +425,8 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
  * @returns {number[]} An array of offsets where line breaks occur.
  */
 const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
-    const offsets: number[] = [0];
-    let textOffset = 0;
-
-    // 1. Find explicit `<br />` breaks and store their offsets
-    for (const node of pDOMNode.childNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === "BR") {
-            offsets.push(textOffset);
-        } else if (node.nodeType === Node.TEXT_NODE) {
-            textOffset += node.textContent?.length || 0;
-        }
-    }
-
     const lineWidths = measureParagraphLineWidths(pDOMNode);
-
-    // 3. Measure where soft-wrapped lines start and track offsets
+    const offsets: number[] = [0];
     const textContent = pDOMNode.innerHTML || pDOMNode.textContent || "";
     const charWidths = measureTextWidths(pDOMNode);
 
@@ -432,6 +450,16 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
     }
 
     return offsets;
+};
+
+/**
+ * Get offsets where explicit line breaks occur in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of offsets where explicit line breaks occur.
+ */
+const getExplicitBreakOffsets = (pDOMNode: HTMLElement): number[] => {
+    const brTags = Array.from(pDOMNode.querySelectorAll("br"));
+    return brTags.map((br) => br.previousSibling?.textContent?.length || 0);
 };
 
 /**
@@ -479,7 +507,8 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     if (!pDOMNode) return returnDefaultLineInfo();
 
     const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
-    const lineCount = lineBreakOffsets.length;
+    const brTagOffsets = getExplicitBreakOffsets(pDOMNode);
+    const lineCount = lineBreakOffsets.length - brTagOffsets.length;
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
     const offset = view.domAtPos(pos - atEndOfParagraphOffset).offset + atEndOfParagraphOffset;
