@@ -321,6 +321,90 @@ const measureTextWidths = (pDOMNode: HTMLElement): number[] => {
 };
 
 /**
+ * Measure the width of the text up to a given offset in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @param offset - The offset within the paragraph.
+ * @param lineNumber - The line number within the paragraph.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @returns {number} The width of the text up to the offset.
+ */
+export const getTextWidthUpToOffsetInLine = (
+    pDOMNode: HTMLElement,
+    offset: number,
+    lineNumber: number,
+    lineBreakOffsets: number[]
+): number => {
+    const textUpToOffset = pDOMNode.textContent?.slice(lineBreakOffsets[lineNumber], offset) || "";
+    const computedStyles = getComputedStyle(pDOMNode);
+    const { width } = measureText(textUpToOffset, computedStyles);
+    return width;
+};
+
+/**
+ * Get the offset within a line given the offset in the paragraph and line number.
+ * @param offset - The offset within the paragraph.
+ * @param lineNumber - The line number within the paragraph.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @returns {number} The offset within the line.
+ */
+const getOffsetInLine = (offset: number, lineNumber: number, lineBreakOffsets: number[]): number => {
+    if (lineNumber === 0) {
+        return offset;
+    }
+
+    return offset - lineBreakOffsets[lineNumber];
+};
+
+export const getOffsetForDistanceInLine = (
+    view: EditorView,
+    pos: ResolvedPos | number,
+    lineNumber: number,
+    targetDistance: number
+): number => {
+    const pDOMNode = getPDOMNodeFromPos(view, pos);
+    if (!pDOMNode) return 0;
+
+    // Now let's get the text up to the specified line.
+    const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
+    const thisLineOffset = lineBreakOffsets[lineNumber];
+    const nextLineOffset = lineBreakOffsets[lineNumber + 1];
+    const textContent = pDOMNode.textContent?.slice(thisLineOffset, nextLineOffset) || "";
+
+    const charWidths: number[] = [];
+
+    const computedStyle = getComputedStyle(pDOMNode);
+
+    let cumulativeWidth = 0;
+
+    // Measure the width of each character using the helper function
+    for (let i = 0; i < textContent.length; i++) {
+        const char = textContent[i];
+        const { width } = measureText(char, computedStyle);
+        cumulativeWidth += width;
+        charWidths.push(cumulativeWidth);
+    }
+
+    // Now, we have the widths of each character and the cumulative widths.
+    // Next, we need to find the offset that matches the target distance on the given line.
+
+    // We need to find the line break offsets within the specified line number.
+
+    // Loop through the characters in the specified line, and find the closest match to the target distance
+    let closestLineOffset = 0;
+    let closestDistanceDiff = Math.abs(charWidths[0] - targetDistance);
+
+    for (let i = 0; i < charWidths.length; i++) {
+        const currentDistanceDiff = Math.abs(charWidths[i] - targetDistance);
+        if (currentDistanceDiff <= closestDistanceDiff) {
+            closestLineOffset = i + (i < charWidths.length ? 1 : 0);
+            closestDistanceDiff = currentDistanceDiff;
+        }
+    }
+
+    return thisLineOffset + closestLineOffset;
+};
+
+/**
  * Measure the widths of each line in a paragraph.
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of line widths.
@@ -351,7 +435,7 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
         }
     }
 
-    const paragraphWidths = measureParagraphLineWidths(pDOMNode);
+    const lineWidths = measureParagraphLineWidths(pDOMNode);
 
     // 3. Measure where soft-wrapped lines start and track offsets
     const textContent = pDOMNode.innerHTML || pDOMNode.textContent || "";
@@ -361,14 +445,14 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
     let rectIndex = 0;
 
     for (let i = 0; i < textContent.length; i++) {
-        if (rectIndex >= paragraphWidths.length - 1) {
+        if (rectIndex >= lineWidths.length - 1) {
             // We are on the last line of the paragraph
             break;
         }
 
         cumulativeWidth += charWidths[i] || 0;
 
-        if (cumulativeWidth >= paragraphWidths[rectIndex]) {
+        if (cumulativeWidth >= lineWidths[rectIndex]) {
             // Detected a soft-wrapped line break
             offsets.push(i - 2);
             rectIndex++;
@@ -390,6 +474,15 @@ const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): n
     return binarySearch(lineBreakOffsets, offset, compareOffsets);
 };
 
+const getPDOMNodeFromPos = (view: EditorView, pos: ResolvedPos | number): Nullable<HTMLElement> => {
+    if (typeof pos !== "number") {
+        pos = pos.pos;
+    }
+
+    const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
+    return getParagraphDOMNode(view, paragraphPos);
+};
+
 /**
  * Given a paragraph position and position within said paragraph, return the number of
  * lines in the paragraph and the line number of the position.
@@ -403,22 +496,28 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
         pos = pos.pos;
     }
 
-    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineBreakOffsets: [0], lineNumber: 0, offsetInLine: 0 });
+    const returnDefaultLineInfo = (): ParagraphLineInfo => ({
+        lineCount: 0,
+        lineBreakOffsets: [0],
+        lineNumber: 0,
+        offsetInLine: 0,
+        offsetDistance: 0,
+    });
 
-    const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
-
-    const pDOMNode = getParagraphDOMNode(view, paragraphPos);
+    const pDOMNode = getPDOMNodeFromPos(view, pos);
     if (!pDOMNode) return returnDefaultLineInfo();
 
     const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
     const lineCount = lineBreakOffsets.length;
 
-    const { offset } = view.domAtPos(pos);
+    const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
+    const offset = view.domAtPos(pos - atEndOfParagraphOffset).offset + atEndOfParagraphOffset;
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
 
-    const offsetInLine = offset - lineBreakOffsets[lineNumber];
+    const offsetInLine = getOffsetInLine(offset, lineNumber, lineBreakOffsets);
+    const offsetDistance = getTextWidthUpToOffsetInLine(pDOMNode, offset, lineNumber, lineBreakOffsets);
 
-    return { lineCount, lineBreakOffsets, lineNumber, offsetInLine };
+    return { lineCount, lineBreakOffsets, lineNumber, offsetInLine, offsetDistance };
 };
 
 /**
@@ -430,10 +529,10 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
 export const isPosAtFirstLineOfParagraph = (
     view: EditorView,
     $pos: ResolvedPos | number
-): { isAtFirstLine: boolean; offsetInLine: number } => {
-    const { lineNumber, offsetInLine } = getParagraphLineInfo(view, $pos);
+): { isAtFirstLine: boolean } & ParagraphLineInfo => {
+    const { lineNumber, ...otherLineInfo } = getParagraphLineInfo(view, $pos);
     const isAtFirstLine = lineNumber === 0;
-    return { isAtFirstLine, offsetInLine };
+    return { isAtFirstLine, lineNumber, ...otherLineInfo };
 };
 
 /**
@@ -442,11 +541,8 @@ export const isPosAtFirstLineOfParagraph = (
  * @param $pos - The [resolved] position in the document.
  * @returns {boolean} True if the position is at the last line of the paragraph, false otherwise.
  */
-export const isPosAtLastLineOfParagraph = (
-    view: EditorView,
-    $pos: ResolvedPos | number
-): { isAtLastLine: boolean; offsetInLine: number } => {
-    const { lineCount, lineNumber, offsetInLine } = getParagraphLineInfo(view, $pos);
+export const isPosAtLastLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): { isAtLastLine: boolean } & ParagraphLineInfo => {
+    const { lineCount, lineNumber, ...otherLineInfo } = getParagraphLineInfo(view, $pos);
     const isAtLastLine = lineNumber + 1 === lineCount;
-    return { isAtLastLine, offsetInLine };
+    return { isAtLastLine, lineCount, lineNumber, ...otherLineInfo };
 };

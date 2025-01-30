@@ -22,4 +22,9 @@ export type ParagraphLineInfo = {
      * The character offset within the line
      */
     offsetInLine: number;
+
+    /**
+     * The distance in pixels from the start of the line
+     */
+    offsetDistance: number;
 };

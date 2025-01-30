@@ -21,6 +21,7 @@ import {
 import {
     getFirstParagraphInNextPageBodyAfterPos,
     getLastParagraphInPreviousPageBodyBeforePos,
+    getOffsetForDistanceInLine,
     getParagraphLineInfo,
     getParagraphNodeAndPosition,
     isAtStartOrEndOfParagraph,
@@ -162,7 +163,7 @@ const KeymapPlugin = keymap({
         console.log("In first child of page body");
 
         const thisPos = $pos.pos;
-        const { isAtFirstLine, offsetInLine } = isPosAtFirstLineOfParagraph(view, $pos);
+        const { isAtFirstLine, offsetDistance } = isPosAtFirstLineOfParagraph(view, $pos);
         if (!isAtFirstLine) {
             return false;
         }
@@ -191,9 +192,9 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        const { lineCount: prevParLineCount, lineBreakOffsets: prevParLineBreakOffsets } = getParagraphLineInfo(view, previousParagraphPos);
-        const prevParaLastLineOffset = prevParLineBreakOffsets[prevParLineCount - 1];
-        const cursorOffset = prevParaLastLineOffset + offsetInLine;
+        const { lineCount: prevParLineCount } = getParagraphLineInfo(view, previousParagraphPos);
+        const prevParagraphLastLineNum = prevParLineCount - 1;
+        const cursorOffset = getOffsetForDistanceInLine(view, previousParagraphPos, prevParagraphLastLineNum, offsetDistance) + 1;
 
         setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, cursorOffset);
 
