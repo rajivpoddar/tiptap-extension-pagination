@@ -483,6 +483,35 @@ const getPDOMNodeFromPos = (view: EditorView, pos: ResolvedPos | number): Nullab
 };
 
 /**
+ * Helper function to calculate the total length of text content in an element.
+ * It will recursively sum the lengths of all text nodes within the element.
+ * @param elementNode - The DOM element node (e.g., <code>, <span>).
+ * @returns {number} - The total length of text content inside the element.
+ */
+const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement): number => {
+    let totalLength = 0;
+
+    // Traverse all child nodes and sum the lengths of text nodes
+    Array.from(elementNode.childNodes).forEach((childNode) => {
+        if (childNode.nodeType === Node.TEXT_NODE) {
+            totalLength += (childNode as Text).length;
+        } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+            const pos = view.posAtDOM(childNode, 0);
+            const pmNode = view.state.doc.nodeAt(pos);
+            if (pmNode && pmNode.type.spec.atom) {
+                // Atom nodes are treated as a single character
+                totalLength += 1;
+            } else {
+                // Recursively call for nested elements
+                totalLength += getTextLengthFromElement(view, childNode as HTMLElement);
+            }
+        }
+    });
+
+    return totalLength;
+};
+
+/**
  * Given a paragraph position and position within said paragraph, return the number of
  * lines in the paragraph and the line number of the position.
  * @param view - The editor view.
@@ -511,7 +540,12 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     const lineCount = lineBreakOffsets.length - brTagOffsets.length;
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
-    const offset = view.domAtPos(pos - atEndOfParagraphOffset).offset + atEndOfParagraphOffset;
+    let { offset } = view.domAtPos(pos - atEndOfParagraphOffset);
+    const pPos = pos - offset;
+    const paragraph = view.domAtPos(pPos);
+    const previousOffset = getTextLengthFromElement(view, paragraph.node as HTMLElement);
+    offset += previousOffset + atEndOfParagraphOffset;
+
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
 
     const offsetInLine = getOffsetInLine(offset, lineNumber, lineBreakOffsets);
