@@ -499,25 +499,27 @@ const getPDOMNodeFromPos = (view: EditorView, pos: ResolvedPos | number): Nullab
  * @param elementNode - The DOM element node (e.g., <code>, <span>).
  * @returns {number} - The total length of text content inside the element.
  */
-const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement): number => {
+const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement, end?: number): number => {
     let totalLength = 0;
 
     // Traverse all child nodes and sum the lengths of text nodes
-    Array.from(elementNode.childNodes).forEach((childNode) => {
-        if (childNode.nodeType === Node.TEXT_NODE) {
-            totalLength += (childNode as Text).length;
-        } else if (childNode.nodeType === Node.ELEMENT_NODE) {
-            const pos = view.posAtDOM(childNode, 0);
-            const pmNode = view.state.doc.nodeAt(pos);
-            if (pmNode && pmNode.type.spec.atom) {
-                // Atom nodes are treated as a single character
-                totalLength += 1;
-            } else {
-                // Recursively call for nested elements
-                totalLength += getTextLengthFromElement(view, childNode as HTMLElement);
+    Array.from(elementNode.childNodes)
+        .slice(0, end)
+        .forEach((childNode) => {
+            if (childNode.nodeType === Node.TEXT_NODE) {
+                totalLength += (childNode as Text).length;
+            } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+                const pos = view.posAtDOM(childNode, 0);
+                const pmNode = view.state.doc.nodeAt(pos);
+                if (pmNode && pmNode.type.spec.atom) {
+                    // Atom nodes are treated as a single character
+                    totalLength += 1;
+                } else {
+                    // Recursively call for nested elements
+                    totalLength += getTextLengthFromElement(view, childNode as HTMLElement);
+                }
             }
-        }
-    });
+        });
 
     return totalLength;
 };
@@ -552,10 +554,11 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
     let { node, offset } = view.domAtPos(pos - atEndOfParagraphOffset);
+    const elem = view.domAtPos(pos - offset - atEndOfParagraphOffset);
     const paragraphNode = node.parentNode;
     if (!paragraphNode) return returnDefaultLineInfo();
 
-    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement);
+    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement, elem.offset);
     offset += previousOffset + atEndOfParagraphOffset;
 
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
