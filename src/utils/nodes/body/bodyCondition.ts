@@ -53,7 +53,7 @@ export const isPosAtLastChildOfBody = (doc: PMNode, $pos: ResolvedPos | number):
  * Check if the given position is at the start of the document.
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
- * @param allowTextBlock - Whether to allow text blocks at the start of the document. Default is false.
+ * @param checkExactStart - Whether the position must be at the exact start of the body.
  * @returns {boolean} True if the position is at the start of the document, false otherwise.
  */
 export const isPosMatchingStartOfBodyCondition = (doc: PMNode, $pos: ResolvedPos | number, checkExactStart: boolean): boolean => {

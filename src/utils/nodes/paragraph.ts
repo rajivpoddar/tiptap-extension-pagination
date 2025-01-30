@@ -5,12 +5,15 @@
  */
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
+import { EditorView } from "@tiptap/pm/view";
 import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
-import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
+import { getParentNodePosOfType, getPositionNodeType, isAtomNode, isNodeEmpty } from "./node";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
-import { inRange } from "../math";
+import { binarySearch, findClosestIndex, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
+import { ParagraphLineInfo } from "../../types/paragraph";
+import { measureCumulativeTextWidths, measureText } from "./text";
 
 /**
  * Check if the given node is a paragraph node.
@@ -261,7 +264,6 @@ export const getParagraphNodeAndPosition = (doc: PMNode, pos: ResolvedPos | numb
 export const getLastParagraphInPreviousPageBodyBeforePos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const previousPageBody = getBodyBeforePos(doc, pos);
     if (!previousPageBody.node) {
-        console.warn("No previous page body node found");
         return previousPageBody;
     }
 
@@ -278,9 +280,322 @@ export const getLastParagraphInPreviousPageBodyBeforePos = (doc: PMNode, pos: Re
 export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
     const nextPageBody = getBodyAfterPos(doc, pos);
     if (!nextPageBody.node) {
-        console.warn("No next page body node found");
         return nextPageBody;
     }
 
     return getNextParagraph(doc, nextPageBody.pos);
+};
+
+/**
+ * Get the paragraph DOM node.
+ * @param view - The editor view.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @returns {Node} The paragraph DOM node.
+ */
+const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<HTMLElement> => {
+    // DOM nodes are offsetted by 1 for some reason.
+    const paragraphTextPos = paragraphPos + 1;
+    return (view.domAtPos(paragraphTextPos).node as HTMLElement) ?? null;
+};
+
+/**
+ * Measure the widths of each character in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of character widths.
+ */
+const measureTextWidths = (pDOMNode: HTMLElement): number[] => {
+    const charWidths: number[] = [];
+
+    const textContent = pDOMNode.textContent || "";
+    const computedStyles = getComputedStyle(pDOMNode);
+
+    for (let i = 0; i < textContent.length; i++) {
+        const char = textContent[i];
+        const { width } = measureText(char, computedStyles);
+        charWidths.push(width);
+    }
+
+    return charWidths;
+};
+
+/**
+ * Measure the width of the text up to a given offset in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @param offset - The offset within the paragraph.
+ * @param lineNumber - The line number within the paragraph.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @returns {number} The width of the text up to the offset.
+ */
+export const getTextWidthUpToOffsetInLine = (
+    pDOMNode: HTMLElement,
+    offset: number,
+    lineNumber: number,
+    lineBreakOffsets: number[]
+): number => {
+    const textUpToOffset = pDOMNode.textContent?.slice(lineBreakOffsets[lineNumber], offset) || "";
+    const computedStyles = getComputedStyle(pDOMNode);
+    const { width } = measureText(textUpToOffset, computedStyles);
+    return width;
+};
+
+/**
+ * Get the offset within a line given the offset in the paragraph and line number.
+ * @param offset - The offset within the paragraph.
+ * @param lineNumber - The line number within the paragraph.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @returns {number} The offset within the line.
+ */
+const getOffsetInLine = (offset: number, lineNumber: number, lineBreakOffsets: number[]): number => {
+    if (lineNumber === 0) {
+        return offset;
+    }
+
+    return offset - lineBreakOffsets[lineNumber];
+};
+
+export const getOffsetForDistanceInLine = (
+    view: EditorView,
+    pos: ResolvedPos | number,
+    lineNumber: number,
+    targetDistance: number
+): number => {
+    const pDOMNode = getPDOMNodeFromPos(view, pos);
+    if (!pDOMNode) return 0;
+
+    const lineBreakOffsets = getParagraphLineBreakOffsets(view, pDOMNode);
+    const thisLineOffset = lineBreakOffsets[lineNumber];
+    const nextLineOffset = lineBreakOffsets[lineNumber + 1];
+    const textContent = pDOMNode.textContent?.slice(thisLineOffset, nextLineOffset) || "";
+
+    const computedStyles = getComputedStyle(pDOMNode);
+    const charWidths = measureCumulativeTextWidths(textContent, computedStyles);
+
+    const closestIndex = findClosestIndex(charWidths, targetDistance);
+
+    return thisLineOffset + closestIndex + 1;
+};
+
+/**
+ * Measure the widths of each line in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of line widths.
+ */
+export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
+    const range = document.createRange();
+    range.selectNodeContents(pDOMNode);
+    const rects = range.getClientRects();
+
+    const lines: number[] = [];
+    let currentLineWidths: number[] = [];
+    let cumulativeLineLeft: number = rects[0]?.left || 0;
+    let cumulativeLineTop: number = rects[0]?.top || 0;
+    let prevLineRight: number = 0;
+
+    const addNewLine = (width?: number) => {
+        lines.push(currentLineWidths.reduce((acc, width) => acc + width, 0));
+        if (width) {
+            currentLineWidths = [width];
+        }
+    };
+
+    Array.from(rects).forEach((rect, index) => {
+        if (index === 0) {
+            // First line
+            currentLineWidths.push(rect.width);
+        } else {
+            if (rect.left === prevLineRight) {
+                // Next element in line
+                currentLineWidths.push(rect.width);
+            } else if (rect.left === cumulativeLineLeft && rect.top > cumulativeLineTop) {
+                // New Line
+                addNewLine(rect.width);
+            } else if (rect.left >= cumulativeLineLeft) {
+                // Skip
+            } else {
+                // New Line
+                addNewLine(rect.width);
+            }
+        }
+
+        cumulativeLineLeft = rect.left;
+        cumulativeLineTop = rect.top;
+        prevLineRight = rect.right;
+    });
+
+    if (currentLineWidths.length > 0) {
+        // Add the last line
+        addNewLine();
+    }
+
+    return lines;
+};
+
+/**
+ * Get offsets where explicit and soft line breaks occur in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of offsets where line breaks occur.
+ */
+const getParagraphLineBreakOffsets = (view: EditorView, pDOMNode: HTMLElement): number[] => {
+    const charWidths = measureTextWidths(pDOMNode);
+    const lineWidths = measureParagraphLineWidths(pDOMNode);
+
+    let offsets: number[] = [0];
+    let cumulativeWidth = 0;
+    let rectIndex = 0;
+    let charIndex = 0;
+
+    const sumTextNodes = (node: HTMLElement): void => {
+        const isBr = node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR";
+        if (isBr && offsets[offsets.length - 1] !== charIndex) {
+            offsets.push(charIndex);
+            rectIndex++;
+            cumulativeWidth = 0;
+        } else if (isAtomNode(view, node)) {
+            // Atom nodes are treated as a single character
+            charIndex += 1;
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            const nodeTextContent = node.textContent || "";
+            for (let i = 0; i < nodeTextContent.length; i++) {
+                charIndex += 1;
+                cumulativeWidth += charWidths[charIndex] || 0;
+
+                if (cumulativeWidth > lineWidths[rectIndex]) {
+                    offsets.push(charIndex);
+                    rectIndex++;
+                    cumulativeWidth = 0;
+                }
+            }
+        } else {
+            // Recursively call for nested elements
+            const nestedChildren = (node as HTMLElement).childNodes;
+            Array.from(nestedChildren).forEach((childNode) => {
+                sumTextNodes(childNode as HTMLElement);
+            });
+        }
+    };
+
+    sumTextNodes(pDOMNode);
+
+    return offsets;
+};
+
+/**
+ * Get the line number for a given position within a paragraph using binary search.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @param offset - The position within the paragraph.
+ * @returns {number} The line number of the position (0-indexed).
+ */
+const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): number => {
+    const compareOffsets = (a: number, b: number): number => a - b;
+    return binarySearch(lineBreakOffsets, offset, compareOffsets);
+};
+
+const getPDOMNodeFromPos = (view: EditorView, pos: ResolvedPos | number): Nullable<HTMLElement> => {
+    if (typeof pos !== "number") {
+        pos = pos.pos;
+    }
+
+    const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
+    return getParagraphDOMNode(view, paragraphPos);
+};
+
+/**
+ * Helper function to calculate the total length of text content in an element.
+ * It will recursively sum the lengths of all text nodes within the element.
+ * @param elementNode - The DOM element node (e.g., <code>, <span>).
+ * @returns {number} - The total length of text content inside the element.
+ */
+const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement, end?: number): number => {
+    let totalLength = 0;
+
+    // Traverse all child nodes and sum the lengths of text nodes
+    Array.from(elementNode.childNodes)
+        .slice(0, end)
+        .forEach((childNode) => {
+            if (childNode.nodeType === Node.TEXT_NODE) {
+                totalLength += (childNode as Text).length;
+            } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+                if (isAtomNode(view, childNode)) {
+                    // Atom nodes are treated as a single character
+                    totalLength += 1;
+                } else {
+                    // Recursively call for nested elements
+                    totalLength += getTextLengthFromElement(view, childNode as HTMLElement);
+                }
+            }
+        });
+
+    return totalLength;
+};
+
+/**
+ * Given a paragraph position and position within said paragraph, return the number of
+ * lines in the paragraph and the line number of the position.
+ * @param view - The editor view.
+ * @param pos - The [resolved] position in the document.
+ * @returns {ParagraphLineInfo} The number of lines in the paragraph and the
+ * line number of the position (0-indexed).
+ */
+export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): ParagraphLineInfo => {
+    if (typeof pos !== "number") {
+        pos = pos.pos;
+    }
+
+    const returnDefaultLineInfo = (): ParagraphLineInfo => ({
+        lineCount: 0,
+        lineBreakOffsets: [0],
+        lineNumber: 0,
+        offsetInLine: 0,
+        offsetDistance: 0,
+    });
+
+    const pDOMNode = getPDOMNodeFromPos(view, pos);
+    if (!pDOMNode) return returnDefaultLineInfo();
+
+    const lineBreakOffsets = getParagraphLineBreakOffsets(view, pDOMNode);
+    const lineCount = lineBreakOffsets.length;
+
+    const { doc } = view.state;
+    const paragraphEndOffset = isAtStartOfParagraph(doc, pos) ? 1 : isAtEndOfParagraph(view.state.doc, pos) ? -1 : 0;
+    let { node, offset } = view.domAtPos(pos + paragraphEndOffset);
+    const elem = view.domAtPos(pos - offset + paragraphEndOffset);
+    const paragraphNode = node.parentNode;
+    if (!paragraphNode) return returnDefaultLineInfo();
+
+    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement, elem.offset);
+    offset += previousOffset - paragraphEndOffset;
+
+    const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
+
+    const offsetInLine = getOffsetInLine(offset, lineNumber, lineBreakOffsets);
+    const offsetDistance = getTextWidthUpToOffsetInLine(pDOMNode, offset, lineNumber, lineBreakOffsets);
+
+    return { lineCount, lineBreakOffsets, lineNumber, offsetInLine, offsetDistance };
+};
+
+/**
+ * Checks if the position is at the first line of the paragraph.
+ * @param view - The editor view.
+ * @param $pos - The [resolved] position in the document.
+ * @returns {boolean} True if the position is at the first line of the paragraph, false otherwise.
+ */
+export const isPosAtFirstLineOfParagraph = (
+    view: EditorView,
+    $pos: ResolvedPos | number
+): { isAtFirstLine: boolean } & ParagraphLineInfo => {
+    const { lineNumber, ...otherLineInfo } = getParagraphLineInfo(view, $pos);
+    const isAtFirstLine = lineNumber === 0;
+    return { isAtFirstLine, lineNumber, ...otherLineInfo };
+};
+
+/**
+ * Checks if the position is at the last line of the paragraph.
+ * @param view - The editor view.
+ * @param $pos - The [resolved] position in the document.
+ * @returns {boolean} True if the position is at the last line of the paragraph, false otherwise.
+ */
+export const isPosAtLastLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): { isAtLastLine: boolean } & ParagraphLineInfo => {
+    const { lineCount, lineNumber, ...otherLineInfo } = getParagraphLineInfo(view, $pos);
+    const isAtLastLine = lineNumber + 1 === lineCount;
+    return { isAtLastLine, lineCount, lineNumber, ...otherLineInfo };
 };

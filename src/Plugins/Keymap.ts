@@ -15,23 +15,29 @@ import {
     setSelection,
     setSelectionAtPos,
     setSelectionToEndOfParagraph,
+    setSelectionToParagraph,
+    setSelectionToStartOfParagraph,
 } from "../utils/selection";
 
 import {
     getFirstParagraphInNextPageBodyAfterPos,
     getLastParagraphInPreviousPageBodyBeforePos,
+    getOffsetForDistanceInLine,
+    getParagraphLineInfo,
     getParagraphNodeAndPosition,
     isAtStartOrEndOfParagraph,
     isParagraphNode,
+    isPosAtFirstLineOfParagraph,
+    isPosAtLastLineOfParagraph,
     isPositionWithinParagraph,
 } from "../utils/nodes/paragraph";
 import { isNodeEmpty } from "@tiptap/core";
 import { appendAndReplaceNode, deleteNode } from "../utils/nodes/node";
 import { isPageNode } from "../utils/nodes/page/page";
-import { isPosAtStartOfDocument } from "../utils/nodes/document";
+import { isPosAtStartOfDocumentBody } from "../utils/nodes/document";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
-import { isPosAtEndOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
+import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
 
 const KeymapPlugin = keymap({
     ArrowLeft: (state, dispatch) => {
@@ -74,8 +80,8 @@ const KeymapPlugin = keymap({
 
         const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
         if (!previousParagraphNode) {
-            console.warn("No last paragraph node found in previous page.");
-            return false;
+            // Handle to prevent cursor moving to header
+            return true;
         }
 
         setSelectionToEndOfParagraph(tr, previousParagraphPos, previousParagraphNode);
@@ -123,11 +129,149 @@ const KeymapPlugin = keymap({
 
         const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
         if (!nextParagraphNode) {
-            console.warn("No first paragraph node found in next page.");
-            return false;
+            // Handle to prevent cursor moving to footer
+            return true;
         }
 
         const newSelection = moveToThisTextBlock(tr, nextParagraphPos);
+        setSelection(tr, newSelection);
+
+        dispatch(tr);
+        return true;
+    },
+    ArrowUp: (state, dispatch, view) => {
+        if (!dispatch) {
+            console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (!view) {
+            console.warn("No view provided");
+            return false;
+        }
+
+        if (isHighlighting(state)) {
+            return false;
+        }
+
+        const { doc, tr } = state;
+        const $pos = getResolvedPosition(state);
+
+        if (!isPosAtFirstChildOfBody(doc, $pos)) {
+            return false;
+        }
+
+        console.log("In first child of page body");
+
+        const thisPos = $pos.pos;
+        const { isAtFirstLine, offsetDistance } = isPosAtFirstLineOfParagraph(view, $pos);
+        if (!isAtFirstLine) {
+            return false;
+        }
+
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: previousParagraphPos, node: previousParagraphNode } = getLastParagraphInPreviousPageBodyBeforePos(doc, paragraphPos);
+        if (!previousParagraphNode) {
+            if (!isPosAtStartOfBody(doc, $pos)) {
+                // Move to the start of the current paragraph
+                setSelectionToStartOfParagraph(tr, paragraphPos, paragraphNode);
+                dispatch(tr);
+            } else {
+                // Handle to prevent cursor moving to header
+            }
+
+            return true;
+        }
+
+        const { lineCount: prevParLineCount } = getParagraphLineInfo(view, previousParagraphPos);
+        const prevParagraphLastLineNum = prevParLineCount - 1;
+        const cursorOffset = getOffsetForDistanceInLine(view, previousParagraphPos, prevParagraphLastLineNum, offsetDistance) + 1;
+
+        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, cursorOffset);
+
+        dispatch(tr);
+        return true;
+    },
+    ArrowDown: (state, dispatch, view) => {
+        if (!dispatch) {
+            console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (!view) {
+            console.warn("No view provided");
+            return false;
+        }
+
+        if (isHighlighting(state)) {
+            return false;
+        }
+
+        const { doc, tr } = state;
+        const $pos = getResolvedPosition(state);
+
+        if (!isPosAtLastChildOfBody(doc, $pos)) {
+            return false;
+        }
+
+        console.log("In last child of page body");
+
+        const thisPos = $pos.pos;
+        const { isAtLastLine, offsetDistance } = isPosAtLastLineOfParagraph(view, $pos);
+        if (!isAtLastLine) {
+            return false;
+        }
+
+        const expectedTextNodePos = thisPos - 1;
+        const thisTextNode = doc.nodeAt(expectedTextNodePos);
+        if (!thisTextNode) {
+            console.warn("No node found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
+        if (!paragraphNode) {
+            console.warn("No current paragraph node found");
+            return false;
+        }
+
+        if (!isParagraphNode(thisTextNode) && !isTextNode(thisTextNode)) {
+            console.warn("Unexpected node type found at position", expectedTextNodePos);
+            return false;
+        }
+
+        const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
+        if (!nextParagraphNode) {
+            if (!isPosAtEndOfBody(doc, $pos)) {
+                // Move to the end of the current paragraph
+                setSelectionToEndOfParagraph(tr, paragraphPos, paragraphNode);
+                dispatch(tr);
+            } else {
+                // Handle to prevent cursor moving to footer
+            }
+
+            return true;
+        }
+
+        const cursorOffset = getOffsetForDistanceInLine(view, nextParagraphPos, 0, offsetDistance) + 1;
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, cursorOffset);
         setSelection(tr, newSelection);
 
         dispatch(tr);
@@ -218,7 +362,7 @@ const KeymapPlugin = keymap({
                 tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
                 setSelectionAtPos(tr, thisPos - 1);
             }
-        } else if (isPosAtStartOfDocument(doc, $pos, true)) {
+        } else if (isPosAtStartOfDocumentBody(doc, $pos, true)) {
             // Prevent deleting the first page node
             return true;
         } else if (!isPosAtStartOfBody(doc, $pos)) {
@@ -262,8 +406,8 @@ const KeymapPlugin = keymap({
                 paragraphPos
             );
             if (!previousParagraphNode) {
-                console.warn("No previous paragraph node found");
-                return false;
+                // Handle to prevent cursor moving to header
+                return true;
             }
 
             if (!isNodeEmpty(previousParagraphNode) || !isNodeEmpty(paragraphNode)) {
@@ -326,8 +470,8 @@ const KeymapPlugin = keymap({
 
         const { pos: nextParagraphPos, node: nextParagraphNode } = getFirstParagraphInNextPageBodyAfterPos(doc, paragraphPos);
         if (!nextParagraphNode) {
-            console.warn("No first paragraph node found in next page.");
-            return false;
+            // Handle to prevent cursor moving to footer
+            return true;
         }
 
         const thisNodeEmpty = isNodeEmpty(paragraphNode);

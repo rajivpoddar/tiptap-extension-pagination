@@ -22,7 +22,7 @@ const getNumPagesInDoc = (doc: PMNode): number => {
  * @param doc - The current document.
  * @returns {number} The last page number in the document (0-indexed).
  */
-const getLastPageNum = (doc: PMNode): number => {
+export const getLastPageNum = (doc: PMNode): number => {
     return getNumPagesInDoc(doc) - 1;
 };
 
