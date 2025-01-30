@@ -358,19 +358,30 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
 };
 
 /**
- * Get the line number for a given position within a paragraph.
+ * Get the line number for a given position within a paragraph using binary search.
  * @param lineBreakOffsets - The offsets where line breaks occur.
  * @param offset - The position within the paragraph.
  * @returns {number} The line number of the position.
  */
 const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): number => {
-    for (let i = lineBreakOffsets.length - 1; i >= 0; i--) {
-        if (offset > lineBreakOffsets[i]) {
-            return i;
+    let low = 0;
+    let high = lineBreakOffsets.length - 1;
+
+    while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+
+        if (lineBreakOffsets[mid] === offset) {
+            return mid;
+        }
+
+        if (lineBreakOffsets[mid] < offset) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
         }
     }
 
-    return 0;
+    return high;
 };
 
 /**
