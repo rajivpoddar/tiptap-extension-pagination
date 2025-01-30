@@ -4,9 +4,10 @@
  * @description Utility functions for creating custom nodes in the editor.
  */
 
-import { Node, ResolvedPos, TagParseRule } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos, TagParseRule } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
 import { parseHTMLNodeGetAttrs } from "../attributes/getAttributes";
+import { EditorView } from "@tiptap/pm/view";
 
 /**
  * Get the type of the node at the specified position.
@@ -24,7 +25,7 @@ export const getPositionNodeType = ($pos: ResolvedPos): string => {
  * @param type - The type of the node to search for.
  * @returns {ResolvedPos} The position of the parent node of the specified type.
  */
-export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, type: string): ResolvedPos => {
+export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, type: string): ResolvedPos => {
     // Base case: If the position is a number, resolve it
     if (typeof $pos !== "number") {
         const thisNode = doc.nodeAt($pos.pos);
@@ -71,7 +72,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
  * @param newNode - The new node to append and replace with.
  * @returns {void}
  */
-export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: Node, newNode: Node): void => {
+export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: PMNode, newNode: PMNode): void => {
     const newContent = existingNode.content.append(newNode.content);
     tr.replaceWith(pos, pos + existingNode.nodeSize - 1, newContent);
 };
@@ -83,7 +84,7 @@ export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode:
  * @param node - The node to delete.
  * @returns {void}
  */
-export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
+export const deleteNode = (tr: Transaction, pos: number, node: PMNode): void => {
     tr.delete(pos, pos + node.nodeSize);
 };
 
@@ -92,7 +93,7 @@ export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
  * @param node - The node to check.
  * @returns {boolean} True if the node is empty, false otherwise.
  */
-export const isNodeEmpty = (node: Node): boolean => {
+export const isNodeEmpty = (node: PMNode): boolean => {
     return node.content.size === 0;
 };
 
@@ -107,3 +108,14 @@ export const parseHTMLNode = (baseElement: string, nodeTagAttribute: string, pre
     tag: `${baseElement}[${nodeTagAttribute}]`,
     getAttrs: parseHTMLNodeGetAttrs(nodeTagAttribute, preventNestedNodes),
 });
+
+/**
+ * Check if the given node is atomic.
+ * @param node - The node to check.
+ * @returns {boolean} True if the node is a text node, false otherwise.
+ */
+export const isAtomNode = (view: EditorView, node: Node): boolean => {
+    const pos = view.posAtDOM(node, 0);
+    const pmNode = view.state.doc.nodeAt(pos);
+    return !!(pmNode && pmNode.type.spec.atom);
+};

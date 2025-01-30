@@ -8,7 +8,7 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorView } from "@tiptap/pm/view";
 import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
-import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
+import { getParentNodePosOfType, getPositionNodeType, isAtomNode, isNodeEmpty } from "./node";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
 import { binarySearch, findClosestIndex, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
@@ -362,7 +362,7 @@ export const getOffsetForDistanceInLine = (
     const pDOMNode = getPDOMNodeFromPos(view, pos);
     if (!pDOMNode) return 0;
 
-    const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
+    const lineBreakOffsets = getParagraphLineBreakOffsets(view, pDOMNode);
     const thisLineOffset = lineBreakOffsets[lineNumber];
     const nextLineOffset = lineBreakOffsets[lineNumber + 1];
     const textContent = pDOMNode.textContent?.slice(thisLineOffset, nextLineOffset) || "";
@@ -435,30 +435,46 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of offsets where line breaks occur.
  */
-const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
-    const lineWidths = measureParagraphLineWidths(pDOMNode);
-    const offsets: number[] = [0];
-    const textContent = pDOMNode.innerHTML || pDOMNode.textContent || "";
+const getParagraphLineBreakOffsets = (view: EditorView, pDOMNode: HTMLElement): number[] => {
     const charWidths = measureTextWidths(pDOMNode);
+    const lineWidths = measureParagraphLineWidths(pDOMNode);
 
+    let offsets: number[] = [0];
     let cumulativeWidth = 0;
     let rectIndex = 0;
+    let charIndex = 0;
 
-    for (let i = 0; i < textContent.length; i++) {
-        if (rectIndex >= lineWidths.length - 1) {
-            // We are on the last line of the paragraph
-            break;
-        }
-
-        cumulativeWidth += charWidths[i] || 0;
-
-        if (cumulativeWidth >= lineWidths[rectIndex]) {
-            // Detected a soft-wrapped line break
-            offsets.push(i - 2);
+    const sumTextNodes = (node: HTMLElement): void => {
+        const isBr = node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR";
+        if (isBr && offsets[offsets.length - 1] !== charIndex) {
+            offsets.push(charIndex);
             rectIndex++;
             cumulativeWidth = 0;
+        } else if (isAtomNode(view, node)) {
+            // Atom nodes are treated as a single character
+            charIndex += 1;
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            const nodeTextContent = node.textContent || "";
+            for (let i = 0; i < nodeTextContent.length; i++) {
+                charIndex += 1;
+                cumulativeWidth += charWidths[charIndex] || 0;
+
+                if (cumulativeWidth > lineWidths[rectIndex]) {
+                    offsets.push(charIndex);
+                    rectIndex++;
+                    cumulativeWidth = 0;
+                }
+            }
+        } else {
+            // Recursively call for nested elements
+            const nestedChildren = (node as HTMLElement).childNodes;
+            Array.from(nestedChildren).forEach((childNode) => {
+                sumTextNodes(childNode as HTMLElement);
+            });
         }
-    }
+    };
+
+    sumTextNodes(pDOMNode);
 
     return offsets;
 };
@@ -499,9 +515,7 @@ const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement, en
             if (childNode.nodeType === Node.TEXT_NODE) {
                 totalLength += (childNode as Text).length;
             } else if (childNode.nodeType === Node.ELEMENT_NODE) {
-                const pos = view.posAtDOM(childNode, 0);
-                const pmNode = view.state.doc.nodeAt(pos);
-                if (pmNode && pmNode.type.spec.atom) {
+                if (isAtomNode(view, childNode)) {
                     // Atom nodes are treated as a single character
                     totalLength += 1;
                 } else {
@@ -538,7 +552,7 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     const pDOMNode = getPDOMNodeFromPos(view, pos);
     if (!pDOMNode) return returnDefaultLineInfo();
 
-    const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
+    const lineBreakOffsets = getParagraphLineBreakOffsets(view, pDOMNode);
     const lineCount = lineBreakOffsets.length;
 
     const atEndOfParagraphOffset = isAtEndOfParagraph(view.state.doc, pos) ? 1 : 0;
