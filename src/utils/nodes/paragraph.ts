@@ -10,7 +10,7 @@ import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
-import { inRange } from "../math";
+import { binarySearch, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
 import { ParagraphLineInfo } from "../../types/paragraph";
 
@@ -361,27 +361,11 @@ const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
  * Get the line number for a given position within a paragraph using binary search.
  * @param lineBreakOffsets - The offsets where line breaks occur.
  * @param offset - The position within the paragraph.
- * @returns {number} The line number of the position.
+ * @returns {number} The line number of the position (0-indexed).
  */
 const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): number => {
-    let low = 0;
-    let high = lineBreakOffsets.length - 1;
-
-    while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-
-        if (lineBreakOffsets[mid] === offset) {
-            return mid;
-        }
-
-        if (lineBreakOffsets[mid] < offset) {
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
-    return high;
+    const compareOffsets = (a: number, b: number): number => a - b;
+    return binarySearch(lineBreakOffsets, offset, compareOffsets);
 };
 
 /**

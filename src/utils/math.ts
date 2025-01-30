@@ -24,3 +24,35 @@ export const inRange = (value: number, min: number, max: number): boolean => {
 export const pythagoreanTheorem = (a: number, b: number): number => {
     return Math.sqrt(a ** 2 + b ** 2);
 };
+
+/**
+ * Generic binary search function.
+ * @param arr - The sorted array to search.
+ * @param target - The target value to search for.
+ * @param compare - A comparison function that returns:
+ *                  - A negative number if `target` < element at current index
+ *                  - Zero if `target` === element at current index
+ *                  - A positive number if `target` > element at current index
+ * @returns {number} - The index of the target element, or null if not found.
+ */
+export const binarySearch = <T>(arr: T[], target: T, compare: (a: T, b: T) => number): number => {
+    let low = 0;
+    let high = arr.length - 1;
+
+    while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const comparison = compare(target, arr[mid]);
+
+        if (comparison === 0) {
+            return mid; // Found the target
+        }
+
+        if (comparison < 0) {
+            high = mid - 1; // Search in the left half
+        } else {
+            low = mid + 1; // Search in the right half
+        }
+    }
+
+    return high;
+};
