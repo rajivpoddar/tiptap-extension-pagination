@@ -45,3 +45,24 @@ export const measureText = (text: string, computedStyles: CSSStyleDeclaration): 
 
     return clientBoundingRect;
 };
+
+/**
+ * Measure the cumulative width of each character in a text node.
+ * @param textContent - The text content of the node.
+ * @param computedStyles - The computed styles of the node.
+ * @returns {number[]} The cumulative width of each character in the text node.
+ */
+export const measureCumulativeTextWidths = (textContent: string, computedStyles: CSSStyleDeclaration): number[] => {
+    const cumulativeWidths: number[] = [];
+
+    let cumulativeWidth = 0;
+
+    for (let i = 0; i < textContent.length; i++) {
+        const char = textContent[i];
+        const { width } = measureText(char, computedStyles);
+        cumulativeWidth += width;
+        cumulativeWidths.push(cumulativeWidth);
+    }
+
+    return cumulativeWidths;
+};

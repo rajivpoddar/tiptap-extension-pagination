@@ -13,7 +13,7 @@ import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
 import { binarySearch, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
 import { ParagraphLineInfo } from "../../types/paragraph";
-import { measureText } from "./text";
+import { measureCumulativeTextWidths, measureText } from "./text";
 
 /**
  * Check if the given node is a paragraph node.
@@ -364,32 +364,14 @@ export const getOffsetForDistanceInLine = (
     const pDOMNode = getPDOMNodeFromPos(view, pos);
     if (!pDOMNode) return 0;
 
-    // Now let's get the text up to the specified line.
     const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
     const thisLineOffset = lineBreakOffsets[lineNumber];
     const nextLineOffset = lineBreakOffsets[lineNumber + 1];
     const textContent = pDOMNode.textContent?.slice(thisLineOffset, nextLineOffset) || "";
 
-    const charWidths: number[] = [];
+    const computedStyles = getComputedStyle(pDOMNode);
+    const charWidths = measureCumulativeTextWidths(textContent, computedStyles);
 
-    const computedStyle = getComputedStyle(pDOMNode);
-
-    let cumulativeWidth = 0;
-
-    // Measure the width of each character using the helper function
-    for (let i = 0; i < textContent.length; i++) {
-        const char = textContent[i];
-        const { width } = measureText(char, computedStyle);
-        cumulativeWidth += width;
-        charWidths.push(cumulativeWidth);
-    }
-
-    // Now, we have the widths of each character and the cumulative widths.
-    // Next, we need to find the offset that matches the target distance on the given line.
-
-    // We need to find the line break offsets within the specified line number.
-
-    // Loop through the characters in the specified line, and find the closest match to the target distance
     let closestLineOffset = 0;
     let closestDistanceDiff = Math.abs(charWidths[0] - targetDistance);
 
