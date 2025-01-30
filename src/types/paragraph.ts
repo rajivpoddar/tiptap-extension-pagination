@@ -12,4 +12,9 @@ export type ParagraphLineInfo = {
      * (as visible in the DOM)
      */
     lineNumber: number;
+
+    /**
+     * The character offset within the line
+     */
+    offsetInLine: number;
 };

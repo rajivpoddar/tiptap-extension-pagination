@@ -407,7 +407,7 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
         pos = pos.pos;
     }
 
-    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineNumber: 0 });
+    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineNumber: 0, offsetInLine: 0 });
 
     const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
 
@@ -420,7 +420,9 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
     const { offset } = view.domAtPos(pos);
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
 
-    return { lineCount, lineNumber };
+    const offsetInLine = offset - lineBreakOffsets[lineNumber];
+
+    return { lineCount, lineNumber, offsetInLine };
 };
 
 /**
@@ -429,9 +431,13 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
  * @param $pos - The [resolved] position in the document.
  * @returns {boolean} True if the position is at the first line of the paragraph, false otherwise.
  */
-export const isPosAtFirstLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
-    const { lineNumber } = getParagraphLineInfo(view, $pos);
-    return lineNumber === 0;
+export const isPosAtFirstLineOfParagraph = (
+    view: EditorView,
+    $pos: ResolvedPos | number
+): { isAtFirstLine: boolean; offsetInLine: number } => {
+    const { lineNumber, offsetInLine } = getParagraphLineInfo(view, $pos);
+    const isAtFirstLine = lineNumber === 0;
+    return { isAtFirstLine, offsetInLine };
 };
 
 /**
@@ -440,7 +446,11 @@ export const isPosAtFirstLineOfParagraph = (view: EditorView, $pos: ResolvedPos 
  * @param $pos - The [resolved] position in the document.
  * @returns {boolean} True if the position is at the last line of the paragraph, false otherwise.
  */
-export const isPosAtLastLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
-    const { lineCount, lineNumber } = getParagraphLineInfo(view, $pos);
-    return lineNumber + 1 === lineCount;
+export const isPosAtLastLineOfParagraph = (
+    view: EditorView,
+    $pos: ResolvedPos | number
+): { isAtLastLine: boolean; offsetInLine: number } => {
+    const { lineCount, lineNumber, offsetInLine } = getParagraphLineInfo(view, $pos);
+    const isAtLastLine = lineNumber + 1 === lineCount;
+    return { isAtLastLine, offsetInLine };
 };

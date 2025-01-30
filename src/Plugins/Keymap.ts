@@ -142,6 +142,11 @@ const KeymapPlugin = keymap({
             return false;
         }
 
+        if (!view) {
+            console.warn("No view provided");
+            return false;
+        }
+
         if (isHighlighting(state)) {
             return false;
         }
@@ -156,13 +161,9 @@ const KeymapPlugin = keymap({
         console.log("In first child of page body");
 
         const thisPos = $pos.pos;
-        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
-        if (view) {
-            if (!isPosAtFirstLineOfParagraph(view, $pos)) {
-                return false;
-            }
-        } else {
-            console.warn("No view provided");
+        const { isAtFirstLine, offsetInLine } = isPosAtFirstLineOfParagraph(view, $pos);
+        if (!isAtFirstLine) {
+            return false;
         }
 
         const expectedTextNodePos = thisPos - 1;
@@ -189,7 +190,7 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, offsetInNode);
+        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, offsetInLine);
 
         dispatch(tr);
         return true;
@@ -197,6 +198,11 @@ const KeymapPlugin = keymap({
     ArrowDown: (state, dispatch, view) => {
         if (!dispatch) {
             console.warn("No dispatch function provided");
+            return false;
+        }
+
+        if (!view) {
+            console.warn("No view provided");
             return false;
         }
 
@@ -214,13 +220,9 @@ const KeymapPlugin = keymap({
         console.log("In last child of page body");
 
         const thisPos = $pos.pos;
-        const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
-        if (view) {
-            if (!isPosAtLastLineOfParagraph(view, $pos)) {
-                return false;
-            }
-        } else {
-            console.warn("No view provided");
+        const { isAtLastLine, offsetInLine } = isPosAtLastLineOfParagraph(view, $pos);
+        if (!isAtLastLine) {
+            return false;
         }
 
         const expectedTextNodePos = thisPos - 1;
@@ -247,7 +249,7 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, offsetInNode);
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, offsetInLine + 1);
         setSelection(tr, newSelection);
 
         dispatch(tr);
