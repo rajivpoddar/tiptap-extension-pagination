@@ -5,12 +5,14 @@
  */
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
+import { EditorView } from "@tiptap/pm/view";
 import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
 import { getParentNodePosOfType, getPositionNodeType, isNodeEmpty } from "./node";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
 import { inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
+import { ParagraphLineInfo } from "../../types/paragraph";
 
 /**
  * Check if the given node is a paragraph node.
@@ -283,4 +285,102 @@ export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: Resolv
     }
 
     return getNextParagraph(doc, nextPageBody.pos);
+};
+
+/**
+ * Get the paragraph DOM node.
+ * @param view - The editor view.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @returns {Node} The paragraph DOM node.
+ */
+const getTextDomNode = (view: EditorView, paragraphPos: number): Nullable<Node> => {
+    const paragraphTextPos = paragraphPos + 1;
+    return view.domAtPos(paragraphTextPos).node ?? null;
+};
+
+/**
+ * Calculate the number of lines in a paragraph as visible in the DOM.
+ * @param view - The editor view.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @returns {Nullable<DOMRectList>} The list of DOMRects for each line in the paragraph.
+ */
+const getParagraphLineRects = (view: EditorView, paragraphPos: number): Nullable<DOMRectList> => {
+    const paragraphNode = getTextDomNode(view, paragraphPos);
+    if (!paragraphNode) {
+        console.warn("Invalid paragraph node.");
+        return null;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(paragraphNode);
+
+    // Split paragraph text into spans of visible lines
+    return range.getClientRects();
+};
+
+/**
+ * Given a paragraph position and position within said paragraph, return the number of
+ * lines in the paragraph and the line number of the position.
+ * @param view - The editor view.
+ * @param pos - The [resolved] position in the document.
+ * @returns {ParagraphLineInfo} The number of lines in the paragraph and the line number of the position.
+ */
+const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): ParagraphLineInfo => {
+    if (typeof pos !== "number") {
+        pos = pos.pos;
+    }
+
+    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineNumber: 0 });
+
+    const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
+
+    const paragraphRects = getParagraphLineRects(view, paragraphPos);
+    if (!paragraphRects) return returnDefaultLineInfo();
+
+    const lineCount = paragraphRects.length;
+    const textDOMNode = getTextDomNode(view, paragraphPos);
+    if (!textDOMNode) return returnDefaultLineInfo();
+
+    // Find which line the given position is in
+    const { offset: domPos } = view.domAtPos(pos);
+    let lineNumber: number = 0;
+
+    if (lineCount > 0) {
+        for (let i = 0; i < lineCount; i++) {
+            // Create a range for each line and check if the position falls within it
+            const lineRange = document.createRange();
+            lineRange.setStart(textDOMNode, 0);
+            lineRange.setEnd(textDOMNode, domPos + 1);
+
+            const lineRects = lineRange.getClientRects();
+            if (lineRects.length > 0 && paragraphRects[i].top === lineRects[lineRects.length - 1].top) {
+                lineNumber = i + 1;
+                break;
+            }
+        }
+    }
+
+    return { lineCount, lineNumber };
+};
+
+/**
+ * Checks if the position is at the first line of the paragraph.
+ * @param view - The editor view.
+ * @param $pos - The [resolved] position in the document.
+ * @returns {boolean} True if the position is at the first line of the paragraph, false otherwise.
+ */
+export const isPosAtFirstLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
+    const { lineNumber } = getParagraphLineInfo(view, $pos);
+    return lineNumber === 1;
+};
+
+/**
+ * Checks if the position is at the last line of the paragraph.
+ * @param view - The editor view.
+ * @param $pos - The [resolved] position in the document.
+ * @returns {boolean} True if the position is at the last line of the paragraph, false otherwise.
+ */
+export const isPosAtLastLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
+    const { lineCount, lineNumber } = getParagraphLineInfo(view, $pos);
+    return lineNumber === lineCount;
 };

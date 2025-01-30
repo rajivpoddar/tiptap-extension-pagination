@@ -24,6 +24,8 @@ import {
     getParagraphNodeAndPosition,
     isAtStartOrEndOfParagraph,
     isParagraphNode,
+    isPosAtFirstLineOfParagraph,
+    isPosAtLastLineOfParagraph,
     isPositionWithinParagraph,
 } from "../utils/nodes/paragraph";
 import { isNodeEmpty } from "@tiptap/core";
@@ -134,7 +136,7 @@ const KeymapPlugin = keymap({
         dispatch(tr);
         return true;
     },
-    ArrowUp: (state, dispatch) => {
+    ArrowUp: (state, dispatch, view) => {
         if (!dispatch) {
             console.warn("No dispatch function provided");
             return false;
@@ -155,6 +157,14 @@ const KeymapPlugin = keymap({
 
         const thisPos = $pos.pos;
         const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        if (view) {
+            if (!isPosAtFirstLineOfParagraph(view, $pos)) {
+                return false;
+            }
+        } else {
+            console.warn("No view provided");
+        }
+
         const expectedTextNodePos = thisPos - 1;
         const thisTextNode = doc.nodeAt(expectedTextNodePos);
         if (!thisTextNode) {
@@ -184,7 +194,7 @@ const KeymapPlugin = keymap({
         dispatch(tr);
         return true;
     },
-    ArrowDown: (state, dispatch) => {
+    ArrowDown: (state, dispatch, view) => {
         if (!dispatch) {
             console.warn("No dispatch function provided");
             return false;
@@ -205,6 +215,14 @@ const KeymapPlugin = keymap({
 
         const thisPos = $pos.pos;
         const offsetInNode = $pos.parentOffset; // This isn't the best to match the actual position but it's a start.
+        if (view) {
+            if (!isPosAtLastLineOfParagraph(view, $pos)) {
+                return false;
+            }
+        } else {
+            console.warn("No view provided");
+        }
+
         const expectedTextNodePos = thisPos - 1;
         const thisTextNode = doc.nodeAt(expectedTextNodePos);
         if (!thisTextNode) {
