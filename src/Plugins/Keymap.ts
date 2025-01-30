@@ -34,7 +34,7 @@ import {
 import { isNodeEmpty } from "@tiptap/core";
 import { appendAndReplaceNode, deleteNode } from "../utils/nodes/node";
 import { isPageNode } from "../utils/nodes/page/page";
-import { isPosAtStartOfDocument } from "../utils/nodes/document";
+import { isPosAtStartOfDocumentBody } from "../utils/nodes/document";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
 import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
@@ -362,7 +362,7 @@ const KeymapPlugin = keymap({
                 tr.replaceWith(paragraphPos, paragraphPos + paragraphNode.nodeSize, newParagraph);
                 setSelectionAtPos(tr, thisPos - 1);
             }
-        } else if (isPosAtStartOfDocument(doc, $pos, true)) {
+        } else if (isPosAtStartOfDocumentBody(doc, $pos, true)) {
             // Prevent deleting the first page node
             return true;
         } else if (!isPosAtStartOfBody(doc, $pos)) {
