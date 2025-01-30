@@ -402,12 +402,12 @@ const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): n
  * @returns {ParagraphLineInfo} The number of lines in the paragraph and the
  * line number of the position (0-indexed).
  */
-const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): ParagraphLineInfo => {
+export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): ParagraphLineInfo => {
     if (typeof pos !== "number") {
         pos = pos.pos;
     }
 
-    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineNumber: 0, offsetInLine: 0 });
+    const returnDefaultLineInfo = (): ParagraphLineInfo => ({ lineCount: 0, lineBreakOffsets: [0], lineNumber: 0, offsetInLine: 0 });
 
     const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
 
@@ -422,7 +422,7 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
 
     const offsetInLine = offset - lineBreakOffsets[lineNumber];
 
-    return { lineCount, lineNumber, offsetInLine };
+    return { lineCount, lineBreakOffsets, lineNumber, offsetInLine };
 };
 
 /**

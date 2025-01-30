@@ -21,6 +21,7 @@ import {
 import {
     getFirstParagraphInNextPageBodyAfterPos,
     getLastParagraphInPreviousPageBodyBeforePos,
+    getParagraphLineInfo,
     getParagraphNodeAndPosition,
     isAtStartOrEndOfParagraph,
     isParagraphNode,
@@ -190,7 +191,11 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, offsetInLine);
+        const { lineCount: prevParLineCount, lineBreakOffsets: prevParLineBreakOffsets } = getParagraphLineInfo(view, previousParagraphPos);
+        const prevParaLastLineOffset = prevParLineBreakOffsets[prevParLineCount - 1];
+        const cursorOffset = prevParaLastLineOffset + offsetInLine;
+
+        setSelectionToParagraph(tr, previousParagraphPos, previousParagraphNode, cursorOffset);
 
         dispatch(tr);
         return true;

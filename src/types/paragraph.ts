@@ -8,6 +8,11 @@ export type ParagraphLineInfo = {
     lineCount: number;
 
     /**
+     * The offset of each line within the paragraph
+     */
+    lineBreakOffsets: number[];
+
+    /**
      * The line number of a specific position within the paragraph
      * (as visible in the DOM)
      */
