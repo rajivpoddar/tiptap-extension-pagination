@@ -293,30 +293,84 @@ export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: Resolv
  * @param paragraphPos - The position of the paragraph in the document.
  * @returns {Node} The paragraph DOM node.
  */
-const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<Node> => {
+const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<HTMLElement> => {
     // DOM nodes are offsetted by 1 for some reason.
     const paragraphTextPos = paragraphPos + 1;
-    return view.domAtPos(paragraphTextPos).node ?? null;
+    return (view.domAtPos(paragraphTextPos).node as HTMLElement) ?? null;
 };
 
 /**
- * Calculate the number of lines in a paragraph as visible in the DOM.
- * @param view - The editor view.
- * @param paragraphPos - The position of the paragraph in the document.
- * @returns {Nullable<DOMRectList>} The list of DOMRects for each line in the paragraph.
+ * Get offsets where explicit and soft line breaks occur in a paragraph.
+ * @param pDOMNode - The paragraph DOM node.
+ * @returns {number[]} An array of offsets where line breaks occur.
  */
-const getParagraphLineRects = (view: EditorView, paragraphPos: number): Nullable<DOMRectList> => {
-    const paragraphNode = getParagraphDOMNode(view, paragraphPos);
-    if (!paragraphNode) {
-        console.warn("Invalid paragraph node.");
-        return null;
+const getParagraphLineBreakOffsets = (pDOMNode: HTMLElement): number[] => {
+    const offsets: number[] = [0];
+    let textOffset = 0;
+
+    // 1. Find explicit `<br />` breaks and store their offsets
+    for (const node of pDOMNode.childNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === "BR") {
+            offsets.push(textOffset);
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            textOffset += node.textContent?.length || 0;
+        }
     }
 
+    // 2. Use `Range` to detect soft-wrapped line breaks
     const range = document.createRange();
-    range.selectNodeContents(paragraphNode);
+    range.selectNodeContents(pDOMNode);
+    const paragraphRects = range.getClientRects();
 
-    // Split paragraph text into spans of visible lines
-    return range.getClientRects();
+    // 3. Measure where soft-wrapped lines start and track offsets
+    const textContent = pDOMNode.innerHTML || pDOMNode.textContent || "";
+    const charWidths: number[] = [];
+
+    // Measure the width of each character to estimate when wrapping occurs
+    const tempSpan = document.createElement("span");
+    document.body.appendChild(tempSpan); // Temporarily add to the DOM
+    for (let i = 0; i < textContent.length; i++) {
+        tempSpan.innerHTML = textContent[i];
+        charWidths[i] = tempSpan.getBoundingClientRect().width;
+    }
+    document.body.removeChild(tempSpan);
+
+    let cumulativeWidth = 0;
+    let rectIndex = 0;
+
+    for (let i = 0; i < textContent.length; i++) {
+        if (rectIndex >= paragraphRects.length - 1) {
+            // We are on the last line of the paragraph
+            break;
+        }
+
+        cumulativeWidth += charWidths[i] || 0;
+
+        if (cumulativeWidth >= paragraphRects[rectIndex].width) {
+            // Detected a soft-wrapped line break
+            offsets.push(i);
+            rectIndex++;
+            cumulativeWidth = 0;
+        }
+    }
+
+    return offsets;
+};
+
+/**
+ * Get the line number for a given position within a paragraph.
+ * @param lineBreakOffsets - The offsets where line breaks occur.
+ * @param offset - The position within the paragraph.
+ * @returns {number} The line number of the position.
+ */
+const getLineNumberForPosition = (lineBreakOffsets: number[], offset: number): number => {
+    for (let i = lineBreakOffsets.length - 1; i >= 0; i--) {
+        if (offset > lineBreakOffsets[i]) {
+            return i;
+        }
+    }
+
+    return 0;
 };
 
 /**
@@ -324,7 +378,8 @@ const getParagraphLineRects = (view: EditorView, paragraphPos: number): Nullable
  * lines in the paragraph and the line number of the position.
  * @param view - The editor view.
  * @param pos - The [resolved] position in the document.
- * @returns {ParagraphLineInfo} The number of lines in the paragraph and the line number of the position.
+ * @returns {ParagraphLineInfo} The number of lines in the paragraph and the
+ * line number of the position (0-indexed).
  */
 const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): ParagraphLineInfo => {
     if (typeof pos !== "number") {
@@ -335,31 +390,14 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
 
     const paragraphPos = getThisParagraphNodePosition(view.state.doc, pos);
 
-    const paragraphRects = getParagraphLineRects(view, paragraphPos);
-    if (!paragraphRects) return returnDefaultLineInfo();
+    const pDOMNode = getParagraphDOMNode(view, paragraphPos);
+    if (!pDOMNode) return returnDefaultLineInfo();
 
-    const lineCount = paragraphRects.length;
-    const pDomNode = getParagraphDOMNode(view, paragraphPos);
-    if (!pDomNode) return returnDefaultLineInfo();
+    const lineBreakOffsets = getParagraphLineBreakOffsets(pDOMNode);
+    const lineCount = lineBreakOffsets.length;
 
-    // Find which line the given position is in
-    const { offset: domPos } = view.domAtPos(pos);
-    let lineNumber: number = 0;
-
-    if (lineCount > 0) {
-        for (let i = 0; i < lineCount; i++) {
-            // Create a range for each line and check if the position falls within it
-            const lineRange = document.createRange();
-            lineRange.setStart(pDomNode, 0);
-            lineRange.setEnd(pDomNode, domPos + 1);
-
-            const lineRects = lineRange.getClientRects();
-            if (lineRects.length > 0 && paragraphRects[i].top === lineRects[lineRects.length - 1].top) {
-                lineNumber = i + 1;
-                break;
-            }
-        }
-    }
+    const { offset } = view.domAtPos(pos);
+    const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
 
     return { lineCount, lineNumber };
 };
@@ -372,7 +410,7 @@ const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number): Para
  */
 export const isPosAtFirstLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
     const { lineNumber } = getParagraphLineInfo(view, $pos);
-    return lineNumber === 1;
+    return lineNumber === 0;
 };
 
 /**
@@ -383,5 +421,5 @@ export const isPosAtFirstLineOfParagraph = (view: EditorView, $pos: ResolvedPos 
  */
 export const isPosAtLastLineOfParagraph = (view: EditorView, $pos: ResolvedPos | number): boolean => {
     const { lineCount, lineNumber } = getParagraphLineInfo(view, $pos);
-    return lineNumber === lineCount;
+    return lineNumber + 1 === lineCount;
 };
