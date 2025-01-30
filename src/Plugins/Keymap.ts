@@ -226,7 +226,7 @@ const KeymapPlugin = keymap({
         console.log("In last child of page body");
 
         const thisPos = $pos.pos;
-        const { isAtLastLine, offsetInLine } = isPosAtLastLineOfParagraph(view, $pos);
+        const { isAtLastLine, offsetDistance } = isPosAtLastLineOfParagraph(view, $pos);
         if (!isAtLastLine) {
             return false;
         }
@@ -255,7 +255,8 @@ const KeymapPlugin = keymap({
             return false;
         }
 
-        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, offsetInLine + 1);
+        const cursorOffset = getOffsetForDistanceInLine(view, nextParagraphPos, 0, offsetDistance) + 1;
+        const newSelection = moveToThisTextBlock(tr, nextParagraphPos, undefined, cursorOffset);
         setSelection(tr, newSelection);
 
         dispatch(tr);
