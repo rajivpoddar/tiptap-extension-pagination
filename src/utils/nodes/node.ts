@@ -4,8 +4,11 @@
  * @description Utility functions for creating custom nodes in the editor.
  */
 
-import { Node, ResolvedPos } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos, TagParseRule } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
+import { parseHTMLNodeGetAttrs } from "../attributes/getAttributes";
+import { EditorView } from "@tiptap/pm/view";
+import { Nullable } from "../../types/record";
 
 /**
  * Get the type of the node at the specified position.
@@ -17,18 +20,38 @@ export const getPositionNodeType = ($pos: ResolvedPos): string => {
 };
 
 /**
+ * Check if the node type matches the specified type.
+ * @param node - The node to check.
+ * @param type - The type of the node to match. Can be string or an array of strings.
+ * @returns {boolean} True if the node type matches, false otherwise.
+ */
+const doesNodeTypeMatch = (node: Nullable<PMNode>, type: string | string[]): boolean => {
+    if (!node) {
+        return false;
+    }
+
+    const nodeTypeName = node.type.name;
+    if (Array.isArray(type)) {
+        return type.includes(nodeTypeName);
+    }
+    return nodeTypeName === type;
+};
+
+/**
  * Get the parent node position of the specified type.
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
- * @param type - The type of the node to search for.
+ * @param type - The type of the node to search for. Can be string or an array of strings.
  * @returns {ResolvedPos} The position of the parent node of the specified type.
  */
-export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, type: string): ResolvedPos => {
+export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, type: string | string[]): ResolvedPos => {
     // Base case: If the position is a number, resolve it
     if (typeof $pos !== "number") {
         const thisNode = doc.nodeAt($pos.pos);
-        if (thisNode && thisNode.type.name === type) {
-            return $pos;
+        if (thisNode) {
+            if (doesNodeTypeMatch(thisNode, type)) {
+                return $pos;
+            }
         }
 
         if ($pos.pos === 0) {
@@ -47,7 +70,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
     const thisPos = doc.resolve($pos);
 
     // Base case: If the node at the position is of the specified type, return the position
-    if (doc.nodeAt($pos)?.type.name === type) {
+    if (doesNodeTypeMatch(doc.nodeAt($pos), type)) {
         return thisPos;
     }
 
@@ -70,7 +93,7 @@ export const getParentNodePosOfType = (doc: Node, $pos: ResolvedPos | number, ty
  * @param newNode - The new node to append and replace with.
  * @returns {void}
  */
-export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: Node, newNode: Node): void => {
+export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode: PMNode, newNode: PMNode): void => {
     const newContent = existingNode.content.append(newNode.content);
     tr.replaceWith(pos, pos + existingNode.nodeSize - 1, newContent);
 };
@@ -82,7 +105,7 @@ export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode:
  * @param node - The node to delete.
  * @returns {void}
  */
-export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
+export const deleteNode = (tr: Transaction, pos: number, node: PMNode): void => {
     tr.delete(pos, pos + node.nodeSize);
 };
 
@@ -91,47 +114,29 @@ export const deleteNode = (tr: Transaction, pos: number, node: Node): void => {
  * @param node - The node to check.
  * @returns {boolean} True if the node is empty, false otherwise.
  */
-export const isNodeEmpty = (node: Node): boolean => {
+export const isNodeEmpty = (node: PMNode): boolean => {
     return node.content.size === 0;
 };
 
 /**
- * Check if the node has the specified attribute.
+ * A rule that matches a node based on the specified tag and attribute.
+ * @param baseElement - The base element to match.
+ * @param nodeTagAttribute - The attribute of the node tag.
+ * @param preventNestedNodes - True if nested nodes should be prevented, false otherwise.
+ * @returns {TagParseRule} The rule that matches the node based on the specified tag and attribute.
+ */
+export const parseHTMLNode = (baseElement: string, nodeTagAttribute: string, preventNestedNodes: boolean): TagParseRule => ({
+    tag: `${baseElement}[${nodeTagAttribute}]`,
+    getAttrs: parseHTMLNodeGetAttrs(nodeTagAttribute, preventNestedNodes),
+});
+
+/**
+ * Check if the given node is atomic.
  * @param node - The node to check.
- * @param attr - The attribute to check for.
- * @returns {boolean} True if the node has the specified attribute, false otherwise.
+ * @returns {boolean} True if the node is a text node, false otherwise.
  */
-export const nodeHasAttribute = (node: Node, attr: string): boolean => {
-    const { attrs } = node;
-    return attr in attrs && attrs[attr] !== undefined && attrs[attr] !== null;
+export const isAtomNode = (view: EditorView, node: Node): boolean => {
+    const pos = view.posAtDOM(node, 0);
+    const pmNode = view.state.doc.nodeAt(pos);
+    return !!(pmNode && pmNode.type.spec.atom);
 };
-
-/**
- * Parse the HTML attribute of the element.
- * @param element - The element to parse the attribute from.
- * @param attr - The attribute to parse.
- * @param fallback - The fallback value if the attribute is not found.
- * @returns {T} The parsed attribute value or the fallback value.
- */
-export const parseHTMLAttribute =
-    <T>(attr: string, fallback: T) =>
-    (element: HTMLElement): T => {
-        const margins = element.getAttribute(attr);
-        return margins ? JSON.parse(margins) : fallback;
-    };
-
-/**
- * Render the HTML attribute.
- * @param attr - The attribute to render.
- * @param attributes - The attributes to render.
- * @returns {Object} The rendered attribute.
- */
-export const renderHTMLAttribute =
-    <T extends Record<string, unknown>>(attr: keyof T) =>
-    (attributes: T): { [key in keyof T]: string } => {
-        const value = attributes[attr];
-
-        return {
-            [attr]: JSON.stringify(value),
-        } as { [key in keyof T]: string };
-    };

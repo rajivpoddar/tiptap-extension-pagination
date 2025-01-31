@@ -6,9 +6,10 @@
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Selection, TextSelection, Transaction } from "@tiptap/pm/state";
-import { Sign } from "../constants/direction";
+import { Sign } from "../types/direction";
 import { Nullable } from "../types/record";
-import { isNodeEmpty } from "./node";
+import { isNodeEmpty } from "./nodes/node";
+import { inRange } from "./math";
 
 /**
  * Check if the editor is currently highlighting text.
@@ -82,11 +83,35 @@ export const setSelectionAtEndOfDocument = (tr: Transaction): Transaction => {
  */
 export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode): void => {
     if (isNodeEmpty(paragraphNode)) {
-        // Node will not have a text selection so move to the start of the paragraph
-        setSelectionAtPos(tr, paragraphPos); // + 1 ?
+        const selection = moveToThisTextBlock(tr, paragraphPos, 1);
+        setSelection(tr, selection);
     } else {
         const paragraphStartPos = tr.doc.resolve(paragraphPos + 1);
         moveToNearestTextSelection(tr, paragraphStartPos, 1);
+    }
+};
+
+/**
+ * Set the selection to the paragraph with an optional offset.
+ * @param tr - The current transaction.
+ * @param paragraphPos - The position of the paragraph in the document.
+ * @param paragraphNode - The paragraph node.
+ * @param offsetInNode - The offset in the paragraph node. Default is 0.
+ * @returns {void}
+ */
+export const setSelectionToParagraph = (tr: Transaction, paragraphPos: number, paragraphNode: PMNode, offsetInNode: number = 0): void => {
+    if (isNodeEmpty(paragraphNode)) {
+        // Node will not have a text selection so move to the start of the paragraph
+        setSelectionToStartOfParagraph(tr, paragraphPos, paragraphNode);
+    } else {
+        if (!inRange(offsetInNode, 0, paragraphNode.nodeSize - 1)) {
+            console.warn("Cannot set selection: Invalid offset in node. Node is of size", paragraphNode.nodeSize);
+            return;
+        }
+
+        const paragraphPosWithOffset = paragraphPos + offsetInNode;
+        const $pos = tr.doc.resolve(paragraphPosWithOffset);
+        moveToNearestTextSelection(tr, $pos, 1);
     }
 };
 
@@ -126,20 +151,39 @@ export const moveToPreviousTextBlock = (tr: Transaction, $pos: ResolvedPos | num
 };
 
 /**
+ * Caps the offset in the node to the length of the node.
+ * @param tr - The current transaction.
+ * @param $pos - The resolved position in the document.
+ * @param offsetInNode - The offset in the node.
+ * @returns {number} The capped offset in the node.
+ */
+const capOffsetInNode = (tr: Transaction, $pos: ResolvedPos, offsetInNode: number): number => {
+    const thisNode = tr.doc.nodeAt($pos.pos);
+    if (!thisNode) {
+        console.warn(`Unable to resolve node at position ${$pos.pos}. Capping offset to 0`);
+        return offsetInNode;
+    }
+
+    return Math.min(offsetInNode, thisNode.nodeSize - 1);
+};
+
+/**
  * Move the cursor to the current text block.
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
- * @param bias - The search direction.
+ * @param bias - The search direction. Default is 1 (forward).
+ * @param offsetInNode - The offset in the node. Default is 0. Will cap at the length of the node.
  * @returns {Selection} The new selection.
  */
-export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number, bias: Sign = 1): Selection => {
+export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number, bias: Sign = 1, offsetInNode: number = 0): Selection => {
     if (typeof $pos === "number") {
-        return moveToThisTextBlock(tr, tr.doc.resolve($pos));
+        $pos = tr.doc.resolve($pos);
     }
 
-    const thisPos = $pos.pos;
-    const thisResPos = tr.doc.resolve(thisPos);
-    const selection = Selection.near(thisResPos, bias);
+    const adjustedOffset = capOffsetInNode(tr, $pos, offsetInNode);
+    const offsetPos = $pos.pos + adjustedOffset;
+    const $offsetPos = tr.doc.resolve(offsetPos);
+    const selection = Selection.near($offsetPos, bias);
     return selection;
 };
 

@@ -38,7 +38,7 @@ import React from "react";
 import { Stack } from "@mui/material";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Pagination, { PageNode } from "tiptap-extension-pagination";
+import Pagination, { PageNode, HeaderFooterNode, BodyNode } from "tiptap-extension-pagination";
 
 type DispatchOrFunction<T> = Dispatch<T> | ((value: T) => void);
 
@@ -49,21 +49,7 @@ type EditorProps = {
 };
 
 const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true }) => {
-    // ====== Prop Destructuring ======
-
-    // ====== Constants ======
-
-    const extensions = [StarterKit, Pagination, PageNode];
-
-    // ====== State Variables ======
-
-    // ====== Refs ======
-
-    // ====== Memo Hooks ======
-
-    // ====== Effect Hooks ======
-
-    // ====== Hooks ======
+    const extensions = [StarterKit, Pagination, PageNode, HeaderFooterNode, BodyNode];
 
     const editor = useEditor({
         extensions,
@@ -77,11 +63,9 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
             const { state } = editor;
             const { selection } = state;
             const { $from, $to } = selection;
-            console.log("Selection updated", $from.pos, $to.pos);
+            console.log("Selection updated:", $from.pos, $to.pos);
         },
     });
-
-    // ====== Functions ======
 
     // ====== Event Handlers ======
 
@@ -93,8 +77,6 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
     const handleChange = (value: string): void => {
         setContent(value);
     };
-
-    // ====== Render Helpers ======
 
     // ====== Render ======
 

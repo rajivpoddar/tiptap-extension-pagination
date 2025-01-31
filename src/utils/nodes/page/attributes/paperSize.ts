@@ -7,15 +7,19 @@
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
-import { DEFAULT_PAPER_SIZE, paperDimensions } from "../constants/paperSize";
-import { PaperOrientation, PaperDimensions, PaperSize } from "../types/paper";
-import { PageNodeAttributes, PageContentPixelDimensions } from "../types/page";
-import { Nullable } from "../types/record";
-import { getPageAttribute, isPageNode } from "./page";
-import { mmToPixels } from "./window";
-import { nodeHasAttribute } from "./node";
+import { DEFAULT_PAPER_SIZE, paperDimensions } from "../../../../constants/paperSize";
+import { PAGE_NODE_ATTR_KEYS } from "../../../../constants/page";
+import { DEFAULT_PAPER_ORIENTATION } from "../../../../constants/paperOrientation";
+import { PaperOrientation, PaperDimensions, PaperSize } from "../../../../types/paper";
+import { PageNodeAttributes, PageContentPixelDimensions } from "../../../../types/page";
+import { Nullable } from "../../../../types/record";
+import { isPageNode } from "../page";
+import { getPageAttributeByPageNum } from "../pageNumber";
+import { mmToPixels } from "../../../window";
+import { nodeHasAttribute } from "../../../attributes/getAttributes";
 import { setPageNodeAttribute } from "./setPageAttributes";
-import { PAGE_NODE_ATTR_KEYS } from "../constants/page";
+import { getPageNodePaperOrientation } from "./paperOrientation";
+import { BodyNodeAttributes } from "../../../../types/body";
 
 /**
  * Check if the given paper size is valid.
@@ -27,7 +31,7 @@ export const isValidPaperSize = (paperSize: PaperSize): boolean => {
 };
 
 /**
- * Given a paper size, return the dimensions of the paper
+ * Given a paper size, return the dimensions of the paper in millimeters.
  * @param paperSize - The paper size
  * @param orientation - The orientation of the paper
  * @returns {PaperDimensions} - The dimensions of the paper
@@ -46,6 +50,17 @@ export const getPaperDimensions = (paperSize: PaperSize, orientation: PaperOrien
 };
 
 /**
+ * Gets the paper dimensions of a page node
+ * @param pageNode - The page node to get the paper dimensions from
+ * @returns {PaperDimensions} - The dimensions of the paper
+ */
+export const getPaperDimensionsFromPageNode = (pageNode: PMNode): PaperDimensions => {
+    const paperSize = getPageNodePaperSize(pageNode) ?? DEFAULT_PAPER_SIZE;
+    const paperOrientation = getPageNodePaperOrientation(pageNode) ?? DEFAULT_PAPER_ORIENTATION;
+    return getPaperDimensions(paperSize, paperOrientation);
+};
+
+/**
  * Flips the width and height of a given set of dimensions.
  * @param dimensions - The dimensions to flip.
  * @returns {PaperDimensions} The flipped dimensions.
@@ -55,20 +70,30 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
 };
 
 /**
- * Calculates the pixel width and height of a given paper size. Excludes page
- * margins as we are only calculating the area where content can be added.
+ * Calculates the pixel width and height of a given paper size.
  * @param pageNodeAttributes - The attributes of the page node.
+ * @param bodyNodeAttributes - The attributes of the body node.
  * @returns {PageContentPixelDimensions} The height and width of the page in pixels.
  */
-export const calculatePageContentPixelDimensions = (pageNodeAttributes: PageNodeAttributes): PageContentPixelDimensions => {
-    const { paperSize, paperOrientation, pageMargins, pageBorders } = pageNodeAttributes;
-    const { top: topMargin, right: rightMargin, bottom: bottomMargin, left: leftMargin } = pageMargins;
-    const { top: borderTop, right: borderRight, bottom: borderBottom, left: borderLeft } = pageBorders;
-    const { width, height } = getPaperDimensions(paperSize, paperOrientation);
-    const pageContentHeight = mmToPixels(height - (topMargin + bottomMargin)) - (borderTop + borderBottom);
-    const pageContentWidth = mmToPixels(width - (leftMargin + rightMargin)) - (borderLeft + borderRight);
+export const calculatePageContentPixelDimensions = (
+    pageNodeAttributes: PageNodeAttributes,
+    bodyNodeAttributes: BodyNodeAttributes
+): PageContentPixelDimensions => {
+    const { paperSize, paperOrientation, pageBorders } = pageNodeAttributes;
+    const { width: paperWidth, height: paperHeight } = getPaperDimensions(paperSize, paperOrientation);
 
-    return { pageContentHeight, pageContentWidth };
+    const { top: marginTop, left: marginLeft, right: marginRight, bottom: marginBottom } = bodyNodeAttributes.pageMargins;
+    const verticalMargins = marginTop + marginBottom;
+    const horizontalMargins = marginLeft + marginRight;
+
+    const { top: borderTop, right: borderRight, bottom: borderBottom, left: borderLeft } = pageBorders;
+    const verticalBorders = borderTop + borderBottom;
+    const horizontalBorders = borderLeft + borderRight;
+
+    const bodyHeight = mmToPixels(paperHeight - verticalMargins) - verticalBorders;
+    const bodyWidth = mmToPixels(paperWidth - horizontalMargins) - horizontalBorders;
+
+    return { bodyHeight, bodyWidth };
 };
 
 /**
@@ -100,7 +125,7 @@ export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
  */
 export const getPageNumPaperSize = (context: Editor | EditorState, pageNum: number): PaperSize => {
     const getDefault = context instanceof Editor ? context.commands.getDefaultPaperSize : () => DEFAULT_PAPER_SIZE;
-    return getPageAttribute(context, pageNum, getDefault, getPageNodePaperSize);
+    return getPageAttributeByPageNum(context, pageNum, getDefault, getPageNodePaperSize);
 };
 
 /**

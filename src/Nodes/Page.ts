@@ -4,23 +4,18 @@
  * @description Custom node for creating a page in the editor.
  */
 
-import { Attributes, Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
-import { DOMSerializer, Fragment } from "@tiptap/pm/model";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { DEFAULT_PAPER_SIZE } from "../constants/paperSize";
+import { Node, NodeViewRendererProps, mergeAttributes } from "@tiptap/core";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "../constants/pageBorders";
 import { DEFAULT_PAPER_COLOUR } from "../constants/paperColours";
-import { DEFAULT_PAPER_ORIENTATION } from "../constants/paperOrientation";
 import { PAGE_NODE_NAME, DEFAULT_PAGE_GAP, PAGE_ATTRIBUTES } from "../constants/page";
-import { DEFAULT_MARGIN_CONFIG } from "../constants/pageMargins";
-import { getPageNodePaperSize, getPaperDimensions } from "../utils/paperSize";
-import { getPageNodePaperColour } from "../utils/paperColour";
-import { isPageNode } from "../utils/page";
-import { getPageNodePaperOrientation } from "../utils/paperOrientation";
-import { calculatePagePadding, getPageNodePaperMargins } from "../utils/paperMargins";
+import { getPaperDimensionsFromPageNode } from "../utils/nodes/page/attributes/paperSize";
+import { getPageNodePaperColour } from "../utils/nodes/page/attributes/paperColour";
+import { isPageNode } from "../utils/nodes/page/page";
 import { mm, px } from "../utils/units";
-import { calculatePageBorders, getPageNodePageBorders } from "../utils/pageBorders";
-import { parseHTMLAttribute, renderHTMLAttribute } from "../utils/node";
+import { calculateShorthandPageBorders, getPageNodePageBorders } from "../utils/nodes/page/attributes/pageBorders";
+import { constructChildOnlyClipboardPlugin } from "../utils/clipboard";
+import { parseHTMLNode } from "../utils/nodes/node";
+import { addNodeAttributes } from "../utils/attributes/addAttributes";
 
 const baseElement = "div" as const;
 const dataPageAttribute = "data-page" as const;
@@ -32,7 +27,7 @@ type PageNodeOptions = {
 const PageNode = Node.create<PageNodeOptions>({
     name: PAGE_NODE_NAME,
     group: "block",
-    content: "block*",
+    content: `block{1,3}`, // We must have a body section and can optionally have a header and footer
     defining: true,
     isolating: false,
 
@@ -43,35 +38,11 @@ const PageNode = Node.create<PageNodeOptions>({
     },
 
     addAttributes() {
-        return Object.entries(PAGE_ATTRIBUTES).reduce(
-            (attributes, [key, config]) => ({
-                ...attributes,
-                [key]: {
-                    default: config.default,
-                    parseHTML: parseHTMLAttribute(key, config.default),
-                    renderHTML: renderHTMLAttribute(key),
-                },
-            }),
-            {} as Attributes
-        );
+        return addNodeAttributes(PAGE_ATTRIBUTES);
     },
 
     parseHTML() {
-        return [
-            {
-                tag: `${baseElement}[${dataPageAttribute}]`,
-                getAttrs: (node) => {
-                    const parent = (node as HTMLElement).parentElement;
-
-                    // Prevent nested page nodes
-                    if (parent && parent.hasAttribute(dataPageAttribute)) {
-                        return false;
-                    }
-
-                    return {};
-                },
-            },
-        ];
+        return [parseHTMLNode(baseElement, dataPageAttribute, true)];
     },
 
     renderHTML({ HTMLAttributes }) {
@@ -85,17 +56,12 @@ const PageNode = Node.create<PageNodeOptions>({
             dom.setAttribute(dataPageAttribute, String(true));
             dom.classList.add(PAGE_NODE_NAME);
 
-            const paperSize = getPageNodePaperSize(node) ?? DEFAULT_PAPER_SIZE;
-            const paperOrientation = getPageNodePaperOrientation(node) ?? DEFAULT_PAPER_ORIENTATION;
-            const paperMargins = getPageNodePaperMargins(node) ?? DEFAULT_MARGIN_CONFIG;
-            const pageBorders = getPageNodePageBorders(node) ?? DEFAULT_PAGE_BORDER_CONFIG;
-            const { width, height } = getPaperDimensions(paperSize, paperOrientation);
-
+            const { width, height } = getPaperDimensionsFromPageNode(node);
             dom.style.width = mm(width);
             dom.style.height = mm(height);
-            dom.style.padding = calculatePagePadding(paperMargins);
 
-            dom.style.borderWidth = calculatePageBorders(pageBorders);
+            const pageBorders = getPageNodePageBorders(node) ?? DEFAULT_PAGE_BORDER_CONFIG;
+            dom.style.borderWidth = calculateShorthandPageBorders(pageBorders);
             dom.style.borderStyle = "solid";
             dom.style.borderColor = "#ccc";
 
@@ -121,40 +87,7 @@ const PageNode = Node.create<PageNodeOptions>({
     },
 
     addProseMirrorPlugins() {
-        const schema = this.editor.schema;
-
-        // Extend DOMSerializer to override serializeFragment
-        const paginationClipboardSerializer = Object.create(DOMSerializer.fromSchema(schema));
-
-        // Override serializeFragment
-        paginationClipboardSerializer.serializeFragment = (
-            fragment: Fragment,
-            options = {},
-            target = document.createDocumentFragment()
-        ) => {
-            const serializer = DOMSerializer.fromSchema(schema);
-
-            fragment.forEach((node) => {
-                if (isPageNode(node)) {
-                    // Serialize only the children of the page node
-                    serializer.serializeFragment(node.content, options, target);
-                } else {
-                    // Serialize non-page nodes directly
-                    serializer.serializeNode(node, options);
-                }
-            });
-
-            return target;
-        };
-
-        return [
-            new Plugin({
-                key: new PluginKey("pageClipboardPlugin"),
-                props: {
-                    clipboardSerializer: paginationClipboardSerializer,
-                },
-            }),
-        ];
+        return [constructChildOnlyClipboardPlugin("pageClipboardPlugin", this.editor.schema, isPageNode)];
     },
 });
 
