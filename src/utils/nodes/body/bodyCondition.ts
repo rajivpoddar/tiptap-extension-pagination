@@ -8,6 +8,7 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "../document";
 import { isPositionWithinParagraph } from "../paragraph";
 import { getStartOfBodyAndParagraphPosition, getEndOfBodyAndParagraphPosition } from "../../pagination";
+import { isAtEndOfNode, isAtStartOfNode } from "../../positionCondition";
 
 /**
  * Check if the given position is exactly at the start of the first child of the body.
@@ -84,28 +85,7 @@ export const isPosMatchingStartOfBodyCondition = (doc: PMNode, $pos: ResolvedPos
         return false;
     }
 
-    // Determine the condition to check
-    // First position of paragraph will always be 1 more than the body position
-    const isFirstParagraph = startOfBodyPos + 1 === startOfParagraphPos;
-    if (checkExactStart) {
-        // Check if position is exactly at the start of the body
-        // First position of text will always be 1 more than the first paragraph position
-        const isPosAtStartOfParagraph = startOfParagraphPos + 1 === $pos.pos;
-        if (isFirstParagraph && isPosAtStartOfParagraph) {
-            console.log("At the start of the page body");
-            return true;
-        }
-        console.log("Not at the start of the page body");
-        return false;
-    } else {
-        // Check if position is at the first child of the body
-        if (isFirstParagraph) {
-            console.log("In the first child of the page body");
-            return true;
-        }
-        console.log("Not in the first child of the page body");
-        return false;
-    }
+    return isAtStartOfNode($pos, startOfBodyPos, startOfParagraphPos, checkExactStart);
 };
 
 /**
@@ -143,26 +123,5 @@ export const isPosMatchingEndOfBodyCondition = (doc: PMNode, $pos: ResolvedPos |
         return false;
     }
 
-    // Determine the condition to check
-    // Last position of paragraph will always be 1 less than the end of the last body position
-    const isLastParagraph = endOfParagraphPos + 1 === endOfBodyPos;
-    if (checkExactEnd) {
-        // Check if position is exactly at the end of the body
-        // Last position of text will always be 1 less than the end of the last paragraph position
-        const isPosAtEndOfParagraph = endOfParagraphPos + 1 === $pos.pos;
-        if (isLastParagraph && isPosAtEndOfParagraph) {
-            console.log("At the end of the page body");
-            return true;
-        }
-        console.log("Not at the end of the page body");
-        return false;
-    } else {
-        // Check if position is at the last child of the body
-        if (isLastParagraph) {
-            console.log("In the last child of the page body");
-            return true;
-        }
-        console.log("Not in the last child of the page body");
-        return false;
-    }
+    return isAtEndOfNode($pos, endOfBodyPos, endOfParagraphPos, checkExactEnd);
 };
