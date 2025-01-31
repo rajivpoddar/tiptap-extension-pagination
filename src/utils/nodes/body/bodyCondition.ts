@@ -9,6 +9,25 @@ import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "../document";
 import { isPositionWithinParagraph } from "../paragraph";
 import { getStartOfBodyAndParagraphPosition, getEndOfBodyAndParagraphPosition } from "../../pagination";
 import { isAtEndOfNode, isAtStartOfNode } from "../../positionCondition";
+import { getPageChildNodePosFromPosition } from "../page/page";
+import { isBodyNode } from "./body";
+
+/**
+ * Check if the given position is within the body.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is within the body, false otherwise.
+ */
+export const isPosInBody = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isPosInBody(doc, doc.resolve($pos));
+    }
+
+    const { node: pageChildNode } = getPageChildNodePosFromPosition(doc, $pos);
+    if (!pageChildNode) return false;
+
+    return isBodyNode(pageChildNode);
+};
 
 /**
  * Check if the given position is exactly at the start of the first child of the body.
@@ -63,6 +82,10 @@ export const isPosMatchingStartOfBodyCondition = (doc: PMNode, $pos: ResolvedPos
         return isPosMatchingStartOfBodyCondition(doc, doc.resolve($pos), checkExactStart);
     }
 
+    if (!isPosInBody(doc, $pos)) {
+        return false;
+    }
+
     // Check if we are at the start of the document
     if (isPosAtStartOfDocument(doc, $pos, false)) {
         return true;
@@ -99,6 +122,10 @@ export const isPosMatchingEndOfBodyCondition = (doc: PMNode, $pos: ResolvedPos |
     // Resolve position if given as a number
     if (typeof $pos === "number") {
         return isPosMatchingEndOfBodyCondition(doc, doc.resolve($pos), checkExactEnd);
+    }
+
+    if (!isPosInBody(doc, $pos)) {
+        return false;
     }
 
     // Check if we are at the end of the document
