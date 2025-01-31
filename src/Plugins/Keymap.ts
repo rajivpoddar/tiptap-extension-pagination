@@ -362,12 +362,18 @@ const KeymapPlugin = keymap({
 
         const { doc, tr, schema } = state;
         const $pos = getResolvedPosition(state);
-        const thisPos = $pos.pos;
+
+        if (isPosAtStartOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         // Ensure that the position is within a valid block (paragraph)
         if (!isPositionWithinParagraph($pos)) {
             return false;
         }
+
+        const thisPos = $pos.pos;
 
         if (isPosAtEndOfBody(doc, $pos)) {
             // Traverse $pos.path to find the nearest page node
@@ -461,6 +467,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtEndOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         // Ensure that the position is within a valid block (paragraph)
         if (!isPositionWithinParagraph($pos)) {
