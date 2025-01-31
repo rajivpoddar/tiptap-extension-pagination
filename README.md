@@ -38,7 +38,7 @@ import React from "react";
 import { Stack } from "@mui/material";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Pagination, { PageNode } from "tiptap-extension-pagination";
+import Pagination, { PageNode, HeaderFooterNode, BodyNode } from "tiptap-extension-pagination";
 
 type DispatchOrFunction<T> = Dispatch<T> | ((value: T) => void);
 
@@ -53,7 +53,7 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
 
     // ====== Constants ======
 
-    const extensions = [StarterKit, Pagination, PageNode];
+    const extensions = [StarterKit, Pagination, PageNode, HeaderFooterNode, BodyNode];
 
     // ====== State Variables ======
 
@@ -77,7 +77,7 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
             const { state } = editor;
             const { selection } = state;
             const { $from, $to } = selection;
-            console.log("Selection updated", $from.pos, $to.pos);
+            console.log("Selection updated:", $from.pos, $to.pos);
         },
     });
 
