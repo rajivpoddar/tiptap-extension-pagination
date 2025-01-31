@@ -13,7 +13,8 @@ import { isPosAtEndOfDocument, isPosAtStartOfDocument } from "./document";
 import { binarySearch, findClosestIndex, inRange } from "../math";
 import { getBodyAfterPos, getBodyBeforePos, getEndOfBodyPosition } from "./body/bodyPosition";
 import { ParagraphLineInfo } from "../../types/paragraph";
-import { measureCumulativeTextWidths, measureText } from "./text";
+import { isAtEndOfTextNode, isAtStartOfTextNode, measureCumulativeTextWidths, measureText } from "./text";
+import { isAtHardBreak } from "./hardBreak";
 
 /**
  * Check if the given node is a paragraph node.
@@ -529,6 +530,23 @@ const getTextLengthFromElement = (view: EditorView, elementNode: HTMLElement, en
 };
 
 /**
+ * Calculate the paragraph end offset based on the position. Used to correct
+ * getting the right DOM node when the position is at the start or end of a paragraph / text node.
+ * @param view - The editor view.
+ * @param pos - The [resolved] position in the document.
+ * @returns {number} The paragraph end offset.
+ */
+const calculateParagraphEndOffset = (view: EditorView, pos: ResolvedPos | number): number => {
+    const { doc } = view.state;
+    if (isAtStartOfParagraph(doc, pos) || isAtStartOfTextNode(doc, pos)) {
+        return 1;
+    } else if (isAtEndOfParagraph(doc, pos) || isAtEndOfTextNode(doc, pos) || isAtHardBreak(doc, pos)) {
+        return -1;
+    } else {
+        return 0;
+    }
+};
+/**
  * Given a paragraph position and position within said paragraph, return the number of
  * lines in the paragraph and the line number of the position.
  * @param view - The editor view.
@@ -555,17 +573,14 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
     const lineBreakOffsets = getParagraphLineBreakOffsets(view, pDOMNode);
     const lineCount = lineBreakOffsets.length;
 
-    const { doc } = view.state;
-    const paragraphEndOffset = isAtStartOfParagraph(doc, pos) ? 1 : isAtEndOfParagraph(view.state.doc, pos) ? -1 : 0;
-    let { node, offset } = view.domAtPos(pos + paragraphEndOffset);
-    const elem = view.domAtPos(pos - offset + paragraphEndOffset);
-    const paragraphNode = node.parentNode;
-    if (!paragraphNode) return returnDefaultLineInfo();
+    const paragraphEndOffset = calculateParagraphEndOffset(view, pos);
+    let { offset } = view.domAtPos(pos + paragraphEndOffset);
+    const { node: paragraphNode, offset: paragraphOffset } = view.domAtPos(pos - offset + paragraphEndOffset);
 
-    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement, elem.offset);
-    offset += previousOffset - paragraphEndOffset;
-
+    const previousOffset = getTextLengthFromElement(view, paragraphNode as HTMLElement, paragraphOffset);
+    offset += previousOffset;
     const lineNumber = getLineNumberForPosition(lineBreakOffsets, offset);
+    offset -= paragraphEndOffset;
 
     const offsetInLine = getOffsetInLine(offset, lineNumber, lineBreakOffsets);
     const offsetDistance = getTextWidthUpToOffsetInLine(pDOMNode, offset, lineNumber, lineBreakOffsets);

@@ -4,8 +4,10 @@
  * @description Utility functions for text nodes.
  */
 
-import { Node as PMNode } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { Nullable } from "../../types/record";
+import { NullableNodePos } from "../../types/node";
+import { getParentNodePosOfType } from "./node";
 
 /**
  * Check if the given node is a text node.
@@ -19,6 +21,75 @@ export const isTextNode = (node: Nullable<PMNode>): boolean => {
     }
 
     return node.type.name === "text";
+};
+
+/**
+ * Check if the given position is at the start of the text node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the start of the text node, false otherwise.
+ */
+export const isAtStartOfTextNode = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isAtStartOfTextNode(doc, doc.resolve($pos));
+    }
+
+    const { pos: textPos, node: textNode } = getTextNodeAndPosition(doc, $pos);
+    if (!textNode) {
+        return false;
+    }
+
+    return $pos.pos === textPos;
+};
+
+/**
+ * Check if the given position is at the end of the text node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document or the absolute position of the node.
+ * @returns {boolean} True if the position is at the end of the text node, false otherwise.
+ */
+export const isAtEndOfTextNode = (doc: PMNode, $pos: ResolvedPos | number): boolean => {
+    if (typeof $pos === "number") {
+        return isAtEndOfTextNode(doc, doc.resolve($pos));
+    }
+
+    const { pos: textPos, node: textNode } = getTextNodeAndPosition(doc, $pos);
+    if (!textNode) {
+        return false;
+    }
+
+    return $pos.pos + 1 === textPos + textNode.nodeSize;
+};
+
+/**
+ * Get the position of the text node.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {number} The position of the text node.
+ */
+export const getThisTextNodePosition = (doc: PMNode, pos: ResolvedPos | number): number => {
+    return getParentNodePosOfType(doc, pos, "text").pos;
+};
+
+/**
+ * Get the text node and the position of the text node.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {NullableNodePos} The text node and the position of the text node.
+ */
+export const getTextNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): NullableNodePos => {
+    if (typeof pos === "number") {
+        return getTextNodeAndPosition(doc, doc.resolve(pos));
+    }
+
+    const textPos = getThisTextNodePosition(doc, pos);
+    const textNode = doc.nodeAt(textPos);
+    if (!isTextNode(textNode)) {
+        console.warn("No text node found");
+        return { pos: -1, node: textNode };
+    }
+
+    return { pos: textPos, node: textNode };
 };
 
 /**

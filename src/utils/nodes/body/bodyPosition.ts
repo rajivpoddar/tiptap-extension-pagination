@@ -92,7 +92,7 @@ export const getBodyBeforePos = (doc: PMNode, pos: ResolvedPos | number): Nullab
     }
 
     const { node: previousPageNode, pos: previousPagePos } = previousPage;
-    return getPageRegionNodeAndPos(previousPagePos, previousPageNode, "body");
+    return getPageRegionNodeAndPos(previousPagePos, previousPageNode, BODY_NODE_NAME);
 };
 
 /**
@@ -108,5 +108,5 @@ export const getBodyAfterPos = (doc: PMNode, pos: ResolvedPos | number): Nullabl
     }
 
     const { node: nextPageNode, pos: nextPagePos } = nextPage;
-    return getPageRegionNodeAndPos(nextPagePos, nextPageNode, "body");
+    return getPageRegionNodeAndPos(nextPagePos, nextPageNode, BODY_NODE_NAME);
 };

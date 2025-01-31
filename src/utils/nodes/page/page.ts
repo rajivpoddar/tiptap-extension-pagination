@@ -4,11 +4,14 @@
  * @description Utility functions for page nodes in the editor.
  */
 
-import { Node as PMNode } from "@tiptap/pm/model";
+import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
 import { PAGE_NODE_NAME } from "../../../constants/page";
-import { NodePosArray } from "../../../types/node";
+import { NodePosArray, NullableNodePos } from "../../../types/node";
 import { Nullable } from "../../../types/record";
+import { getParentNodePosOfType } from "../node";
+import { BODY_NODE_NAME } from "../../../constants/body";
+import { HEADER_FOOTER_NODE_NAME } from "../../../constants/pageRegions";
 
 /**
  * Check if the given node is a page node.
@@ -59,4 +62,26 @@ export const collectPageNodes = (doc: PMNode): NodePosArray => {
     });
 
     return pageNodes;
+};
+
+/**
+ * Given a position in the document, get the child node of the page node at that position.
+ * I.e. that will be a header/footer node or a body node.
+ * @param doc - The document node.
+ * @param $pos - The resolved position in the document.
+ * @returns {NullableNodePos} The child node position of the page node at the given position.
+ */
+export const getPageChildNodePosFromPosition = (doc: PMNode, $pos: ResolvedPos | number): NullableNodePos => {
+    if (typeof $pos === "number") {
+        return getPageChildNodePosFromPosition(doc, doc.resolve($pos));
+    }
+
+    const pageChildPos = getParentNodePosOfType(doc, $pos, [BODY_NODE_NAME, HEADER_FOOTER_NODE_NAME]);
+    const pageChildNode = doc.nodeAt(pageChildPos.pos);
+    if (!pageChildNode) {
+        console.warn("No page child node found");
+        return { pos: -1, node: pageChildNode };
+    }
+
+    return { pos: pageChildPos.pos, node: pageChildNode };
 };

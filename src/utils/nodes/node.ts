@@ -8,6 +8,7 @@ import { Node as PMNode, ResolvedPos, TagParseRule } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
 import { parseHTMLNodeGetAttrs } from "../attributes/getAttributes";
 import { EditorView } from "@tiptap/pm/view";
+import { Nullable } from "../../types/record";
 
 /**
  * Get the type of the node at the specified position.
@@ -19,18 +20,38 @@ export const getPositionNodeType = ($pos: ResolvedPos): string => {
 };
 
 /**
+ * Check if the node type matches the specified type.
+ * @param node - The node to check.
+ * @param type - The type of the node to match. Can be string or an array of strings.
+ * @returns {boolean} True if the node type matches, false otherwise.
+ */
+const doesNodeTypeMatch = (node: Nullable<PMNode>, type: string | string[]): boolean => {
+    if (!node) {
+        return false;
+    }
+
+    const nodeTypeName = node.type.name;
+    if (Array.isArray(type)) {
+        return type.includes(nodeTypeName);
+    }
+    return nodeTypeName === type;
+};
+
+/**
  * Get the parent node position of the specified type.
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
- * @param type - The type of the node to search for.
+ * @param type - The type of the node to search for. Can be string or an array of strings.
  * @returns {ResolvedPos} The position of the parent node of the specified type.
  */
-export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, type: string): ResolvedPos => {
+export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, type: string | string[]): ResolvedPos => {
     // Base case: If the position is a number, resolve it
     if (typeof $pos !== "number") {
         const thisNode = doc.nodeAt($pos.pos);
-        if (thisNode && thisNode.type.name === type) {
-            return $pos;
+        if (thisNode) {
+            if (doesNodeTypeMatch(thisNode, type)) {
+                return $pos;
+            }
         }
 
         if ($pos.pos === 0) {
@@ -49,7 +70,7 @@ export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, 
     const thisPos = doc.resolve($pos);
 
     // Base case: If the node at the position is of the specified type, return the position
-    if (doc.nodeAt($pos)?.type.name === type) {
+    if (doesNodeTypeMatch(doc.nodeAt($pos), type)) {
         return thisPos;
     }
 

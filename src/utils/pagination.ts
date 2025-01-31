@@ -11,6 +11,41 @@ import { HEADER_FOOTER_NODE_NAME } from "../constants/pageRegions";
 import { PaginationNodeTypes } from "../types/pagination";
 import { getStartOfBodyPosition, getEndOfBodyPosition } from "./nodes/body/bodyPosition";
 import { getEndOfParagraphPosition, getStartOfParagraphPosition } from "./nodes/paragraph";
+import { getStartOfPageAmendmentPosition, getEndOfPageAmendmentPosition } from "./nodes/headerFooter/headerFooterPosition";
+
+/**
+ * Get the start of the page amendment and paragraph positions.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {startOfPageAmendmentPos: number, startOfParagraphPos: number} The start positions of the
+ * page amendment and paragraph.
+ */
+export const getStartOfPageAmendmentAndParagraphPosition = (
+    doc: PMNode,
+    pos: ResolvedPos | number
+): { startOfPageAmendmentPos: number; startOfParagraphPos: number } => {
+    const startOfParagraphPos = getStartOfParagraphPosition(doc, pos);
+    const startOfPageAmendmentPos = getStartOfPageAmendmentPosition(doc, pos);
+
+    return { startOfPageAmendmentPos, startOfParagraphPos };
+};
+
+/**
+ * Get the end of the page amendment and paragraph positions.
+ * @param doc - The document node.
+ * @param pos - The resolved position in the document or the absolute position of the node.
+ * @returns {endOfPageAmendmentPos: number, endOfParagraphPos: number} The end positions of the
+ * page amendment and paragraph.
+ */
+export const getEndOfPageAmendmentAndParagraphPosition = (
+    doc: PMNode,
+    $pos: ResolvedPos | number
+): { endOfPageAmendmentPos: number; endOfParagraphPos: number } => {
+    const endOfParagraphPos = getEndOfParagraphPosition(doc, $pos);
+    const endOfPageAmendmentPos = getEndOfPageAmendmentPosition(doc, $pos);
+
+    return { endOfPageAmendmentPos, endOfParagraphPos };
+};
 
 /**
  * Get the start of the body and paragraph positions.

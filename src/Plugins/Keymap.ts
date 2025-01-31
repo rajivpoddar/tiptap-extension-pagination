@@ -38,6 +38,12 @@ import { isPosAtStartOfDocumentBody } from "../utils/nodes/document";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
 import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
+import {
+    isPosAtEndOfPageAmendment,
+    isPosAtFirstChildOfPageAmendment,
+    isPosAtLastChildOfPageAmendment,
+    isPosAtStartOfPageAmendment,
+} from "../utils/nodes/headerFooter/headerFooterCondition";
 
 const KeymapPlugin = keymap({
     ArrowLeft: (state, dispatch) => {
@@ -52,6 +58,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtStartOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtStartOfBody(doc, $pos)) {
             return false;
@@ -101,6 +112,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtEndOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtEndOfBody(doc, $pos)) {
             return false;
@@ -156,6 +172,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtFirstChildOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtFirstChildOfBody(doc, $pos)) {
             return false;
@@ -226,6 +247,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtLastChildOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtLastChildOfBody(doc, $pos)) {
             return false;
@@ -336,12 +362,18 @@ const KeymapPlugin = keymap({
 
         const { doc, tr, schema } = state;
         const $pos = getResolvedPosition(state);
-        const thisPos = $pos.pos;
+
+        if (isPosAtStartOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         // Ensure that the position is within a valid block (paragraph)
         if (!isPositionWithinParagraph($pos)) {
             return false;
         }
+
+        const thisPos = $pos.pos;
 
         if (isPosAtEndOfBody(doc, $pos)) {
             // Traverse $pos.path to find the nearest page node
@@ -435,6 +467,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtEndOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         // Ensure that the position is within a valid block (paragraph)
         if (!isPositionWithinParagraph($pos)) {
