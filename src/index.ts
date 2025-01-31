@@ -9,11 +9,14 @@ import PaginationExtension from "./PaginationExtension";
 
 // === Types ===
 export type { PaginationOptions } from "./PaginationExtension";
+export type * from "./types/body";
 export type * from "./types/cursor";
 export type * from "./types/node";
 export type * from "./types/page";
+export type * from "./types/pageRegions";
+export type * from "./types/pagination";
 export type * from "./types/paper";
-export type * from "./types/body";
+export type * from "./types/paragraph";
 
 // === Constants ===
 export { DEFAULT_PAPER_SIZE, paperSizes, paperDimensions } from "./constants/paperSize";
