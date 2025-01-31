@@ -6,10 +6,10 @@
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { getPageChildNodePosFromPosition } from "../page/page";
-import { HEADER_FOOTER_NODE_NAME } from "../../../constants/pageRegions";
 import { isPositionWithinParagraph } from "../paragraph";
 import { getEndOfPageAmendmentAndParagraphPosition, getStartOfPageAmendmentAndParagraphPosition } from "../../pagination";
 import { isAtEndOfNode, isAtStartOfNode } from "../../positionCondition";
+import { isHeaderFooterNode } from "./headerFooter";
 
 /**
  * Check if the given position is within a header or footer.
@@ -24,7 +24,7 @@ export const isPosInPageAmendment = (doc: PMNode, $pos: ResolvedPos | number): b
     const { node: pageChildNode } = getPageChildNodePosFromPosition(doc, $pos);
     if (!pageChildNode) return false;
 
-    return pageChildNode.type.name === HEADER_FOOTER_NODE_NAME;
+    return isHeaderFooterNode(pageChildNode);
 };
 
 /**
