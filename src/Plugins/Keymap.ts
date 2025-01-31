@@ -38,6 +38,7 @@ import { isPosAtStartOfDocumentBody } from "../utils/nodes/document";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
 import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
+import { isPosAtEndOfPageAmendment, isPosAtStartOfPageAmendment } from "../utils/nodes/headerFooter/headerFooterCondition";
 
 const KeymapPlugin = keymap({
     ArrowLeft: (state, dispatch) => {
@@ -52,6 +53,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtStartOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtStartOfBody(doc, $pos)) {
             return false;
@@ -101,6 +107,11 @@ const KeymapPlugin = keymap({
 
         const { doc, tr } = state;
         const $pos = getResolvedPosition(state);
+
+        if (isPosAtEndOfPageAmendment(doc, $pos)) {
+            // Handle to prevent cursor moving out of the page amendment
+            return true;
+        }
 
         if (!isPosAtEndOfBody(doc, $pos)) {
             return false;
