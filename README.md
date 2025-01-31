@@ -49,21 +49,7 @@ type EditorProps = {
 };
 
 const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true }) => {
-    // ====== Prop Destructuring ======
-
-    // ====== Constants ======
-
     const extensions = [StarterKit, Pagination, PageNode, HeaderFooterNode, BodyNode];
-
-    // ====== State Variables ======
-
-    // ====== Refs ======
-
-    // ====== Memo Hooks ======
-
-    // ====== Effect Hooks ======
-
-    // ====== Hooks ======
 
     const editor = useEditor({
         extensions,
@@ -81,8 +67,6 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
         },
     });
 
-    // ====== Functions ======
-
     // ====== Event Handlers ======
 
     /**
@@ -93,8 +77,6 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
     const handleChange = (value: string): void => {
         setContent(value);
     };
-
-    // ====== Render Helpers ======
 
     // ====== Render ======
 
