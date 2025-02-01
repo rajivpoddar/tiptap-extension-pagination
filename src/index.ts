@@ -27,9 +27,9 @@ export { DEFAULT_PAGE_MARGIN_NAME, DEFAULT_PAGE_MARGIN_CONFIG, commonMarginConfi
 export { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
 
 // === Nodes ===
-import PageNode from "./Nodes/Page";
-import HeaderFooterNode from "./Nodes/HeaderFooter";
-import BodyNode from "./Nodes/Body";
+export { PageNode } from "./Nodes/Page";
+export { HeaderFooterNode } from "./Nodes/HeaderFooter";
+export { BodyNode } from "./Nodes/Body";
 
 // === Utils ===
 export { isPageNode } from "./utils/nodes/page/page";
@@ -44,6 +44,4 @@ export { getBodyNodeMargins } from "./utils/nodes/body/body";
 export { doesDocHavePageNodes } from "./utils/nodes/page/page";
 
 // === Exports ===
-export { PageNode, HeaderFooterNode, BodyNode };
-
 export default PaginationExtension;

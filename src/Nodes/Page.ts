@@ -24,7 +24,7 @@ type PageNodeOptions = {
     pageGap: number;
 };
 
-const PageNode = Node.create<PageNodeOptions>({
+export const PageNode = Node.create<PageNodeOptions>({
     name: PAGE_NODE_NAME,
     group: "block",
     content: `block{1,3}`, // We must have a body section and can optionally have a header and footer
@@ -90,5 +90,3 @@ const PageNode = Node.create<PageNodeOptions>({
         return [constructChildOnlyClipboardPlugin("pageClipboardPlugin", this.editor.schema, isPageNode)];
     },
 });
-
-export default PageNode;

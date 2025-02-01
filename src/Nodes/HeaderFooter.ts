@@ -22,7 +22,7 @@ import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 const baseElement = "div" as const;
 const headerFooterAttribute = "data-page-header-footer" as const;
 
-const HeaderFooterNode = Node.create({
+export const HeaderFooterNode = Node.create({
     name: HEADER_FOOTER_NODE_NAME,
     group: "block",
     content: "block+",
@@ -92,5 +92,3 @@ const HeaderFooterNode = Node.create({
         return [constructChildOnlyClipboardPlugin("headerChildOnlyClipboardPlugin", this.editor.schema, isHeaderFooterNode)];
     },
 });
-
-export default HeaderFooterNode;

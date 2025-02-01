@@ -18,7 +18,7 @@ import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 const baseElement = "div" as const;
 const bodyAttribute = "data-page-body" as const;
 
-const BodyNode = Node.create({
+export const BodyNode = Node.create({
     name: BODY_NODE_NAME,
     group: "block",
     content: "block+",
@@ -77,5 +77,3 @@ const BodyNode = Node.create({
         return [constructChildOnlyClipboardPlugin("bodyChildOnlyClipboardPlugin", this.editor.schema, isBodyNode)];
     },
 });
-
-export default BodyNode;
