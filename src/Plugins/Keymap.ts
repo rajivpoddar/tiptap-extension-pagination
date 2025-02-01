@@ -34,7 +34,7 @@ import {
 import { isNodeEmpty } from "@tiptap/core";
 import { appendAndReplaceNode, deleteNode } from "../utils/nodes/node";
 import { isPageNode } from "../utils/nodes/page/page";
-import { isPosAtStartOfDocumentBody } from "../utils/nodes/document";
+import { isPosAtStartOfDocumentBody } from "../utils/nodes/body/bodyCondition";
 import { getPageNodeAndPosition } from "../utils/nodes/page/pagePosition";
 import { isTextNode } from "../utils/nodes/text";
 import { isPosAtEndOfBody, isPosAtFirstChildOfBody, isPosAtLastChildOfBody, isPosAtStartOfBody } from "../utils/nodes/body/bodyCondition";
