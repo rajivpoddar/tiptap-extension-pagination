@@ -25,6 +25,7 @@ export { DEFAULT_PAPER_ORIENTATION, paperOrientationsSelect } from "./constants/
 export { pageSides } from "./constants/pageSides";
 export { DEFAULT_PAGE_MARGIN_NAME, DEFAULT_PAGE_MARGIN_CONFIG, commonMarginConfigs } from "./constants/pageMargins";
 export { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
+export { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 
 // === Nodes ===
 export { PageNode } from "./Nodes/Page";
