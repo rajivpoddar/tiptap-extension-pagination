@@ -8,7 +8,7 @@ import { Node as PMNode, ResolvedPos, TagParseRule } from "@tiptap/pm/model";
 import { Transaction } from "@tiptap/pm/state";
 import { parseHTMLNodeGetAttrs } from "../attributes/getAttributes";
 import { EditorView } from "@tiptap/pm/view";
-import { Nullable } from "../../types/record";
+import { Nullable, Undefinable } from "../../types/record";
 
 /**
  * Get the type of the node at the specified position.
@@ -17,6 +17,16 @@ import { Nullable } from "../../types/record";
  */
 export const getPositionNodeType = ($pos: ResolvedPos): string => {
     return $pos.parent.type.name;
+};
+
+/**
+ * Retrieves the size of a ProseMirror node if it is defined, otherwise returns 0.
+ *
+ * @param node - The ProseMirror node which may be undefined.
+ * @returns The size of the node if it is defined, otherwise 0.
+ */
+export const getMaybeNodeSize = (node: Undefinable<PMNode>): number => {
+    return node?.nodeSize ?? 0;
 };
 
 /**

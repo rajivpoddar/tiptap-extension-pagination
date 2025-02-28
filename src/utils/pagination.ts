@@ -4,7 +4,7 @@
  * @description Utility functions for paginating the editor content.
  */
 
-import { Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
+import { NodeType, Node as PMNode, ResolvedPos, Schema } from "@tiptap/pm/model";
 import { PAGE_NODE_NAME } from "../constants/page";
 import { BODY_NODE_NAME } from "../constants/body";
 import { HEADER_FOOTER_NODE_NAME } from "../constants/pageRegions";
@@ -89,12 +89,12 @@ export const getPaginationNodeTypes = (schema: Schema): PaginationNodeTypes => {
     const { nodes } = schema;
 
     const pageNodeType = nodes[PAGE_NODE_NAME];
-    const headerFooterNodeType = nodes[HEADER_FOOTER_NODE_NAME];
+    const headerFooterNodeType: NodeType | undefined = nodes[HEADER_FOOTER_NODE_NAME];
     const bodyNodeType = nodes[BODY_NODE_NAME];
     const paragraphNodeType = nodes.paragraph;
 
-    if (!pageNodeType || !headerFooterNodeType || !bodyNodeType) {
-        throw new Error("Page, body, or header/footer node type not found in schema");
+    if (!pageNodeType || !bodyNodeType) {
+        throw new Error("Page or body node type not found in schema");
     }
 
     return { pageNodeType, headerFooterNodeType, bodyNodeType, paragraphNodeType };
