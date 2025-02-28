@@ -25,6 +25,8 @@ import { setPageNodePosPaperOrientation } from "./utils/nodes/page/attributes/pa
 import { isMarginValid, isValidPageMargins, setBodyNodePosPageMargins, updateBodyMargin } from "./utils/nodes/body/attributes/pageMargins";
 import { isBorderValid, isValidPageBorders, setPageNodePosPageBorders, updatePageBorder } from "./utils/nodes/page/attributes/pageBorders";
 import { setDocumentSideConfig, setDocumentSideValue, setPageSideConfig, setPageSideValue } from "./utils/setSideConfig";
+import { PageAmendmentOptions } from "./types/pageAmendment";
+import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 
 export interface PaginationOptions {
     /**
@@ -80,6 +82,13 @@ export interface PaginationOptions {
      * @example { top: 2, right: 2, bottom: 2, left: 2 }
      */
     defaultPageBorders: BorderConfig;
+
+    /**
+     * Options for page amendments (header and footer)
+     * @see {@link PageAmendmentOptions}
+     * @example { enableHeader: true, enableFooter: false }
+     */
+    pageAmendmentOptions: PageAmendmentOptions;
 }
 
 declare module "@tiptap/core" {
@@ -271,6 +280,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
             defaultMarginConfig: DEFAULT_PAGE_MARGIN_CONFIG,
             defaultPageBorders: DEFAULT_PAGE_BORDER_CONFIG,
+            pageAmendmentOptions: DEFAULT_PAGE_AMENDMENT_CONFIG,
         };
     },
 
