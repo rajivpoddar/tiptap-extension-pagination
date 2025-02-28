@@ -289,7 +289,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
     },
 
     addProseMirrorPlugins() {
-        return [KeymapPlugin, PaginationPlugin];
+        const { editor, options } = this;
+        return [KeymapPlugin, PaginationPlugin({ editor, options })];
     },
 
     addCommands() {

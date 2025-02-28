@@ -22,13 +22,15 @@ import { isPageNumInRange } from "./nodes/page/pageRange";
 import { HeaderFooter, HeaderFooterNodeAttributes } from "../types/pageRegions";
 import { getPageRegionNode } from "./pageRegion/getAttributes";
 import { getMaybeNodeSize } from "./nodes/node";
+import { PaginationOptions } from "../PaginationExtension";
 
 /**
  * Builds a new document with paginated content.
  * @param view - The editor view.
+ * @param options - The pagination options.
  * @returns {void}
  */
-export const buildPageView = (view: EditorView): void => {
+export const buildPageView = (view: EditorView, options: PaginationOptions): void => {
     const { state, dispatch } = view;
     const { doc } = state;
 
@@ -40,7 +42,7 @@ export const buildPageView = (view: EditorView): void => {
         const { tr, selection } = state;
         const oldCursorPos = selection.from;
 
-        const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
+        const { newDoc, oldToNewPosMap } = buildNewDocument(state, options, contentNodes, nodeHeights);
 
         // Compare the content of the documents
         if (!newDoc.content.eq(doc.content)) {
@@ -143,16 +145,19 @@ const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): numbe
 /**
  * Build the new document and keep track of new positions
  * @param state - The editor state.
+ * @param options - The pagination options.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 const buildNewDocument = (
     state: EditorState,
+    options: PaginationOptions,
     contentNodes: NodePosArray,
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
     const { schema, doc } = state;
+    const { pageAmendmentOptions } = options;
     const {
         pageNodeType: pageType,
         headerFooterNodeType: headerFooterType,
@@ -178,11 +183,19 @@ const buildNewDocument = (
             }
 
             const emptyParagraph = paragraphType.create();
-            return headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
+            const hfNode = headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
+
+            return hfNode;
         };
 
-    const constructHeader = constructHeaderFooter("header");
-    const constructFooter = constructHeaderFooter("footer");
+    const constructHeader = <HF extends HeaderFooter>(headerFooterAttrs: HeaderFooterNodeAttributes<HF>) => {
+        if (!pageAmendmentOptions.enableHeader) return;
+        return constructHeaderFooter("header")(headerFooterAttrs);
+    };
+    const constructFooter = <HF extends HeaderFooter>(headerFooterAttrs: HeaderFooterNodeAttributes<HF>) => {
+        if (!pageAmendmentOptions.enableFooter) return;
+        return constructHeaderFooter("footer")(headerFooterAttrs);
+    };
 
     const constructPageRegions = (currentPageContent: PMNode[]): PMNode[] => {
         const { body: bodyAttrs, footer: footerAttrs } = pageRegionNodeAttributes;
