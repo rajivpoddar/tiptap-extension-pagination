@@ -188,9 +188,7 @@ const buildNewDocument = (
             }
 
             const emptyParagraph = paragraphType.create();
-            const hfNode = headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
-
-            return hfNode;
+            return headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
         };
 
     const constructHeader = <HF extends HeaderFooter>(headerFooterAttrs: HeaderFooterNodeAttributes<HF>) => {
