@@ -27,7 +27,7 @@ npm install tiptap-extension-pagination
 
 ## Usage
 
-```ts
+```tsx
 /**
  * @file /src/Tiptap/Editor.tsx
  * @name Editor
@@ -38,7 +38,7 @@ import React from "react";
 import { Stack } from "@mui/material";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Pagination, { PageNode, HeaderFooterNode, BodyNode } from "tiptap-extension-pagination";
+import PaginationExtension, { PageNode, HeaderFooterNode, BodyNode } from "tiptap-extension-pagination";
 
 type DispatchOrFunction<T> = Dispatch<T> | ((value: T) => void);
 
@@ -49,7 +49,12 @@ type EditorProps = {
 };
 
 const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true }) => {
-    const extensions = [StarterKit, Pagination, PageNode, HeaderFooterNode, BodyNode];
+    const extensions = [
+        StarterKit,
+         PaginationExtension.configure({ ... }), // See configuration options below.
+          PageNode,
+           HeaderFooterNode,
+            BodyNode];
 
     const editor = useEditor({
         extensions,
@@ -88,6 +93,77 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
 };
 
 export default Editor;
+```
+
+# Configuration
+
+This extension comes with a number of configuration options to tailor the editor to your usage. If specified, these configuration options should be placed with the `.configuration()` method when specifying the `PaginationExtension` in your extension array. See below example.
+
+### `defaultPaperSize: PaperSize`
+
+-   **Type**: `PaperSize`
+-   **Description**: The default paper size for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Default**: `"A4"`
+-   **Example**: `"A3"`
+
+### `defaultPaperColour: string`
+
+-   **Type**: `string`
+-   **Description**: The default paper color for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Default**: `"#fff"`
+-   **Example**: `"#f0f0f0"`
+
+### `useDeviceThemeForPaperColour: boolean`
+
+-   **Type**: `boolean`
+-   **Description**: Whether to use the device theme to set the paper color. If enabled, the default paper color will be ignored.
+-   **Default**: `false`
+-   **Example**: `true | false`
+
+### `defaultPaperOrientation: PaperOrientation`
+
+-   **Type**: `PaperOrientation`
+-   **Description**: The default paper orientation for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Default**: `"portrait"`
+-   **Example**: `"portrait" | "landscape"`
+
+### `defaultMarginConfig: MarginConfig`
+
+-   **Type**: `MarginConfig`
+-   **Description**: The default margin configuration for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Default**: `{ top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 }`
+-   **Example**: `{ top: 10, right: 10, bottom: 10, left: 10 }`
+
+### `defaultPageBorders: BorderConfig`
+
+-   **Type**: `BorderConfig`
+-   **Description**: The default border configuration for the document. This controls the thickness of the borders on the page. This is only the default setting for new documents, and can be customized in the editor.
+-   **Default**: `{ top: 1, right: 1, bottom: 1, left: 1 }`
+-   **Example**: `{ top: 2, right: 2, bottom: 2, left: 2 }`
+
+### `pageAmendmentOptions: PageAmendmentOptions`
+
+-   **Type**: `PageAmendmentOptions`
+-   **Description**: Options for page amendments such as header and footer configurations.
+-   **Example**: `{ enableHeader: true, enableFooter: false }`
+
+## Example Configuration
+
+You can specify as little or as much of the configuration as you like. For example:
+
+```ts
+import PaginationExtension from "tiptap-extension-pagination";
+
+// ...
+// In your extension array
+
+PaginationExtension.configure({
+    defaultPaperSize: "A3",
+    pageAmendmentOptions: {
+        enableHeader: false,
+        enableFooter: false,
+    },
+}),
 ```
 
 # References
