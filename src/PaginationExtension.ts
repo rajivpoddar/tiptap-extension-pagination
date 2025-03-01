@@ -11,8 +11,10 @@ import { DEFAULT_PAGE_MARGIN_CONFIG } from "./constants/pageMargins";
 import { DEFAULT_PAPER_ORIENTATION } from "./constants/paperOrientation";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
+import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 import { BODY_NODE_ATTR_KEYS } from "./constants/body";
 import { PaperOrientation, PaperSize } from "./types/paper";
+import { PageAmendmentOptions } from "./types/pageAmendment";
 import { BorderConfig, MultiSide, MarginConfig } from "./types/page";
 import KeymapPlugin from "./Plugins/Keymap";
 import PaginationPlugin from "./Plugins/Pagination";
@@ -25,8 +27,6 @@ import { setPageNodePosPaperOrientation } from "./utils/nodes/page/attributes/pa
 import { isMarginValid, isValidPageMargins, setBodyNodePosPageMargins, updateBodyMargin } from "./utils/nodes/body/attributes/pageMargins";
 import { isBorderValid, isValidPageBorders, setPageNodePosPageBorders, updatePageBorder } from "./utils/nodes/page/attributes/pageBorders";
 import { setDocumentSideConfig, setDocumentSideValue, setPageSideConfig, setPageSideValue } from "./utils/setSideConfig";
-import { PageAmendmentOptions } from "./types/pageAmendment";
-import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 
 export interface PaginationOptions {
     /**
