@@ -109,14 +109,14 @@ This extension comes with a number of configuration options to tailor the editor
 ### `defaultPaperColour: string`
 
 -   **Type**: `string`
--   **Description**: The default paper color for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Description**: The default paper color for the document. This is only the default setting for new documents, and can be customized in the editor. Should be specified as hex code.
 -   **Default**: `"#fff"`
 -   **Example**: `"#f0f0f0"`
 
 ### `useDeviceThemeForPaperColour: boolean`
 
 -   **Type**: `boolean`
--   **Description**: Whether to use the device theme to set the paper color. If enabled, the default paper color will be ignored.
+-   **Description**: Whether to use the device theme to set the paper color. If enabled, the default paper color option will be ignored.
 -   **Default**: `false`
 -   **Example**: `true | false`
 
@@ -130,14 +130,14 @@ This extension comes with a number of configuration options to tailor the editor
 ### `defaultMarginConfig: MarginConfig`
 
 -   **Type**: `MarginConfig`
--   **Description**: The default margin configuration for the document. This is only the default setting for new documents, and can be customized in the editor.
+-   **Description**: The default margin configuration for the document. This is only the default setting for new documents, and can be customized in the editor. Margins are specified in millimetres (mm)
 -   **Default**: `{ top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 }`
 -   **Example**: `{ top: 10, right: 10, bottom: 10, left: 10 }`
 
 ### `defaultPageBorders: BorderConfig`
 
 -   **Type**: `BorderConfig`
--   **Description**: The default border configuration for the document. This controls the thickness of the borders on the page. This is only the default setting for new documents, and can be customized in the editor.
+-   **Description**: The default border configuration for the document. This controls the thickness of the borders on the page (in pixels). This is only the default setting for new documents, and can be customized in the editor.
 -   **Default**: `{ top: 1, right: 1, bottom: 1, left: 1 }`
 -   **Example**: `{ top: 2, right: 2, bottom: 2, left: 2 }`
 
