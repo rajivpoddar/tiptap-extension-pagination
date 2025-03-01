@@ -7,10 +7,11 @@
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import { PaginationOptions } from "../PaginationExtension";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/pagination";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
-import { Nullable } from "../types/record";
+import { Nullable, Undefinable } from "../types/record";
 import { MarginConfig } from "../types/page";
 import { moveToNearestValidCursorPosition, moveToThisTextBlock, setSelection, setSelectionAtEndOfDocument } from "./selection";
 import { inRange } from "./math";
@@ -21,25 +22,30 @@ import { getPaginationNodeTypes } from "./pagination";
 import { isPageNumInRange } from "./nodes/page/pageRange";
 import { HeaderFooter, HeaderFooterNodeAttributes } from "../types/pageRegions";
 import { getPageRegionNode } from "./pageRegion/getAttributes";
+import { getMaybeNodeSize } from "./nodes/node";
+import { isPageNode } from "./nodes/page/page";
+import { isHeaderFooterNode } from "./nodes/headerFooter/headerFooter";
+import { isBodyNode } from "./nodes/body/body";
 
 /**
  * Builds a new document with paginated content.
  * @param view - The editor view.
+ * @param options - The pagination options.
  * @returns {void}
  */
-export const buildPageView = (view: EditorView): void => {
+export const buildPageView = (view: EditorView, options: PaginationOptions): void => {
     const { state, dispatch } = view;
     const { doc } = state;
 
     try {
-        const contentNodes = collectContentNodes(state);
+        const contentNodes = collectContentNodes(doc);
         const nodeHeights = measureNodeHeights(view, contentNodes);
 
         // Record the cursor's old position
         const { tr, selection } = state;
         const oldCursorPos = selection.from;
 
-        const { newDoc, oldToNewPosMap } = buildNewDocument(state, contentNodes, nodeHeights);
+        const { newDoc, oldToNewPosMap } = buildNewDocument(state, options, contentNodes, nodeHeights);
 
         // Compare the content of the documents
         if (!newDoc.content.eq(doc.content)) {
@@ -59,32 +65,34 @@ export const buildPageView = (view: EditorView): void => {
 
 /**
  * Collect content nodes and their existing positions
- * @param state - The editor state.
+ * @param doc - The document node.
  * @returns {NodePosArray} The content nodes and their positions.
  */
-const collectContentNodes = (state: EditorState): NodePosArray => {
-    const { schema } = state;
-    const { pageNodeType, headerFooterNodeType, bodyNodeType } = getPaginationNodeTypes(schema);
-
+const collectContentNodes = (doc: PMNode): NodePosArray => {
     const contentNodes: NodePosArray = [];
-    state.doc.forEach((pageNode, offset) => {
-        if (pageNode.type === pageNodeType) {
-            let pageContentOffset = 1;
+    doc.forEach((pageNode, pageOffset) => {
+        if (isPageNode(pageNode)) {
             pageNode.forEach((pageRegionNode, pageRegionOffset) => {
-                if (pageRegionNode.type === headerFooterNodeType) {
+                // Offsets in forEach loop start from 0, however, the child nodes of any given node
+                // have a starting offset of 1 (for the first child)
+                const truePageRegionOffset = pageRegionOffset + 1;
+
+                if (isHeaderFooterNode(pageRegionNode)) {
                     // Don't collect header/footer nodes
-                    // But we do need to account for their size/offset
-                    pageContentOffset += 1;
-                } else if (pageRegionNode.type === bodyNodeType) {
+                } else if (isBodyNode(pageRegionNode)) {
                     pageRegionNode.forEach((child, childOffset) => {
-                        contentNodes.push({ node: child, pos: offset + pageRegionOffset + childOffset + pageContentOffset });
+                        // First child of body node (e.g. paragraph) has an offset of 1 more
+                        // than the body node itself.
+                        const trueChildOffset = childOffset + 1;
+
+                        contentNodes.push({ node: child, pos: pageOffset + truePageRegionOffset + trueChildOffset });
                     });
                 } else {
-                    contentNodes.push({ node: pageRegionNode, pos: offset + pageRegionOffset + pageContentOffset });
+                    contentNodes.push({ node: pageRegionNode, pos: pageOffset + truePageRegionOffset });
                 }
             });
         } else {
-            contentNodes.push({ node: pageNode, pos: offset + 1 });
+            contentNodes.push({ node: pageNode, pos: pageOffset + 1 });
         }
     });
 
@@ -142,16 +150,19 @@ const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): numbe
 /**
  * Build the new document and keep track of new positions
  * @param state - The editor state.
+ * @param options - The pagination options.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 const buildNewDocument = (
     state: EditorState,
+    options: PaginationOptions,
     contentNodes: NodePosArray,
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
     const { schema, doc } = state;
+    const { pageAmendmentOptions } = options;
     const {
         pageNodeType: pageType,
         headerFooterNodeType: headerFooterType,
@@ -166,7 +177,9 @@ const buildNewDocument = (
 
     const constructHeaderFooter =
         <HF extends HeaderFooter>(pageRegionType: HeaderFooter) =>
-        (headerFooterAttrs: HeaderFooterNodeAttributes<HF>): PMNode => {
+        (headerFooterAttrs: HeaderFooterNodeAttributes<HF>): PMNode | undefined => {
+            if (!headerFooterType) return;
+
             if (existingPageNode) {
                 const hfNode = getPageRegionNode(existingPageNode, pageRegionType);
                 if (hfNode) {
@@ -178,15 +191,22 @@ const buildNewDocument = (
             return headerFooterType.create(headerFooterAttrs, [emptyParagraph]);
         };
 
-    const constructHeader = constructHeaderFooter("header");
-    const constructFooter = constructHeaderFooter("footer");
+    const constructHeader = <HF extends HeaderFooter>(headerFooterAttrs: HeaderFooterNodeAttributes<HF>) => {
+        if (!pageAmendmentOptions.enableHeader) return;
+        return constructHeaderFooter("header")(headerFooterAttrs);
+    };
+    const constructFooter = <HF extends HeaderFooter>(headerFooterAttrs: HeaderFooterNodeAttributes<HF>) => {
+        if (!pageAmendmentOptions.enableFooter) return;
+        return constructHeaderFooter("footer")(headerFooterAttrs);
+    };
 
     const constructPageRegions = (currentPageContent: PMNode[]): PMNode[] => {
         const { body: bodyAttrs, footer: footerAttrs } = pageRegionNodeAttributes;
         const pageBody = bodyType.create(bodyAttrs, currentPageContent);
         const pageFooter = constructFooter(footerAttrs);
 
-        return [currentPageHeader, pageBody, pageFooter];
+        const pageRegions: Undefinable<PMNode>[] = [currentPageHeader, pageBody, pageFooter];
+        return pageRegions.filter((region) => !!region);
     };
 
     const addPage = (currentPageContent: PMNode[]): PMNode => {
@@ -197,14 +217,14 @@ const buildNewDocument = (
     };
 
     // Header is constructed prior to the body because we need to know its node size for the cursor mapping
-    let currentPageHeader: PMNode = constructHeader(pageRegionNodeAttributes.header);
+    let currentPageHeader: PMNode | undefined = constructHeader(pageRegionNodeAttributes.header);
     let currentPageContent: PMNode[] = [];
     let currentHeight = 0;
 
     const oldToNewPosMap: CursorMap = new Map<number, number>();
     const pageOffset = 1,
         bodyOffset = 1;
-    let cumulativeNewDocPos = pageOffset + currentPageHeader.nodeSize + bodyOffset;
+    let cumulativeNewDocPos = pageOffset + getMaybeNodeSize(currentPageHeader) + bodyOffset;
 
     for (let i = 0; i < contentNodes.length; i++) {
         const { node, pos: oldPos } = contentNodes[i];
@@ -213,7 +233,7 @@ const buildNewDocument = (
         const isPageFull = currentHeight + nodeHeight > bodyPixelDimensions.bodyHeight;
         if (isPageFull && currentPageContent.length > 0) {
             const pageNode = addPage(currentPageContent);
-            cumulativeNewDocPos += pageNode.nodeSize - currentPageHeader.nodeSize;
+            cumulativeNewDocPos += pageNode.nodeSize - getMaybeNodeSize(currentPageHeader);
             currentPageContent = [];
             currentHeight = 0;
             existingPageNode = doc.maybeChild(++pageNum);
@@ -223,7 +243,7 @@ const buildNewDocument = (
 
             // Next page header
             currentPageHeader = constructHeader(pageRegionNodeAttributes.header);
-            cumulativeNewDocPos += currentPageHeader.nodeSize;
+            cumulativeNewDocPos += getMaybeNodeSize(currentPageHeader);
         }
 
         // Record the mapping from old position to new position

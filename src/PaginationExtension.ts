@@ -11,8 +11,10 @@ import { DEFAULT_PAGE_MARGIN_CONFIG } from "./constants/pageMargins";
 import { DEFAULT_PAPER_ORIENTATION } from "./constants/paperOrientation";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
+import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 import { BODY_NODE_ATTR_KEYS } from "./constants/body";
 import { PaperOrientation, PaperSize } from "./types/paper";
+import { PageAmendmentOptions } from "./types/pageAmendment";
 import { BorderConfig, MultiSide, MarginConfig } from "./types/page";
 import KeymapPlugin from "./Plugins/Keymap";
 import PaginationPlugin from "./Plugins/Pagination";
@@ -80,6 +82,13 @@ export interface PaginationOptions {
      * @example { top: 2, right: 2, bottom: 2, left: 2 }
      */
     defaultPageBorders: BorderConfig;
+
+    /**
+     * Options for page amendments (header and footer)
+     * @see {@link PageAmendmentOptions}
+     * @example { enableHeader: true, enableFooter: false }
+     */
+    pageAmendmentOptions: PageAmendmentOptions;
 }
 
 declare module "@tiptap/core" {
@@ -271,6 +280,7 @@ const PaginationExtension = Extension.create<PaginationOptions>({
             defaultPaperOrientation: DEFAULT_PAPER_ORIENTATION,
             defaultMarginConfig: DEFAULT_PAGE_MARGIN_CONFIG,
             defaultPageBorders: DEFAULT_PAGE_BORDER_CONFIG,
+            pageAmendmentOptions: DEFAULT_PAGE_AMENDMENT_CONFIG,
         };
     },
 
@@ -279,7 +289,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
     },
 
     addProseMirrorPlugins() {
-        return [KeymapPlugin, PaginationPlugin];
+        const { editor, options } = this;
+        return [KeymapPlugin, PaginationPlugin({ editor, options })];
     },
 
     addCommands() {

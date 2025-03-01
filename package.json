@@ -1,6 +1,6 @@
 {
     "name": "tiptap-extension-pagination",
-    "version": "2.0.3",
+    "version": "2.1.0-1",
     "description": "Add pagination to your Tiptap editor",
     "author": {
         "name": "Hugo Burton",
@@ -34,8 +34,6 @@
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-commonjs": "^28.0.2",
         "@rollup/plugin-typescript": "^12.1.2",
-        "@tiptap/core": "2.11.0",
-        "@tiptap/pm": "2.11.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.34.0",
         "rollup-plugin-auto-external": "^2.0.0",
@@ -44,7 +42,7 @@
         "typescript": "^5.7.3"
     },
     "peerDependencies": {
-        "@tiptap/core": "^2.11.0",
-        "@tiptap/pm": "^2.11.0"
+        "@tiptap/core": "^2.11.5",
+        "@tiptap/pm": "^2.11.5"
     }
 }
