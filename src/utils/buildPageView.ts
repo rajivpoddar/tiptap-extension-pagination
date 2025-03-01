@@ -7,6 +7,7 @@
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState, Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import { PaginationOptions } from "../PaginationExtension";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/pagination";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
@@ -22,7 +23,9 @@ import { isPageNumInRange } from "./nodes/page/pageRange";
 import { HeaderFooter, HeaderFooterNodeAttributes } from "../types/pageRegions";
 import { getPageRegionNode } from "./pageRegion/getAttributes";
 import { getMaybeNodeSize } from "./nodes/node";
-import { PaginationOptions } from "../PaginationExtension";
+import { isPageNode } from "./nodes/page/page";
+import { isHeaderFooterNode } from "./nodes/headerFooter/headerFooter";
+import { isBodyNode } from "./nodes/body/body";
 
 /**
  * Builds a new document with paginated content.
@@ -35,7 +38,7 @@ export const buildPageView = (view: EditorView, options: PaginationOptions): voi
     const { doc } = state;
 
     try {
-        const contentNodes = collectContentNodes(state);
+        const contentNodes = collectContentNodes(doc);
         const nodeHeights = measureNodeHeights(view, contentNodes);
 
         // Record the cursor's old position
@@ -62,32 +65,34 @@ export const buildPageView = (view: EditorView, options: PaginationOptions): voi
 
 /**
  * Collect content nodes and their existing positions
- * @param state - The editor state.
+ * @param doc - The document node.
  * @returns {NodePosArray} The content nodes and their positions.
  */
-const collectContentNodes = (state: EditorState): NodePosArray => {
-    const { schema } = state;
-    const { pageNodeType, headerFooterNodeType, bodyNodeType } = getPaginationNodeTypes(schema);
-
+const collectContentNodes = (doc: PMNode): NodePosArray => {
     const contentNodes: NodePosArray = [];
-    state.doc.forEach((pageNode, offset) => {
-        if (pageNode.type === pageNodeType) {
-            let pageContentOffset = 1;
+    doc.forEach((pageNode, pageOffset) => {
+        if (isPageNode(pageNode)) {
             pageNode.forEach((pageRegionNode, pageRegionOffset) => {
-                if (pageRegionNode.type === headerFooterNodeType) {
+                // Offsets in forEach loop start from 0, however, the child nodes of any given node
+                // have a starting offset of 1 (for the first child)
+                const truePageRegionOffset = pageRegionOffset + 1;
+
+                if (isHeaderFooterNode(pageRegionNode)) {
                     // Don't collect header/footer nodes
-                    // But we do need to account for their size/offset
-                    pageContentOffset += 1;
-                } else if (pageRegionNode.type === bodyNodeType) {
+                } else if (isBodyNode(pageRegionNode)) {
                     pageRegionNode.forEach((child, childOffset) => {
-                        contentNodes.push({ node: child, pos: offset + pageRegionOffset + childOffset + pageContentOffset });
+                        // First child of body node (e.g. paragraph) has an offset of 1 more
+                        // than the body node itself.
+                        const trueChildOffset = childOffset + 1;
+
+                        contentNodes.push({ node: child, pos: pageOffset + truePageRegionOffset + trueChildOffset });
                     });
                 } else {
-                    contentNodes.push({ node: pageRegionNode, pos: offset + pageRegionOffset + pageContentOffset });
+                    contentNodes.push({ node: pageRegionNode, pos: pageOffset + truePageRegionOffset });
                 }
             });
         } else {
-            contentNodes.push({ node: pageNode, pos: offset + 1 });
+            contentNodes.push({ node: pageNode, pos: pageOffset + 1 });
         }
     });
 
