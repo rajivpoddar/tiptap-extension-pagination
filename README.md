@@ -154,8 +154,7 @@ You can specify as little or as much of the configuration as you like. For examp
 ```ts
 import PaginationExtension from "tiptap-extension-pagination";
 
-// ...
-// In your extension array
+// Then in your extension array (within your component)
 
 PaginationExtension.configure({
     defaultPaperSize: "A3",
