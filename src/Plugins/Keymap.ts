@@ -376,7 +376,6 @@ const KeymapPlugin = keymap({
         const thisPos = $pos.pos;
 
         if (isPosAtEndOfBody(doc, $pos)) {
-            // Traverse $pos.path to find the nearest page node
             const { pos: paragraphPos, node: paragraphNode } = getParagraphNodeAndPosition(doc, $pos);
             if (!paragraphNode) {
                 console.warn("No current paragraph node found");
@@ -400,7 +399,6 @@ const KeymapPlugin = keymap({
         } else if (!isPosAtStartOfBody(doc, $pos)) {
             return false;
         } else {
-            // Traverse $pos.path to find the nearest page node
             const { node: thisPageNode, pos: thisPagePos } = getPageNodeAndPosition(doc, $pos);
             if (!thisPageNode) {
                 console.warn("No current page node found");
