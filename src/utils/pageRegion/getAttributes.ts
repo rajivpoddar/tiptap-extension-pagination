@@ -5,20 +5,19 @@
  */
 
 import { Node as PMNode } from "@tiptap/pm/model";
-import { Editor } from "@tiptap/core";
-import { EditorState } from "@tiptap/pm/state";
 import { PageRegion } from "../../types/pageRegions";
 import { Nullable } from "../../types/record";
 import { NullableNodePos } from "../../types/node";
-import { getStateFromContext } from "../editor";
 import { doesDocHavePageNodes } from "../nodes/page/page";
 import { getHeaderFooterNodeType, isHeaderFooterNode } from "../nodes/headerFooter/headerFooter";
 import { isBodyNode } from "../nodes/body/body";
 import { getPageNodeByPageNum } from "../nodes/page/pageNumber";
 import { isPageNumInRange, handleOutOfRangePageNum } from "../nodes/page/pageRange";
+import { EditorState } from "@tiptap/pm/state";
 
 /**
  * Get the page region node of the current page by the page region type.
+ *
  * @param pageNode - The page node to search for the neighbouring page region.
  * @param regionType - The type of the page region to search for.
  * @returns {Nullable<PMNode>} The neighbouring page region node or null if not found.
@@ -43,6 +42,7 @@ export const getPageRegionNode = (pageNode: PMNode, regionType: PageRegion): Nul
 
 /**
  * Get the page region node and position of the current page by the page region type.
+ *
  * @param pagePos - The position of the page node to search for the neighbouring page region.
  * @param pageNode - The page node to search for the neighbouring page region.
  * @param regionType - The type of the page region to search for.
@@ -78,7 +78,8 @@ export const getPageRegionNodeAndPos = (pagePos: number, pageNode: PMNode, regio
 /**
  * Retrieves a specific attribute of a the body node of specified type of a given page number.
  * Falls back to the default value if the page number is invalid or the attribute is missing.
- * @param context - The current editor instance or editor state.
+ *
+ * @param state - The editor state.
  * @param pageNum - The page number to retrieve the attribute for.
  * @param regionType - The type of the region to retrieve the attribute for.
  * @param getDefault - A function to retrieve the default value of the attribute.
@@ -86,14 +87,12 @@ export const getPageRegionNodeAndPos = (pagePos: number, pageNode: PMNode, regio
  * @returns {T} The attribute of the specified body node or default.
  */
 export const getPageRegionAttributeByPageNum = <T>(
-    context: Editor | EditorState,
+    state: EditorState,
     pageNum: number,
     regionType: PageRegion,
     getDefault: () => T,
     getNodeAttribute: (node: PMNode) => Nullable<T>
 ): T => {
-    const state = getStateFromContext(context);
-
     if (!doesDocHavePageNodes(state)) {
         return getDefault();
     }

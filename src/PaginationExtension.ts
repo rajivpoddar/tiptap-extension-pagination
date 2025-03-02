@@ -33,6 +33,7 @@ export interface PaginationOptions {
      * The default paper size for the document. Note this is only the default
      * so you can have settings in your editor which change the paper size.
      * This is only the setting for new documents.
+     *
      * @default "A4"
      * @example "A3"
      */
@@ -42,6 +43,7 @@ export interface PaginationOptions {
      * The default paper colour for the document. Note this is only the default
      * so you can have settings in your editor which change the paper colour.
      * This is only the setting for new documents.
+     *
      * @default "#fff"
      * @example "#f0f0f0"
      */
@@ -50,6 +52,7 @@ export interface PaginationOptions {
     /**
      * Whether to use the device theme to set the paper colour.
      * If enabled, the default paper colour will be ignored.
+     *
      * @default false
      * @example true | false
      */
@@ -59,6 +62,7 @@ export interface PaginationOptions {
      * The default paper orientation for the document. Note this is only the default
      * so you can have settings in your editor which change the paper orientation.
      * This is only the setting for new documents.
+     *
      * @default "portrait"
      * @example "portrait" | "landscape"
      */
@@ -68,6 +72,7 @@ export interface PaginationOptions {
      * The default margin configuration for the document. Note this is only the default
      * so you can have settings in your editor which change the margin configuration.
      * This is only the setting for new documents.
+     *
      * @default { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 }
      * @example { top: 10, right: 10, bottom: 10, left: 10 }
      */
@@ -78,13 +83,15 @@ export interface PaginationOptions {
      * of the borders on the page. Note this is only the default so you can have
      * settings in your editor which change the border configuration. This is only
      * the setting for new documents.
+     *
      * @default { top: 1, right: 1, bottom: 1, left: 1 }
      * @example { top: 2, right: 2, bottom: 2, left: 2 }
      */
     defaultPageBorders: BorderConfig;
 
     /**
-     * Options for page amendments (header and footer)
+     * Options for page amendments (header and footer).
+     *
      * @see {@link PageAmendmentOptions}
      * @example { enableHeader: true, enableFooter: false }
      */

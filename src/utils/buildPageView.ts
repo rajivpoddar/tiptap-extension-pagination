@@ -5,7 +5,7 @@
  */
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
-import { EditorState, Transaction } from "@tiptap/pm/state";
+import { Transaction } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { PaginationOptions } from "../PaginationExtension";
 import { MIN_PARAGRAPH_HEIGHT } from "../constants/pagination";
@@ -26,14 +26,16 @@ import { getMaybeNodeSize } from "./nodes/node";
 import { isPageNode } from "./nodes/page/page";
 import { isHeaderFooterNode } from "./nodes/headerFooter/headerFooter";
 import { isBodyNode } from "./nodes/body/body";
+import { Editor } from "@tiptap/core";
 
 /**
  * Builds a new document with paginated content.
+ *
  * @param view - The editor view.
  * @param options - The pagination options.
  * @returns {void}
  */
-export const buildPageView = (view: EditorView, options: PaginationOptions): void => {
+export const buildPageView = (editor: Editor, view: EditorView, options: PaginationOptions): void => {
     const { state, dispatch } = view;
     const { doc } = state;
 
@@ -45,7 +47,7 @@ export const buildPageView = (view: EditorView, options: PaginationOptions): voi
         const { tr, selection } = state;
         const oldCursorPos = selection.from;
 
-        const { newDoc, oldToNewPosMap } = buildNewDocument(state, options, contentNodes, nodeHeights);
+        const { newDoc, oldToNewPosMap } = buildNewDocument(editor, options, contentNodes, nodeHeights);
 
         // Compare the content of the documents
         if (!newDoc.content.eq(doc.content)) {
@@ -64,7 +66,8 @@ export const buildPageView = (view: EditorView, options: PaginationOptions): voi
 };
 
 /**
- * Collect content nodes and their existing positions
+ * Collect content nodes and their existing positions.
+ *
  * @param doc - The document node.
  * @returns {NodePosArray} The content nodes and their positions.
  */
@@ -101,6 +104,7 @@ const collectContentNodes = (doc: PMNode): NodePosArray => {
 
 /**
  * Calculates the margins of the element.
+ *
  * @param element - The element to calculate margins for.
  * @returns {MarginConfig} The margins of the element.
  */
@@ -116,6 +120,7 @@ const calculateElementMargins = (element: HTMLElement): MarginConfig => {
 
 /**
  * Measure the heights of the content nodes.
+ *
  * @param view - The editor view.
  * @param contentNodes - The content nodes and their positions.
  * @returns {number[]} The heights of the content nodes.
@@ -148,20 +153,21 @@ const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): numbe
 };
 
 /**
- * Build the new document and keep track of new positions
- * @param state - The editor state.
+ * Build the new document and keep track of new positions.
+ *
+ * @param editor - The editor instance.
  * @param options - The pagination options.
  * @param contentNodes - The content nodes and their positions.
  * @param nodeHeights - The heights of the content nodes.
  * @returns {newDoc: PMNode, oldToNewPosMap: CursorMap} The new document and the mapping from old positions to new positions.
  */
 const buildNewDocument = (
-    state: EditorState,
+    editor: Editor,
     options: PaginationOptions,
     contentNodes: NodePosArray,
     nodeHeights: number[]
 ): { newDoc: PMNode; oldToNewPosMap: CursorMap } => {
-    const { schema, doc } = state;
+    const { schema, doc } = editor.state;
     const { pageAmendmentOptions } = options;
     const {
         pageNodeType: pageType,
@@ -173,7 +179,7 @@ const buildNewDocument = (
     let pageNum = 0;
     const pages: PMNode[] = [];
     let existingPageNode: Nullable<PMNode> = doc.maybeChild(pageNum);
-    let { pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum);
+    let { pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(editor, pageNum);
 
     const constructHeaderFooter =
         <HF extends HeaderFooter>(pageRegionType: HeaderFooter) =>
@@ -238,7 +244,7 @@ const buildNewDocument = (
             currentHeight = 0;
             existingPageNode = doc.maybeChild(++pageNum);
             if (isPageNumInRange(doc, pageNum)) {
-                ({ pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(state, pageNum));
+                ({ pageNodeAttributes, pageRegionNodeAttributes, bodyPixelDimensions } = getPaginationNodeAttributes(editor, pageNum));
             }
 
             // Next page header
@@ -271,7 +277,8 @@ const buildNewDocument = (
 
 /**
  * Limit mapped cursor positions to document size to prevent out of bounds errors
- * when setting the cursor position
+ * when setting the cursor position.
+ *
  * @param oldToNewPosMap - The mapping from old positions to new positions.
  * @param docSize - The size of the new document.
  * @returns {void}
@@ -286,6 +293,7 @@ const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number):
 
 /**
  * Map the cursor position from the old document to the new document.
+ *
  * @param contentNodes - The content nodes and their positions.
  * @param oldCursorPos - The old cursor position.
  * @param oldToNewPosMap - The mapping from old positions to new positions.
@@ -317,6 +325,7 @@ const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, old
 
 /**
  * Check if the given position is at the start of a text block.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @returns {boolean} True if the position is at the start of a text block, false otherwise.
@@ -327,6 +336,7 @@ const isNodeBeforeAvailable = ($pos: ResolvedPos): boolean => {
 
 /**
  * Check if the given position is at the end of a text block.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @returns {boolean} True if the position is at the end of a text block, false otherwise.

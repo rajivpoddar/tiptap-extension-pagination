@@ -17,7 +17,7 @@ type PaginationPluginProps = {
     options: PaginationOptions;
 };
 
-const PaginationPlugin = ({ options }: PaginationPluginProps) => {
+const PaginationPlugin = ({ editor, options }: PaginationPluginProps) => {
     return new Plugin({
         key: new PluginKey("pagination"),
         view() {
@@ -41,7 +41,7 @@ const PaginationPlugin = ({ options }: PaginationPluginProps) => {
 
                     isPaginating = true;
 
-                    buildPageView(view, options);
+                    buildPageView(editor, view, options);
 
                     // Reset paginating flag regardless of success or failure because we do not want to get
                     // stuck out of this loop.
