@@ -13,7 +13,7 @@ import { HEADER_FOOTER_DEFAULT_ATTRIBUTES } from "../../constants/pageRegions";
 import { getBodyNodeMargins } from "../nodes/body/body";
 
 /**
- * Calculates the dimensions in millimetres of a header or footer node based on its paper size
+ * Calculates the dimensions in millimetres of a header or footer node based on its paper size.
  *
  * @param pageNode - The page node containing the header or footer node.
  * @param headerFooterNode - The header or footer node to calculate the dimensions for.
