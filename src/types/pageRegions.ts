@@ -24,7 +24,7 @@ export type HeaderFooterNodeAttributes<T extends HeaderFooter | unknown> = {
      * the distance from the top of the page to the top of the header. For the footer,
      * that is the distance from the bottom of the page to the bottom of the footer.
      * Doing things this way allows for this value to be agnostic of the paper size
-     * and orientation.
+     * and orientation. This value should be non-negative.
      */
     pageEndOffset: number;
 
