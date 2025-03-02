@@ -35,8 +35,8 @@ export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<PaperOri
  * @returns {PaperOrientation} The paper orientation of the specified page or default.
  */
 export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): PaperOrientation => {
-    const getDefault = editor.commands.getDefaultPaperOrientation;
-    return getPageAttributeByPageNum(editor.state, pageNum, getDefault, getPageNodePaperOrientation);
+    const { state, options } = editor;
+    return getPageAttributeByPageNum(state, pageNum, options.defaultPaperOrientation, getPageNodePaperOrientation);
 };
 
 /**

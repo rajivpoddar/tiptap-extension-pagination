@@ -5,7 +5,7 @@
  */
 
 import { Transaction } from "@tiptap/pm/state";
-import { Dispatch, Editor } from "@tiptap/core";
+import { Dispatch, Editor, EditorOptions } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../../../../constants/paperColours";
 import { PAGE_NODE_ATTR_KEYS } from "../../../../constants/page";
@@ -25,6 +25,22 @@ import { setPageNodeAttribute } from "./setPageAttributes";
  */
 export const getDeviceThemePaperColour = (): string => {
     return getDeviceTheme() === DARK_THEME ? DARK_PAPER_COLOUR : LIGHT_PAPER_COLOUR;
+};
+
+/**
+ * Retrieves the default paper colour based on the provided editor options.
+ * If the `useDeviceThemeForPaperColour` option is enabled, it returns the device theme paper colour.
+ * Otherwise, it returns the `defaultPaperColour` specified in the options.
+ *
+ * @param options - The editor options containing configuration for paper colour.
+ * @returns The default paper colour as a string.
+ */
+export const getDefaultPaperColour = (options: EditorOptions) => {
+    if (options.useDeviceThemeForPaperColour) {
+        return getDeviceThemePaperColour();
+    } else {
+        return options.defaultPaperColour;
+    }
 };
 
 /**
@@ -58,8 +74,9 @@ export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
  * @returns {string} The paper color of the specified page or default.
  */
 export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
-    const getDefault = editor.commands.getDefaultPaperColour;
-    return getPageAttributeByPageNum(editor.state, pageNum, getDefault, getPageNodePaperColour);
+    const { state, options } = editor;
+    const defaultPaperColour = getDefaultPaperColour(options);
+    return getPageAttributeByPageNum(state, pageNum, defaultPaperColour, getPageNodePaperColour);
 };
 
 /**

@@ -82,7 +82,7 @@ export const getPageRegionNodeAndPos = (pagePos: number, pageNode: PMNode, regio
  * @param state - The editor state.
  * @param pageNum - The page number to retrieve the attribute for.
  * @param regionType - The type of the region to retrieve the attribute for.
- * @param getDefault - A function to retrieve the default value of the attribute.
+ * @param defaultValue - The default value to return if the attribute is missing.
  * @param getNodeAttribute - A function to retrieve the attribute from a body node.
  * @returns {T} The attribute of the specified body node or default.
  */
@@ -90,30 +90,30 @@ export const getPageRegionAttributeByPageNum = <T>(
     state: EditorState,
     pageNum: number,
     regionType: PageRegion,
-    getDefault: () => T,
+    defaultValue: T,
     getNodeAttribute: (node: PMNode) => Nullable<T>
 ): T => {
     if (!doesDocHavePageNodes(state)) {
-        return getDefault();
+        return defaultValue;
     }
 
     const { doc } = state;
 
     if (!isPageNumInRange(doc, pageNum)) {
         return handleOutOfRangePageNum(state, pageNum, (s, p) =>
-            getPageRegionAttributeByPageNum(s, p, regionType, getDefault, getNodeAttribute)
+            getPageRegionAttributeByPageNum(s, p, regionType, defaultValue, getNodeAttribute)
         );
     }
 
     const pageNode = getPageNodeByPageNum(doc, pageNum);
     if (!pageNode) {
-        return getDefault();
+        return defaultValue;
     }
 
     const pageRegionNode = getPageRegionNode(pageNode, regionType);
     if (!pageRegionNode) {
-        return getDefault();
+        return defaultValue;
     }
 
-    return getNodeAttribute(pageRegionNode) ?? getDefault();
+    return getNodeAttribute(pageRegionNode) ?? defaultValue;
 };

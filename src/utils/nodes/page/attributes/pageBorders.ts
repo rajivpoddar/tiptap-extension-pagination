@@ -71,8 +71,8 @@ export const calculateShorthandPageBorders = (pageBorders: BorderConfig): string
  * @returns {BorderConfig} The page border config of the specified page or default.
  */
 export const getPageNumPageBorders = (editor: Editor, pageNum: number): BorderConfig => {
-    const getDefault = editor.commands.getDefaultPageBorders;
-    return getPageAttributeByPageNum(editor.state, pageNum, getDefault, getPageNodePageBorders);
+    const { state, options } = editor;
+    return getPageAttributeByPageNum(state, pageNum, options.defaultPageBorders, getPageNodePageBorders);
 };
 
 /**

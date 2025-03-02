@@ -80,30 +80,30 @@ export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndex
  *
  * @param state - The editor state.
  * @param pageNum - The page number to retrieve the attribute for.
- * @param getDefault - A function to get the default value for the attribute.
+ * @param defaultValue - The default value to return if the attribute is missing.
  * @param getNodeAttribute - A function to extract the attribute from the page node.
  * @returns {T} The attribute of the specified page or default.
  */
 export const getPageAttributeByPageNum = <T>(
     state: EditorState,
     pageNum: number,
-    getDefault: () => T,
+    defaultValue: T,
     getNodeAttribute: (node: PMNode) => Nullable<T>
 ): T => {
     if (!doesDocHavePageNodes(state)) {
-        return getDefault();
+        return defaultValue;
     }
 
     const { doc } = state;
 
     if (!isPageNumInRange(doc, pageNum)) {
-        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttributeByPageNum(s, p, getDefault, getNodeAttribute));
+        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttributeByPageNum(s, p, defaultValue, getNodeAttribute));
     }
 
     const pageNode = getPageNodeByPageNum(doc, pageNum);
     if (!pageNode) {
-        return getDefault();
+        return defaultValue;
     }
 
-    return getNodeAttribute(pageNode) ?? getDefault();
+    return getNodeAttribute(pageNode) ?? defaultValue;
 };

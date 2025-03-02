@@ -46,8 +46,8 @@ export const isValidPageMargins = (pageMargins: MarginConfig): boolean => {
  * @returns {MarginConfig} The page margin config of the specified page or default.
  */
 export const getPageNumPageMargins = (editor: Editor, pageNum: number): MarginConfig => {
-    const getDefault = editor.commands.getDefaultPageMargins;
-    return getPageRegionAttributeByPageNum(editor.state, pageNum, "body", getDefault, getBodyNodeMargins);
+    const { state, options } = editor;
+    return getPageRegionAttributeByPageNum(state, pageNum, "body", options.defaultMarginConfig, getBodyNodeMargins);
 };
 
 /**
