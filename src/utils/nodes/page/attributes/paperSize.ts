@@ -4,7 +4,7 @@
  * @description Utility functions for paper sizes.
  */
 
-import { EditorState, Transaction } from "@tiptap/pm/state";
+import { Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DEFAULT_PAPER_SIZE, paperDimensions } from "../../../../constants/paperSize";
@@ -20,9 +20,11 @@ import { nodeHasAttribute } from "../../../attributes/getAttributes";
 import { setPageNodeAttribute } from "./setPageAttributes";
 import { getPageNodePaperOrientation } from "./paperOrientation";
 import { BodyNodeAttributes } from "../../../../types/body";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Check if the given paper size is valid.
+ *
  * @param paperSize - The paper size to check.
  * @returns {boolean} True if the paper size is valid, false otherwise.
  */
@@ -32,6 +34,7 @@ export const isValidPaperSize = (paperSize: PaperSize): boolean => {
 
 /**
  * Given a paper size, return the dimensions of the paper in millimeters.
+ *
  * @param paperSize - The paper size
  * @param orientation - The orientation of the paper
  * @returns {PaperDimensions} - The dimensions of the paper
@@ -50,7 +53,8 @@ export const getPaperDimensions = (paperSize: PaperSize, orientation: PaperOrien
 };
 
 /**
- * Gets the paper dimensions of a page node
+ * Gets the paper dimensions of a page node.
+ *
  * @param pageNode - The page node to get the paper dimensions from
  * @returns {PaperDimensions} - The dimensions of the paper
  */
@@ -62,6 +66,7 @@ export const getPaperDimensionsFromPageNode = (pageNode: PMNode): PaperDimension
 
 /**
  * Flips the width and height of a given set of dimensions.
+ *
  * @param dimensions - The dimensions to flip.
  * @returns {PaperDimensions} The flipped dimensions.
  */
@@ -71,6 +76,7 @@ export const flipDimensions = (dimensions: PaperDimensions): PaperDimensions => 
 
 /**
  * Calculates the pixel width and height of a given paper size.
+ *
  * @param pageNodeAttributes - The attributes of the page node.
  * @param bodyNodeAttributes - The attributes of the body node.
  * @returns {PageContentPixelDimensions} The height and width of the page in pixels.
@@ -98,6 +104,7 @@ export const calculatePageContentPixelDimensions = (
 
 /**
  * Check if a page node has a paper size attribute.
+ *
  * @param pageNode - The page node to check.
  * @returns {boolean} True if the page node has a paper size attribute, false otherwise.
  */
@@ -107,6 +114,7 @@ export const pageNodeHasPageSize = (pageNode: PMNode): boolean => {
 
 /**
  * Get the paper size of a particular page node in the document.
+ *
  * @param pageNode - The page node to find the paper size for
  * @returns {Nullable<PaperSize>} The paper size of the specified page or null
  * if the paper size is not set.
@@ -119,17 +127,17 @@ export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
 /**
  * Retrieves the paper size of a specific page using the editor instance.
  * Falls back to the default paper size if the page number is invalid.
- * @param context - The current editor instance or editor state.
+ *
+ * @param editor - The current editor instance.
  * @param pageNum - The page number to retrieve the paper size for.
  * @returns {PaperSize} The paper size of the specified page or default.
  */
-export const getPageNumPaperSize = (context: Editor | EditorState, pageNum: number): PaperSize => {
-    const getDefault = context instanceof Editor ? context.commands.getDefaultPaperSize : () => DEFAULT_PAPER_SIZE;
-    return getPageAttributeByPageNum(context, pageNum, getDefault, getPageNodePaperSize);
-};
+export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize =>
+    getPageAttributeByPageNum(editor.state, pageNum, getPaginationExtensionOptions(editor).defaultPaperSize, getPageNodePaperSize);
 
 /**
  * Set the paper size for a page node at the specified position.
+ *
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
  * @param pagePos - The position of the page node to set the paper size for.
@@ -148,6 +156,7 @@ export const setPagePaperSize = (tr: Transaction, dispatch: Dispatch, pagePos: n
 
 /**
  * Helper to set the paper size for a page node at the specified position.
+ *
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
  * @param pagePos - The position of the page node to set the paper size for.

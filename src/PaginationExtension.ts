@@ -10,6 +10,7 @@ import { DEFAULT_PAPER_COLOUR } from "./constants/paperColours";
 import { DEFAULT_PAGE_MARGIN_CONFIG } from "./constants/pageMargins";
 import { DEFAULT_PAPER_ORIENTATION } from "./constants/paperOrientation";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
+import { PAGINATION_EXTENSION_NAME } from "./constants/pagination";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
 import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 import { BODY_NODE_ATTR_KEYS } from "./constants/body";
@@ -21,7 +22,7 @@ import PaginationPlugin from "./Plugins/Pagination";
 import { isPageNode } from "./utils/nodes/page/page";
 import { getPageNodePosByPageNum } from "./utils/nodes/page/pageNumber";
 import { isValidPaperSize, pageNodeHasPageSize, setPageNodePosPaperSize, setPagePaperSize } from "./utils/nodes/page/attributes/paperSize";
-import { getDeviceThemePaperColour, setPageNodePosPaperColour } from "./utils/nodes/page/attributes/paperColour";
+import { getDefaultPaperColour, setPageNodePosPaperColour } from "./utils/nodes/page/attributes/paperColour";
 import { setBodyNodesAttribute, setPageNodesAttribute } from "./utils/nodes/page/attributes/setPageAttributes";
 import { setPageNodePosPaperOrientation } from "./utils/nodes/page/attributes/paperOrientation";
 import { isMarginValid, isValidPageMargins, setBodyNodePosPageMargins, updateBodyMargin } from "./utils/nodes/body/attributes/pageMargins";
@@ -33,6 +34,7 @@ export interface PaginationOptions {
      * The default paper size for the document. Note this is only the default
      * so you can have settings in your editor which change the paper size.
      * This is only the setting for new documents.
+     *
      * @default "A4"
      * @example "A3"
      */
@@ -42,6 +44,7 @@ export interface PaginationOptions {
      * The default paper colour for the document. Note this is only the default
      * so you can have settings in your editor which change the paper colour.
      * This is only the setting for new documents.
+     *
      * @default "#fff"
      * @example "#f0f0f0"
      */
@@ -50,6 +53,7 @@ export interface PaginationOptions {
     /**
      * Whether to use the device theme to set the paper colour.
      * If enabled, the default paper colour will be ignored.
+     *
      * @default false
      * @example true | false
      */
@@ -59,6 +63,7 @@ export interface PaginationOptions {
      * The default paper orientation for the document. Note this is only the default
      * so you can have settings in your editor which change the paper orientation.
      * This is only the setting for new documents.
+     *
      * @default "portrait"
      * @example "portrait" | "landscape"
      */
@@ -68,6 +73,7 @@ export interface PaginationOptions {
      * The default margin configuration for the document. Note this is only the default
      * so you can have settings in your editor which change the margin configuration.
      * This is only the setting for new documents.
+     *
      * @default { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 }
      * @example { top: 10, right: 10, bottom: 10, left: 10 }
      */
@@ -78,13 +84,15 @@ export interface PaginationOptions {
      * of the borders on the page. Note this is only the default so you can have
      * settings in your editor which change the border configuration. This is only
      * the setting for new documents.
+     *
      * @default { top: 1, right: 1, bottom: 1, left: 1 }
      * @example { top: 2, right: 2, bottom: 2, left: 2 }
      */
     defaultPageBorders: BorderConfig;
 
     /**
-     * Options for page amendments (header and footer)
+     * Options for page amendments (header and footer).
+     *
      * @see {@link PageAmendmentOptions}
      * @example { enableHeader: true, enableFooter: false }
      */
@@ -95,27 +103,23 @@ declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         page: {
             /**
-             * Get the default paper size
-             * @returns {PaperSize} The default paper size
-             * @example editor.commands.getDefaultPaperSize()
-             */
-            getDefaultPaperSize: () => PaperSize;
-
-            /**
-             * Set the paper size
+             * Set the paper size.
+             *
              * @param paperSize The paper size
              * @example editor.commands.setDocumentPaperSize("A4")
              */
             setDocumentPaperSize: (paperSize: PaperSize) => ReturnType;
 
             /**
-             * Set the default paper size
+             * Set the default paper size.
+             *
              * @example editor.commands.setDocumentDefaultPaperSize()
              */
             setDocumentDefaultPaperSize: () => ReturnType;
 
             /**
-             * Set the paper size for a specific page
+             * Set the paper size for a specific page.
+             *
              * @param pageNum The page number (0-indexed)
              * @param paperSize The paper size
              * @example editor.commands.setPagePaperSize(0, "A4")
@@ -125,32 +129,29 @@ declare module "@tiptap/core" {
             /**
              * Checks the paper sizes are set for each page in the document.
              * Sets the default paper size if not set.
+             *
              * @example editor.commands.checkPaperSizes()
              */
             checkPaperSizes: () => ReturnType;
 
             /**
-             * Get the default paper colour
-             * @returns {string} The default paper colour
-             * @example editor.commands.getDefaultPaperColour()
-             */
-            getDefaultPaperColour: () => string;
-
-            /**
-             * Set the paper colour for the document
+             * Set the paper colour for the document.
+             *
              * @param paperColour The paper colour
              * @example editor.commands.setDocumentPaperColour("#fff")
              */
             setDocumentPaperColour: (paperColour: string) => ReturnType;
 
             /**
-             * Set the default paper colour
+             * Set the default paper colour.
+             *
              * @example editor.commands.setDocumentDefaultPaperColour()
              */
             setDocumentDefaultPaperColour: () => ReturnType;
 
             /**
-             * Set the paper colour for a specific page
+             * Set the paper colour for a specific page.
+             *
              * @param pageNum The page number (0-indexed)
              * @param paperColour The paper colour
              * @example editor.commands.setPagePaperColour(0, "#fff")
@@ -158,27 +159,23 @@ declare module "@tiptap/core" {
             setPagePaperColour: (pageNum: number, paperColour: string) => ReturnType;
 
             /**
-             * Get the default paper orientation
-             * @returns {PaperOrientation} The default paper orientation
-             * @example editor.commands.getDefaultPaperOrientation()
-             */
-            getDefaultPaperOrientation: () => PaperOrientation;
-
-            /**
              * Set the paper orientation for the document
+             *
              * @param paperOrientation The paper orientation
              * @example editor.commands.setDocumentPaperOrientation("portrait") | editor.commands.setDocumentPaperOrientation("landscape")
              */
             setDocumentPaperOrientation: (paperOrientation: PaperOrientation) => ReturnType;
 
             /**
-             * Set the default paper orientation
+             * Set the default paper orientation for all pages in the document.
+             *
              * @example editor.commands.setDocumentDefaultPaperOrientation()
              */
             setDocumentDefaultPaperOrientation: () => ReturnType;
 
             /**
              * Set the paper orientation for a specific page
+             *
              * @param pageNum The page number (0-indexed)
              * @param paperOrientation The paper orientation
              * @example editor.commands.setPagePaperOrientation(0, "portrait") | editor.commands.setPagePaperOrientation(0, "landscape")
@@ -186,20 +183,23 @@ declare module "@tiptap/core" {
             setPagePaperOrientation: (pageNum: number, paperOrientation: PaperOrientation) => ReturnType;
 
             /**
-             * Set the page margins for the document
+             * Set the page margins for the document.
+             *
              * @param pageMargins The page margins (top, right, bottom, left)
              * @example editor.commands.setDocumentPageMargins({ top: 10, right: 15, bottom: 10, left: 15 })
              */
             setDocumentPageMargins: (pageMargins: MarginConfig) => ReturnType;
 
             /**
-             * Set the default page margins
+             * Set the default page margins.
+             *
              * @example editor.commands.setDocumentDefaultPageMargins()
              */
             setDocumentDefaultPageMargins: () => ReturnType;
 
             /**
-             * Set the page margins for a specific page
+             * Set the page margins for a specific page.
+             *
              * @param pageNum The page number (0-indexed)
              * @param pageMargins The page margins
              * @example editor.commands.setPagePageMargins(0, { top: 10, right: 15, bottom: 10, left: 15 })
@@ -207,7 +207,8 @@ declare module "@tiptap/core" {
             setPagePageMargins: (pageNum: number, pageMargins: MarginConfig) => ReturnType;
 
             /**
-             * Set a margin for the document on a specific side
+             * Set a margin for the document on a specific side.
+             *
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
              * @example editor.commands.setDocumentPageMargin("top", 10)
@@ -215,7 +216,8 @@ declare module "@tiptap/core" {
             setDocumentPageMargin: (margin: MultiSide, value: number) => ReturnType;
 
             /**
-             * Set a margin for a specific page on a specific side
+             * Set a margin for a specific page on a specific side.
+             *
              * @param pageNum The page number (0-indexed)
              * @param margin The margin to set (top, right, bottom, left, x, y, all)
              * @param value The value to set the margin to
@@ -224,27 +226,23 @@ declare module "@tiptap/core" {
             setPagePageMargin: (pageNum: number, margin: MultiSide, value: number) => ReturnType;
 
             /**
-             * Get the default page borders
-             * @returns {BorderConfig} The default page borders
-             * @example editor.commands.getDefaultPageBorders()
-             */
-            getDefaultPageBorders: () => BorderConfig;
-
-            /**
-             * Set the page borders for the document
+             * Set the page borders for the document.
+             *
              * @param pageBorders The page borders (top, right, bottom, left)
              * @example editor.commands.setDocumentPageBorders({ top: 2, right: 2, bottom: 2, left: 2 })
              */
             setDocumentPageBorders: (pageBorders: BorderConfig) => ReturnType;
 
             /**
-             * Set the default page borders
+             * Set the default page borders.
+             *
              * @example editor.commands.setDocumentDefaultPageBorders()
              */
             setDocumentDefaultPageBorders: () => ReturnType;
 
             /**
-             * Set the page borders for a specific page
+             * Set the page borders for a specific page.
+             *
              * @param pageNum The page number (0-indexed)
              * @param pageBorders The page borders
              * @example editor.commands.setPageBorders(0, { top: 2, right: 2, bottom: 2, left: 2 })
@@ -252,14 +250,16 @@ declare module "@tiptap/core" {
             setPageBorders: (pageNum: number, pageBorders: BorderConfig) => ReturnType;
 
             /**
-             * Set a border for the document on a specific side
+             * Set a border for the document on a specific side.
+             *
              * @param border The border to set (top, right, bottom, left, all)
              * @param value The value to set the border to
              */
             setDocumentPageBorder: (border: MultiSide, value: number) => ReturnType;
 
             /**
-             * Set a border for a specific page on a specific side
+             * Set a border for a specific page on a specific side.
+             *
              * @param pageNum The page number (0-indexed)
              * @param border The border to set (top, right, bottom, left, all)
              * @param value The value to set the border to
@@ -270,7 +270,7 @@ declare module "@tiptap/core" {
 }
 
 const PaginationExtension = Extension.create<PaginationOptions>({
-    name: "pagination",
+    name: PAGINATION_EXTENSION_NAME,
 
     addOptions() {
         return {
@@ -295,8 +295,6 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
     addCommands() {
         return {
-            getDefaultPaperSize: () => this.options.defaultPaperSize,
-
             setDocumentPaperSize:
                 (paperSize: PaperSize) =>
                 ({ tr, dispatch }) => {
@@ -315,8 +313,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperSize:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPaperSize(this.options.defaultPaperSize),
+                ({ commands }) =>
+                    commands.setDocumentPaperSize(this.options.defaultPaperSize),
 
             setPagePaperSize:
                 (pageNum: number, paperSize: PaperSize) =>
@@ -350,14 +348,6 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     return paperSizeUpdates.some((update) => update);
                 },
 
-            getDefaultPaperColour: () => {
-                if (this.options.useDeviceThemeForPaperColour) {
-                    return getDeviceThemePaperColour();
-                } else {
-                    return this.options.defaultPaperColour;
-                }
-            },
-
             setDocumentPaperColour:
                 (paperColour: string) =>
                 ({ tr, dispatch }) => {
@@ -371,9 +361,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperColour:
                 () =>
-                ({ editor }) => {
-                    const { commands } = editor;
-                    const defaultPaperColour = commands.getDefaultPaperColour();
+                ({ editor, commands }) => {
+                    const defaultPaperColour = getDefaultPaperColour(editor);
                     return commands.setDocumentPaperColour(defaultPaperColour);
                 },
 
@@ -392,10 +381,6 @@ const PaginationExtension = Extension.create<PaginationOptions>({
                     return setPageNodePosPaperColour(tr, dispatch, pagePos, pageNode, paperColour);
                 },
 
-            getDefaultPaperOrientation: () => {
-                return this.options.defaultPaperOrientation;
-            },
-
             setDocumentPaperOrientation:
                 (paperOrientation: PaperOrientation) =>
                 ({ tr, dispatch }) => {
@@ -409,8 +394,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperOrientation:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
+                ({ commands }) =>
+                    commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
 
             setPagePaperOrientation:
                 (pageNum: number, paperOrientation: PaperOrientation) =>
@@ -431,53 +416,48 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPageMargins:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPageMargins(this.options.defaultMarginConfig),
+                ({ commands }) =>
+                    commands.setDocumentPageMargins(this.options.defaultMarginConfig),
 
             setPagePageMargins: setPageSideConfig(getPageNodePosByPageNum, setBodyNodePosPageMargins),
 
             setDocumentPageMargin:
                 (margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setDocumentSideValue(editor.commands.setDocumentPageMargins, isMarginValid, updateBodyMargin)(margin, value)({
+                ({ tr, dispatch, commands }) =>
+                    setDocumentSideValue(commands.setDocumentPageMargins, isMarginValid, updateBodyMargin)(margin, value)({
                         tr,
                         dispatch,
                     }),
 
             setPagePageMargin:
                 (pageNum: number, margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setPageSideValue(editor.commands.setPagePageMargins, isMarginValid, updateBodyMargin)(pageNum, margin, value)({
+                ({ tr, dispatch, commands }) =>
+                    setPageSideValue(commands.setPagePageMargins, isMarginValid, updateBodyMargin)(pageNum, margin, value)({
                         tr,
                         dispatch,
                     }),
-
-            getDefaultPageBorders: () => {
-                return this.options.defaultPageBorders;
-            },
 
             setDocumentPageBorders: setDocumentSideConfig(PAGE_NODE_ATTR_KEYS.pageBorders, isValidPageBorders, setPageNodesAttribute),
 
             setDocumentDefaultPageBorders:
                 () =>
-                ({ editor }) => {
-                    return editor.commands.setDocumentPageBorders(this.options.defaultPageBorders);
-                },
+                ({ commands }) =>
+                    commands.setDocumentPageBorders(this.options.defaultPageBorders),
 
             setPageBorders: setPageSideConfig(getPageNodePosByPageNum, setPageNodePosPageBorders),
 
             setDocumentPageBorder:
                 (border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setDocumentSideValue(editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
+                ({ tr, dispatch, commands }) =>
+                    setDocumentSideValue(commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
                         tr,
                         dispatch,
                     }),
 
             setPagePageBorder:
                 (pageNum: number, border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setPageSideValue(editor.commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
+                ({ tr, dispatch, commands }) =>
+                    setPageSideValue(commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
                         tr,
                         dispatch,
                     }),

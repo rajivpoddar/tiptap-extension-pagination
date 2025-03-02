@@ -6,10 +6,8 @@
 
 import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
-import { Editor } from "@tiptap/core";
 import { NodePos } from "../../../types/node";
 import { Nullable } from "../../../types/record";
-import { getStateFromContext } from "../../editor";
 import { collectPageNodes, doesDocHavePageNodes, isPageNode } from "./page";
 import { getPageNodeAndPosition } from "./pagePosition";
 import { handleOutOfRangePageNum, isPageNumInRange } from "./pageRange";
@@ -79,34 +77,33 @@ export const getPageNumber = (doc: PMNode, $pos: ResolvedPos | number, zeroIndex
 /**
  * Retrieves a specific attribute of a given page number.
  * Falls back to defaults if the page number is invalid or the attribute is missing.
- * @param context - The current editor instance or editor state.
+ *
+ * @param state - The editor state.
  * @param pageNum - The page number to retrieve the attribute for.
- * @param getDefault - A function to get the default value for the attribute.
+ * @param defaultValue - The default value to return if the attribute is missing.
  * @param getNodeAttribute - A function to extract the attribute from the page node.
  * @returns {T} The attribute of the specified page or default.
  */
 export const getPageAttributeByPageNum = <T>(
-    context: Editor | EditorState,
+    state: EditorState,
     pageNum: number,
-    getDefault: () => T,
+    defaultValue: T,
     getNodeAttribute: (node: PMNode) => Nullable<T>
 ): T => {
-    const state = getStateFromContext(context);
-
     if (!doesDocHavePageNodes(state)) {
-        return getDefault();
+        return defaultValue;
     }
 
     const { doc } = state;
 
     if (!isPageNumInRange(doc, pageNum)) {
-        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttributeByPageNum(s, p, getDefault, getNodeAttribute));
+        return handleOutOfRangePageNum(state, pageNum, (s, p) => getPageAttributeByPageNum(s, p, defaultValue, getNodeAttribute));
     }
 
     const pageNode = getPageNodeByPageNum(doc, pageNum);
     if (!pageNode) {
-        return getDefault();
+        return defaultValue;
     }
 
-    return getNodeAttribute(pageNode) ?? getDefault();
+    return getNodeAttribute(pageNode) ?? defaultValue;
 };

@@ -4,7 +4,7 @@
  * @description Utility functions for handling page borders.
  */
 
-import { EditorState, Transaction } from "@tiptap/pm/state";
+import { Transaction } from "@tiptap/pm/state";
 import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { PAGE_NODE_ATTR_KEYS } from "../../../../constants/page";
@@ -15,10 +15,12 @@ import { px } from "../../../units";
 import { getPageAttributeByPageNum } from "../pageNumber";
 import { setPageNodePosSideConfig, updatePageSideConfig } from "../../../setSideConfig";
 import { MultiAxisSide } from "../../../../types/page";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Checks if a (single) border is valid.
  * Borders must be non-negative and finite to be considered valid.
+ *
  * @param border - The border to check.
  * @returns {boolean} True if the border is valid, false otherwise.
  */
@@ -29,6 +31,7 @@ export const isBorderValid = (border: number): boolean => {
 /**
  * Checks if the page borders are valid.
  * Borders must be non-negative and finite to be considered valid.
+ *
  * @param pageBorder - The page borders to check.
  * @returns {boolean} True if the page borders are valid, false otherwise.
  */
@@ -48,6 +51,7 @@ export const getPageNodePageBorders = (pageNode: PMNode): Nullable<BorderConfig>
 
 /**
  * Converts a border config to a CSS string using px as the unit.
+ *
  * @param pageBorders - The page borders to convert to a CSS string.
  * @returns {string} The CSS string representation of the page borders. Remember MDN says
  * order is (top, right, bottom, left). See https://developer.mozilla.org/en-US/docs/Web/CSS/border.
@@ -62,17 +66,17 @@ export const calculateShorthandPageBorders = (pageBorders: BorderConfig): string
 /**
  * Retrieves the page border config of a specific page using the editor instance.
  * Falls back to the default page border config if the page number is invalid.
- * @param context - The current editor instance or editor state.
+ *
+ * @param editor - The current editor instance.
  * @param pageNum - The page number to retrieve the page border config for.
  * @returns {BorderConfig} The page border config of the specified page or default.
  */
-export const getPageNumPageBorders = (context: Editor | EditorState, pageNum: number): BorderConfig => {
-    const getDefault = context instanceof Editor ? context.commands.getDefaultPageBorders : () => DEFAULT_PAGE_BORDER_CONFIG;
-    return getPageAttributeByPageNum(context, pageNum, getDefault, getPageNodePageBorders);
-};
+export const getPageNumPageBorders = (editor: Editor, pageNum: number): BorderConfig =>
+    getPageAttributeByPageNum(editor.state, pageNum, getPaginationExtensionOptions(editor).defaultPageBorders, getPageNodePageBorders);
 
 /**
  * Set the page borders of a page node.
+ *
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
  * @param pagePos - The position of the page node to set the page borders for.
@@ -101,6 +105,7 @@ export const setPageNodePosPageBorders = (
 
 /**
  * Updates the border on the given page. Does not dispatch the transaction.
+ *
  * @param tr - The transaction to apply the change to.
  * @param pagePos - The position of the page node to update the border for.
  * @param pageNode - The page node to update the border for.
