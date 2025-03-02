@@ -5,7 +5,7 @@
  */
 
 import { Transaction } from "@tiptap/pm/state";
-import { Dispatch, Editor, EditorOptions } from "@tiptap/core";
+import { Dispatch, Editor } from "@tiptap/core";
 import { Node as PMNode } from "@tiptap/pm/model";
 import { DARK_PAPER_COLOUR, LIGHT_PAPER_COLOUR } from "../../../../constants/paperColours";
 import { PAGE_NODE_ATTR_KEYS } from "../../../../constants/page";
@@ -17,6 +17,7 @@ import { isValidColour } from "../../../colour";
 import { nodeHasAttribute } from "../../../attributes/getAttributes";
 import { getDeviceTheme } from "../../../theme";
 import { setPageNodeAttribute } from "./setPageAttributes";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Get the paper colour based on the device theme.
@@ -32,14 +33,15 @@ export const getDeviceThemePaperColour = (): string => {
  * If the `useDeviceThemeForPaperColour` option is enabled, it returns the device theme paper colour.
  * Otherwise, it returns the `defaultPaperColour` specified in the options.
  *
- * @param options - The editor options containing configuration for paper colour.
+ * @param editor - The editor instance.
  * @returns The default paper colour as a string.
  */
-export const getDefaultPaperColour = (options: EditorOptions) => {
-    if (options.useDeviceThemeForPaperColour) {
+export const getDefaultPaperColour = (editor: Editor): string => {
+    const paginationOptions = getPaginationExtensionOptions(editor);
+    if (paginationOptions.useDeviceThemeForPaperColour) {
         return getDeviceThemePaperColour();
     } else {
-        return options.defaultPaperColour;
+        return paginationOptions.defaultPaperColour;
     }
 };
 
@@ -74,9 +76,8 @@ export const getPageNodePaperColour = (pageNode: PMNode): Nullable<string> => {
  * @returns {string} The paper color of the specified page or default.
  */
 export const getPageNumPaperColour = (editor: Editor, pageNum: number): string => {
-    const { state, options } = editor;
-    const defaultPaperColour = getDefaultPaperColour(options);
-    return getPageAttributeByPageNum(state, pageNum, defaultPaperColour, getPageNodePaperColour);
+    const defaultPaperColour = getDefaultPaperColour(editor);
+    return getPageAttributeByPageNum(editor.state, pageNum, defaultPaperColour, getPageNodePaperColour);
 };
 
 /**

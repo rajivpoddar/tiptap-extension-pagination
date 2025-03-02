@@ -13,6 +13,7 @@ import { PaperOrientation } from "../../../../types/paper";
 import { isPageNode } from "../page";
 import { getPageAttributeByPageNum } from "../pageNumber";
 import { setPageNodeAttribute } from "./setPageAttributes";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Get the paper orientation of a particular page node in the document.
@@ -34,10 +35,13 @@ export const getPageNodePaperOrientation = (pageNode: PMNode): Nullable<PaperOri
  * @param pageNum - The page number to retrieve the paper orientation for.
  * @returns {PaperOrientation} The paper orientation of the specified page or default.
  */
-export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): PaperOrientation => {
-    const { state, options } = editor;
-    return getPageAttributeByPageNum(state, pageNum, options.defaultPaperOrientation, getPageNodePaperOrientation);
-};
+export const getPageNumPaperOrientation = (editor: Editor, pageNum: number): PaperOrientation =>
+    getPageAttributeByPageNum(
+        editor.state,
+        pageNum,
+        getPaginationExtensionOptions(editor).defaultPaperOrientation,
+        getPageNodePaperOrientation
+    );
 
 /**
  * Set the paper orientation of a page node to the given value.

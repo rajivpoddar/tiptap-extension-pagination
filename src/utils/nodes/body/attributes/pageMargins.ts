@@ -14,6 +14,7 @@ import { setPageNodePosSideConfig, updatePageSideConfig } from "../../../setSide
 import { mm } from "../../../units";
 import { getBodyNodeMargins } from "../body";
 import { getPageRegionAttributeByPageNum } from "../../../pageRegion/getAttributes";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Checks if a (single) margin is valid.
@@ -45,10 +46,14 @@ export const isValidPageMargins = (pageMargins: MarginConfig): boolean => {
  * @param pageNum - The page number to retrieve the page margin config for.
  * @returns {MarginConfig} The page margin config of the specified page or default.
  */
-export const getPageNumPageMargins = (editor: Editor, pageNum: number): MarginConfig => {
-    const { state, options } = editor;
-    return getPageRegionAttributeByPageNum(state, pageNum, "body", options.defaultMarginConfig, getBodyNodeMargins);
-};
+export const getPageNumPageMargins = (editor: Editor, pageNum: number): MarginConfig =>
+    getPageRegionAttributeByPageNum(
+        editor.state,
+        pageNum,
+        "body",
+        getPaginationExtensionOptions(editor).defaultMarginConfig,
+        getBodyNodeMargins
+    );
 
 /**
  * Calculate the effective DOM margins of the body node. Takes into account

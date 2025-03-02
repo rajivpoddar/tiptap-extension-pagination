@@ -20,6 +20,7 @@ import { nodeHasAttribute } from "../../../attributes/getAttributes";
 import { setPageNodeAttribute } from "./setPageAttributes";
 import { getPageNodePaperOrientation } from "./paperOrientation";
 import { BodyNodeAttributes } from "../../../../types/body";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Check if the given paper size is valid.
@@ -131,10 +132,8 @@ export const getPageNodePaperSize = (pageNode: PMNode): Nullable<PaperSize> => {
  * @param pageNum - The page number to retrieve the paper size for.
  * @returns {PaperSize} The paper size of the specified page or default.
  */
-export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize => {
-    const { state, options } = editor;
-    return getPageAttributeByPageNum(state, pageNum, options.defaultPaperSize, getPageNodePaperSize);
-};
+export const getPageNumPaperSize = (editor: Editor, pageNum: number): PaperSize =>
+    getPageAttributeByPageNum(editor.state, pageNum, getPaginationExtensionOptions(editor).defaultPaperSize, getPageNodePaperSize);
 
 /**
  * Set the paper size for a page node at the specified position.

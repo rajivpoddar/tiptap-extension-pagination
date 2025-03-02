@@ -15,6 +15,7 @@ import { px } from "../../../units";
 import { getPageAttributeByPageNum } from "../pageNumber";
 import { setPageNodePosSideConfig, updatePageSideConfig } from "../../../setSideConfig";
 import { MultiAxisSide } from "../../../../types/page";
+import { getPaginationExtensionOptions } from "../../../options";
 
 /**
  * Checks if a (single) border is valid.
@@ -70,10 +71,8 @@ export const calculateShorthandPageBorders = (pageBorders: BorderConfig): string
  * @param pageNum - The page number to retrieve the page border config for.
  * @returns {BorderConfig} The page border config of the specified page or default.
  */
-export const getPageNumPageBorders = (editor: Editor, pageNum: number): BorderConfig => {
-    const { state, options } = editor;
-    return getPageAttributeByPageNum(state, pageNum, options.defaultPageBorders, getPageNodePageBorders);
-};
+export const getPageNumPageBorders = (editor: Editor, pageNum: number): BorderConfig =>
+    getPageAttributeByPageNum(editor.state, pageNum, getPaginationExtensionOptions(editor).defaultPageBorders, getPageNodePageBorders);
 
 /**
  * Set the page borders of a page node.

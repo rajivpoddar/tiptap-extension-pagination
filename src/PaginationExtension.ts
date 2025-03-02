@@ -10,6 +10,7 @@ import { DEFAULT_PAPER_COLOUR } from "./constants/paperColours";
 import { DEFAULT_PAGE_MARGIN_CONFIG } from "./constants/pageMargins";
 import { DEFAULT_PAPER_ORIENTATION } from "./constants/paperOrientation";
 import { PAGE_NODE_ATTR_KEYS } from "./constants/page";
+import { PAGINATION_EXTENSION_NAME } from "./constants/pagination";
 import { DEFAULT_PAGE_BORDER_CONFIG } from "./constants/pageBorders";
 import { DEFAULT_PAGE_AMENDMENT_CONFIG } from "./constants/pageAmendment";
 import { BODY_NODE_ATTR_KEYS } from "./constants/body";
@@ -99,8 +100,6 @@ export interface PaginationOptions {
 }
 
 declare module "@tiptap/core" {
-    interface EditorOptions extends PaginationOptions {}
-
     interface Commands<ReturnType> {
         page: {
             /**
@@ -271,7 +270,7 @@ declare module "@tiptap/core" {
 }
 
 const PaginationExtension = Extension.create<PaginationOptions>({
-    name: "pagination",
+    name: PAGINATION_EXTENSION_NAME,
 
     addOptions() {
         return {
@@ -314,8 +313,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperSize:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPaperSize(this.options.defaultPaperSize),
+                ({ commands }) =>
+                    commands.setDocumentPaperSize(this.options.defaultPaperSize),
 
             setPagePaperSize:
                 (pageNum: number, paperSize: PaperSize) =>
@@ -362,9 +361,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperColour:
                 () =>
-                ({ editor }) => {
-                    const { commands, options } = editor;
-                    const defaultPaperColour = getDefaultPaperColour(options);
+                ({ editor, commands }) => {
+                    const defaultPaperColour = getDefaultPaperColour(editor);
                     return commands.setDocumentPaperColour(defaultPaperColour);
                 },
 
@@ -396,8 +394,8 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPaperOrientation:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
+                ({ commands }) =>
+                    commands.setDocumentPaperOrientation(this.options.defaultPaperOrientation),
 
             setPagePaperOrientation:
                 (pageNum: number, paperOrientation: PaperOrientation) =>
@@ -418,23 +416,23 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPageMargins:
                 () =>
-                ({ editor }) =>
-                    editor.commands.setDocumentPageMargins(this.options.defaultMarginConfig),
+                ({ commands }) =>
+                    commands.setDocumentPageMargins(this.options.defaultMarginConfig),
 
             setPagePageMargins: setPageSideConfig(getPageNodePosByPageNum, setBodyNodePosPageMargins),
 
             setDocumentPageMargin:
                 (margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setDocumentSideValue(editor.commands.setDocumentPageMargins, isMarginValid, updateBodyMargin)(margin, value)({
+                ({ tr, dispatch, commands }) =>
+                    setDocumentSideValue(commands.setDocumentPageMargins, isMarginValid, updateBodyMargin)(margin, value)({
                         tr,
                         dispatch,
                     }),
 
             setPagePageMargin:
                 (pageNum: number, margin: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setPageSideValue(editor.commands.setPagePageMargins, isMarginValid, updateBodyMargin)(pageNum, margin, value)({
+                ({ tr, dispatch, commands }) =>
+                    setPageSideValue(commands.setPagePageMargins, isMarginValid, updateBodyMargin)(pageNum, margin, value)({
                         tr,
                         dispatch,
                     }),
@@ -443,24 +441,23 @@ const PaginationExtension = Extension.create<PaginationOptions>({
 
             setDocumentDefaultPageBorders:
                 () =>
-                ({ editor }) => {
-                    return editor.commands.setDocumentPageBorders(this.options.defaultPageBorders);
-                },
+                ({ commands }) =>
+                    commands.setDocumentPageBorders(this.options.defaultPageBorders),
 
             setPageBorders: setPageSideConfig(getPageNodePosByPageNum, setPageNodePosPageBorders),
 
             setDocumentPageBorder:
                 (border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setDocumentSideValue(editor.commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
+                ({ tr, dispatch, commands }) =>
+                    setDocumentSideValue(commands.setDocumentPageBorders, isBorderValid, updatePageBorder)(border, value)({
                         tr,
                         dispatch,
                     }),
 
             setPagePageBorder:
                 (pageNum: number, border: MultiSide, value: number) =>
-                ({ tr, dispatch, editor }) =>
-                    setPageSideValue(editor.commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
+                ({ tr, dispatch, commands }) =>
+                    setPageSideValue(commands.setPageBorders, isBorderValid, updatePageBorder)(pageNum, border, value)({
                         tr,
                         dispatch,
                     }),
