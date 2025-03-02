@@ -15,6 +15,7 @@ import { getStartOfPageAmendmentPosition, getEndOfPageAmendmentPosition } from "
 
 /**
  * Get the start of the page amendment and paragraph positions.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {startOfPageAmendmentPos: number, startOfParagraphPos: number} The start positions of the
@@ -32,6 +33,7 @@ export const getStartOfPageAmendmentAndParagraphPosition = (
 
 /**
  * Get the end of the page amendment and paragraph positions.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {endOfPageAmendmentPos: number, endOfParagraphPos: number} The end positions of the
@@ -49,6 +51,7 @@ export const getEndOfPageAmendmentAndParagraphPosition = (
 
 /**
  * Get the start of the body and paragraph positions.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {startOfBodyPos: number, startOfParagraphPos: number} The start positions of the body and paragraph.
@@ -65,6 +68,7 @@ export const getStartOfBodyAndParagraphPosition = (
 
 /**
  * Get the end of the body and paragraph positions.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {endOfBodyPos: number, endOfParagraphPos: number} The end positions of the body and paragraph.
@@ -81,6 +85,7 @@ export const getEndOfBodyAndParagraphPosition = (
 
 /**
  * Collect the node types for pagination.
+ *
  * @param schema - The schema of the editor.
  * @returns {PaginationNodeTypes} The node types for pagination.
  * @throws {Error} Throws an error if the page, body, or header/footer node types are not found in the schema.

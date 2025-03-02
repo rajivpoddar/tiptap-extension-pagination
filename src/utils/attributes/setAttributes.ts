@@ -8,6 +8,7 @@ import { Transaction } from "@tiptap/pm/state";
 
 /**
  * Set a node attribute to the given value.
+ *
  * @param tr - The transaction to apply the change to.
  * @param pos - The position of the node to set the attribute for.
  * @param node - The node to set the attribute for.
@@ -27,6 +28,7 @@ export const setNodeAttribute = (tr: Transaction, pos: number, node: PMNode, att
 
 /**
  * Set a node attribute to the given value for the nodes of the type handled by the setNodeTypeAttribute callback.
+ *
  * @param tr - The transaction to apply the change to.
  * @param attr - The attribute to set.
  * @param value - The value to set the attribute to.

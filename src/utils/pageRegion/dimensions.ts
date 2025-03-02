@@ -14,6 +14,7 @@ import { getBodyNodeMargins } from "../nodes/body/body";
 
 /**
  * Calculates the dimensions in millimetres of a header or footer node based on its paper size
+ *
  * @param pageNode - The page node containing the header or footer node.
  * @param headerFooterNode - The header or footer node to calculate the dimensions for.
  * @returns {PaperDimensions} The dimensions of the header or footer node.
@@ -30,6 +31,7 @@ export const calculateHeaderFooterDimensions = (pageNode: PMNode, headerFooterNo
 /**
  * Calculates the dimensions in millimetres of a body node based on its paper size
  * and orientation.
+ *
  * @param pageNode - The page node containing the body node.
  * @param bodyNode - The body node to calculate the dimensions for.
  * @returns {PaperDimensions} The dimensions of the body node.

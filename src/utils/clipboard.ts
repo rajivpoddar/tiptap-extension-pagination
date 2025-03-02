@@ -9,6 +9,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 
 /**
  * Constructs a clipboard serialiser that serialises only the children of the nodes of the specified schema.
+ *
  * @param schema - The schema to use for serialisation.
  * @returns {DOMSerializer} The constructed clipboard serialiser.
  */
@@ -38,6 +39,7 @@ const constructChildOnlyClipboardSerialiser = (schema: Schema, isNode: (node: PM
 
 /**
  * Constructs a clipboard plugin with the specified key and serialiser.
+ *
  * @param name - The plugin key.
  * @param serialiser - The serialiser to use for clipboard operations.
  * @returns {Plugin} The constructed clipboard plugin.
@@ -53,6 +55,7 @@ const constructClipboardPlugin = (name: string, serialiser: DOMSerializer): Plug
 
 /**
  * Constructs a clipboard plugin that serialises only the children of the nodes of the specified schema.
+ *
  * @param name - The plugin key.
  * @param schema - The schema to use for serialisation.
  * @param isNode - A function that returns true if the node is a page node.

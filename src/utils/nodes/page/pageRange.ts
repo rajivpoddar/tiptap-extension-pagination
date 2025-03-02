@@ -10,6 +10,7 @@ import { EditorState } from "@tiptap/pm/state";
 
 /**
  * Get the page number of the given node.
+ *
  * @param node - The node to get the page number for.
  * @returns {Nullable<number>} The page number of the node or null if the node is not a page node.
  */
@@ -29,6 +30,7 @@ export const getLastPageNum = (doc: PMNode): number => {
 /**
  * Handles cases where the given page number is out of range.
  * Logs a warning and falls back to the last page number.
+ *
  * @param state - The current editor state.
  * @param pageNum - The page number to validate.
  * @param fallbackFn - A function to determine the fallback value based on the last page number.
@@ -46,6 +48,7 @@ export const handleOutOfRangePageNum = <T>(
 
 /**
  * Check if the page number is in range for the document.
+ *
  * @param doc - The current document.
  * @param pageNum - The page number to check (0-indexed).
  * @returns {boolean} True if the page number is in range, false otherwise.

@@ -22,6 +22,7 @@ const calculateWindowDPI = (): number => {
 
 /**
  * Converts millimeters to pixels.
+ *
  * @param mm - The length in millimeters.
  * @returns The length in pixels.
  */

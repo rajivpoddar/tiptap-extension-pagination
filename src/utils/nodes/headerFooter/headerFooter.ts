@@ -17,6 +17,7 @@ import { XMarginConfig } from "../../../types/page";
 
 /**
  * Determines if the given node is a header node.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is a header node, false otherwise.
  */
@@ -26,6 +27,7 @@ export const isHeaderFooterNode = (node: PMNode): boolean => {
 
 /**
  * Get the type of the header or footer node.
+ *
  * @param headerFooterNode - The header or footer node to retrieve the type for.
  * @returns {Nullable<HeaderFooter>} The type of the specified header or footer node or null if not found.
  */
@@ -36,6 +38,7 @@ export const getHeaderFooterNodeType = (headerFooterNode: PMNode): Nullable<Head
 
 /**
  * Get the x margins from a header or footer node.
+ *
  * @param headerFooterNode - The header or footer node.
  * @returns {Nullable<XMarginConfig>} The x margins of the specified header or footer.
  */
@@ -46,6 +49,7 @@ export const getHeaderFooterNodeXMargins = (headerFooterNode: PMNode): Nullable<
 
 /**
  * Get the page end offset of the header or footer node.
+ *
  * @param headerFooterNode - The header or footer node to retrieve the page end offset for.
  * @returns {Nullable<number>} The page end offset of the specified header or footer node or null if not found.
  */
@@ -56,6 +60,7 @@ export const getHeaderFooterNodePageEndOffset = (headerFooterNode: PMNode): Null
 
 /**
  * Get the height of the header or footer node.
+ *
  * @param headerFooterNode - The header or footer node to retrieve the height for.
  * @returns {Nullable<number>} The height of the specified header or footer node or null if not found.
  */

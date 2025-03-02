@@ -23,6 +23,7 @@ export const getThisPageNodePosition = (doc: PMNode, pos: ResolvedPos | number):
 
 /**
  * Get the page node position and the page node itself.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {NullableNodePos} The position and the node of the page.
@@ -44,6 +45,7 @@ export const getPageNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): 
 
 /**
  * Get the child of the page node at the specified position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {DirectChild} The child of the page node at the specified position.
@@ -58,6 +60,7 @@ export const getPageChild = (doc: PMNode, pos: ResolvedPos | number): DirectChil
 
 /**
  * Get the start of the page position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The start position of the page.
@@ -74,6 +77,7 @@ export const getStartOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): 
 
 /**
  * Get the end of the page position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The end position of the page.
@@ -93,6 +97,7 @@ export const getEndOfPagePosition = (doc: PMNode, pos: ResolvedPos | number): nu
 
 /**
  * Gets the page node of the page before the page at the specified position.
+ *
  * @param doc - The document node.
  * @param pos - Any position in the current page.
  * @returns {NullableNodePos} The page node of the page before the current page.
@@ -117,6 +122,7 @@ export const getPageBeforePos = (doc: PMNode, pos: ResolvedPos | number): Nullab
 
 /**
  * Gets the page node of the page after the page at the specified position.
+ *
  * @param doc - The document node.
  * @param pos - Any position in the current page.
  * @returns {NullableNodePos} The page node of the page after the current page.

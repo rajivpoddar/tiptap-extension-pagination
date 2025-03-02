@@ -13,6 +13,7 @@ import { inRange } from "./math";
 
 /**
  * Check if the editor is currently highlighting text.
+ *
  * @param state - The current editor state.
  * @returns True if text is currently highlighted, false otherwise.
  */
@@ -23,6 +24,7 @@ export const isHighlighting = (state: EditorState): boolean => {
 
 /**
  * Get the resolved position in the document.
+ *
  * @param state - The current editor state.
  * @returns The resolved position in the document.
  */
@@ -35,6 +37,7 @@ export const getResolvedPosition = (state: EditorState): ResolvedPos => {
 /**
  * Set the selection at the specified anchor and head positions. If head is not provided,
  * it will be set to the anchor position.
+ *
  * @param tr - The current transaction.
  * @param anchor - The anchor position.
  * @param head - The head position.
@@ -47,6 +50,7 @@ export const setSelectionAtPos = (tr: Transaction, anchor: number, head?: number
 
 /**
  * Set the selection to the specified selection object.
+ *
  * @param tr - The current transaction.
  * @param selection - The selection object.
  * @returns The updated transaction.
@@ -58,6 +62,7 @@ export const setSelection = <S extends Selection>(tr: Transaction, selection: S)
 
 /**
  * Set the selection at the start of the document.
+ *
  * @param tr - The current transaction.
  * @returns The updated transaction.
  */
@@ -67,6 +72,7 @@ export const setSelectionAtStartOfDocument = (tr: Transaction): Transaction => {
 
 /**
  * Set the selection at the end of the document.
+ *
  * @param tr - The current transaction.
  * @returns The updated transaction.
  */
@@ -76,6 +82,7 @@ export const setSelectionAtEndOfDocument = (tr: Transaction): Transaction => {
 
 /**
  * Set the selection to the start of the paragraph.
+ *
  * @param tr - The current transaction.
  * @param paragraphPos - The position of the paragraph in the document.
  * @param paragraphNode - The paragraph node.
@@ -93,6 +100,7 @@ export const setSelectionToStartOfParagraph = (tr: Transaction, paragraphPos: nu
 
 /**
  * Set the selection to the paragraph with an optional offset.
+ *
  * @param tr - The current transaction.
  * @param paragraphPos - The position of the paragraph in the document.
  * @param paragraphNode - The paragraph node.
@@ -117,6 +125,7 @@ export const setSelectionToParagraph = (tr: Transaction, paragraphPos: number, p
 
 /**
  * Set the selection to the end of the paragraph.
+ *
  * @param tr - The current transaction.
  * @param paragraphPos - The position of the paragraph in the document.
  * @param paragraphNode - The paragraph node.
@@ -134,6 +143,7 @@ export const setSelectionToEndOfParagraph = (tr: Transaction, paragraphPos: numb
 
 /**
  * Move the cursor to the previous text block.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @returns {Selection} The new selection.
@@ -152,6 +162,7 @@ export const moveToPreviousTextBlock = (tr: Transaction, $pos: ResolvedPos | num
 
 /**
  * Caps the offset in the node to the length of the node.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @param offsetInNode - The offset in the node.
@@ -169,6 +180,7 @@ const capOffsetInNode = (tr: Transaction, $pos: ResolvedPos, offsetInNode: numbe
 
 /**
  * Move the cursor to the current text block.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @param bias - The search direction. Default is 1 (forward).
@@ -189,6 +201,7 @@ export const moveToThisTextBlock = (tr: Transaction, $pos: ResolvedPos | number,
 
 /**
  * Move the cursor to the next text block.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @returns {Selection} The new selection.
@@ -207,6 +220,7 @@ export const moveToNextTextBlock = (tr: Transaction, $pos: ResolvedPos | number)
 
 /**
  * Move the cursor to the nearest text selection.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @param bias - The search direction.
@@ -219,6 +233,7 @@ export const moveToNearestTextSelection = (tr: Transaction, $pos: ResolvedPos, b
 
 /**
  * Get the nearest text selection to the given position.
+ *
  * @param $pos - The resolved position in the document.
  * @param bias - The search direction.
  * @returns {Selection} The nearest text selection.
@@ -229,6 +244,7 @@ export const getNearestTextSelection = ($pos: ResolvedPos, bias: Sign = 1): Sele
 
 /**
  * Move the cursor to the nearest valid cursor position.
+ *
  * @param tr - The current transaction.
  * @param $pos - The resolved position in the document.
  * @returns {Selection} The new selection.

@@ -6,6 +6,7 @@
 
 /**
  * Determines if a string needs to be JSON parsed.
+ *
  * @param value - The value to check.
  * @returns {boolean} True if the value needs to be parsed, false otherwise.
  */
@@ -34,6 +35,7 @@ const needsParsing = (value: any): boolean => {
 /**
  * Wrap JSON.parse. Checks if the value needs to be parsed before attempting to parse it.
  * Handles errors by returning the original value if it cannot be parsed.
+ *
  * @param value - The value to parse.
  * @returns - The parsed value or the original value if it does not need to be parsed.
  */

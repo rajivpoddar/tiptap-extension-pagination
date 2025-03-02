@@ -21,6 +21,7 @@ export const getThisPageAmendmentNodePosition = (doc: PMNode, pos: ResolvedPos |
 
 /**
  * Get the header or footer node position and the header or footer node itself.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {pageAmendmentPos: number, pageAmendmentNode: Node} The position and the node of the header or footer.
@@ -41,6 +42,7 @@ export const getPageAmendmentNodeAndPosition = (
 
 /**
  * Get the start of the header or footer position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The start position of the header or footer.
@@ -57,6 +59,7 @@ export const getStartOfPageAmendmentPosition = (doc: PMNode, pos: ResolvedPos | 
 
 /**
  * Get the end of the header or footer position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The end position of the header or footer.

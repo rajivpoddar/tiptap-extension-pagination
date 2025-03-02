@@ -12,6 +12,7 @@ import { MarginConfig } from "../../../types/page";
 
 /**
  * Check if the given node is a body node.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is a body node, false otherwise.
  */
@@ -36,6 +37,7 @@ export const getBodyNodeAttributes = (bodyNode: PMNode): BodyNodeAttributes => {
 
 /**
  * Get the page margins from a body node.
+ *
  * @param bodyNode - The body node to get the page margins from.
  * @returns {Nullable<MarginConfig>} The page margins of the specified page.
  */

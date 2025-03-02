@@ -6,6 +6,7 @@
 
 /**
  * Checks if a value is within a specified range inclusive of the bounds.
+ *
  * @param value - The value to check.
  * @param min - The minimum value of the range.
  * @param max - The maximum value of the range.
@@ -17,6 +18,7 @@ export const inRange = (value: number, min: number, max: number): boolean => {
 
 /**
  * Calculates the hypotenuse of a right triangle given the lengths of the other two sides.
+ *
  * @param a - The length of side A.
  * @param b - The length of side B.
  * @returns The length of the hypotenuse.
@@ -27,6 +29,7 @@ export const pythagoreanTheorem = (a: number, b: number): number => {
 
 /**
  * Generic binary search function.
+ *
  * @param arr - The sorted array to search.
  * @param target - The target value to search for.
  * @param compare - A comparison function that returns:
@@ -59,6 +62,7 @@ export const binarySearch = <T>(arr: T[], target: T, compare: (a: T, b: T) => nu
 
 /**
  * Find the index of the closest element in an array to a target value.
+ *
  * @param arr - The array to search.
  * @param target - The target value to find the closest element to.
  * @returns The index of the closest element in the array.

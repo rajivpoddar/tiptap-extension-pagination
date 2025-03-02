@@ -16,6 +16,7 @@ import { getLastPageNum } from "../page/pageRange";
 
 /**
  * Check if the given position is within the body.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is within the body, false otherwise.
@@ -33,6 +34,7 @@ export const isPosInBody = (doc: PMNode, $pos: ResolvedPos | number): boolean =>
 
 /**
  * Check if the given position is exactly at the start of the first child of the body.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the condition is met, false otherwise.
@@ -43,6 +45,7 @@ export const isPosAtStartOfBody = (doc: PMNode, $pos: ResolvedPos | number): boo
 
 /**
  * Check if the given position is within the first paragraph child of the body.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the start of the body, false otherwise.
@@ -53,6 +56,7 @@ export const isPosAtFirstChildOfBody = (doc: PMNode, $pos: ResolvedPos | number)
 
 /**
  * Check if the given position is exactly at the end of the body.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the end of the body, false otherwise.
@@ -63,6 +67,7 @@ export const isPosAtEndOfBody = (doc: PMNode, $pos: ResolvedPos | number): boole
 
 /**
  * Check if the given position is at the end of the last paragraph child of the body.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the end of the body, false otherwise.
@@ -108,6 +113,7 @@ export const isPosAtEndOfDocumentBody = (doc: PMNode, $pos: ResolvedPos | number
 
 /**
  * Check if the given position is at the start of the document.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @param checkExactStart - Whether the position must be at the exact start of the body.
@@ -150,6 +156,7 @@ export const isPosMatchingStartOfBodyCondition = (doc: PMNode, $pos: ResolvedPos
 
 /**
  * Check if the given position is at the end of the body or the last child of the body.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @param checkExactEnd - Whether to check for the exact end of the body (true) or the last child of the body (false).

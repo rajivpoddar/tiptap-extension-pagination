@@ -13,6 +13,7 @@ import { isHeaderFooterNode } from "./headerFooter";
 
 /**
  * Check if the given position is within a header or footer.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  */
@@ -29,6 +30,7 @@ export const isPosInPageAmendment = (doc: PMNode, $pos: ResolvedPos | number): b
 
 /**
  * Check if the given position is at the start of a header or footer.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the start of a header or footer, false otherwise.
@@ -39,6 +41,7 @@ export const isPosAtStartOfPageAmendment = (doc: PMNode, $pos: ResolvedPos | num
 
 /**
  * Check if the given position is at the first child of a header or footer.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the first child of the header or footer, false otherwise.
@@ -49,6 +52,7 @@ export const isPosAtFirstChildOfPageAmendment = (doc: PMNode, $pos: ResolvedPos 
 
 /**
  * Check if the given position is at the end of a header or footer.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the end of a header or footer, false otherwise.
@@ -59,6 +63,7 @@ export const isPosAtEndOfPageAmendment = (doc: PMNode, $pos: ResolvedPos | numbe
 
 /**
  * Check if the given position is at the last child of a header or footer.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the last child of the header or footer, false otherwise.

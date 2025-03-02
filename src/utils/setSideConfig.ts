@@ -19,6 +19,7 @@ type SideConfig<V> = { [key in PageSide]: V };
 
 /**
  * Generic helper to set the side configuration of a document.
+ *
  * @param attrKey - The key of the attribute to update.
  * @param isValidConfig - A function to validate the side configuration.
  * @param setNodesAttribute - A function to set the attribute nodes.
@@ -47,6 +48,7 @@ export const setDocumentSideConfig =
 
 /**
  * Sets the side configuration of a node.
+ *
  * @param setNodePosByPageNum - A function to get the position of a node by page number.
  * @param setGenericPageNodePosSideConfig - A function to set the side configuration of a node.
  * @param pageNum - The page number to set the side configuration for.
@@ -74,6 +76,7 @@ export const setPageSideConfig =
 
 /**
  * Set one side of the document side configuration.
+ *
  * @param setDocumentSideConfig - A function to set the document side configuration.
  * @param isValueValid - A function to validate the value.
  * @param updateSideConfig - A function to update the side configuration of a page node.
@@ -116,6 +119,7 @@ export const setDocumentSideValue =
 
 /**
  * Set one side of the page side configuration.
+ *
  * @param setPageSideConfig - A function to set the side configuration of a page node.
  * @param isValueValid - A function to validate the value.
  * @param updateSideConfig - A function to update the side configuration of a page node.
@@ -162,6 +166,7 @@ export const setPageSideValue =
 
 /**
  * Set the paper side configuration of a page node.
+ *
  * @param tr - The transaction to apply the change to.
  * @param dispatch - The dispatch function to apply the transaction.
  * @param pagePos - The position of the page node to set the side config for.
@@ -208,6 +213,7 @@ export const setPageNodePosSideConfig = <V, T extends SideConfig<V>>(
 
 /**
  * Updates a page side configuration attribute. Does not dispatch the transaction.
+ *
  * @param tr - The transaction to apply the change to.
  * @param pagePos - The position of the page node to update the attribute for.
  * @param pageNode - The page node to update the attribute for.
@@ -215,6 +221,7 @@ export const setPageNodePosSideConfig = <V, T extends SideConfig<V>>(
  * @param value - The new value of the configuration object.
  * @param getExistingConfig - A function to get the existing configuration object from
  * the node. Can return null if the configuration object is missing or invalid.
+ *
  * @param isValidConfig - A function to validate the configuration object.
  * @param defaultConfig - The default configuration object.
  * @param attrKey - The key of the attribute to update.

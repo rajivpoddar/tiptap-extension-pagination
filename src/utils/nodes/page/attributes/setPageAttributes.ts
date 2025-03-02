@@ -13,6 +13,7 @@ import { setNodeAttribute, setNodesTypeAttribute } from "../../../attributes/set
 
 /**
  * Set a page node attribute to the given value for all page nodes in the document.
+ *
  * @param tr - The transaction to apply the change to.
  * @param attr - The attribute to set.
  * @param value - The value to set the attribute to.
@@ -24,6 +25,7 @@ export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any)
 
 /**
  * Set a page node attribute to the given value.
+ *
  * @param tr - The transaction to apply the change to.
  * @param pos - The position of the node to set the attribute for.
  * @param node - The node to set the attribute for.
@@ -41,6 +43,7 @@ export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode,
 
 /**
  * Set a body node attribute to the given value for all body nodes in the document.
+ *
  * @param tr - The transaction to apply the change to.
  * @param attr - The attribute to set.
  * @param value - The value to set the attribute to.
@@ -52,6 +55,7 @@ export const setBodyNodesAttribute = (tr: Transaction, attr: string, value: any)
 
 /**
  * Set a body node attribute to the given value.
+ *
  * @param tr - The transaction to apply the change to.
  * @param pagePos - The position of the node to set the attribute for.
  * @param pageNode - The page node (parent of the body nody).
