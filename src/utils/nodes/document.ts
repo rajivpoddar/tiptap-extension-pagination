@@ -8,6 +8,7 @@ import { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 
 /**
  * Check if the given position is at the start of the document.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @param allowTextBlock - Whether to allow text blocks at the start of the document. Default is false.
@@ -25,6 +26,7 @@ export const isPosAtStartOfDocument = (doc: PMNode, $pos: ResolvedPos | number, 
 
 /**
  * Check if the given position is at the end of the document.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the position is at the end of the document, false otherwise.

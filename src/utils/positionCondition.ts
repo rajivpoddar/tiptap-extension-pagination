@@ -29,6 +29,7 @@ export const isAtStartOfNode = (
 
 /**
  * Check if the given position is exactly at the end of the node.
+ *
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @param endOfNodePos - The position of the end of the node.
  * @param endOfParagraphPos - The position of the end of the paragraph.

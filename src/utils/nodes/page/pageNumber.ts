@@ -14,6 +14,7 @@ import { handleOutOfRangePageNum, isPageNumInRange } from "./pageRange";
 
 /**
  * Get the page node by page number.
+ *
  * @param doc - The current document.
  * @param pageNum - The page number to find the page node for (0-indexed).
  * @returns {Nullable<PMNode>} The page node of the specified page or null
@@ -36,6 +37,7 @@ export const getPageNodeByPageNum = (doc: PMNode, pageNum: number): Nullable<PMN
 
 /**
  * Get the page node and position by page number.
+ *
  * @param doc - The current document.
  * @param pageNum - The page number to find the page node for (0-indexed).
  * @returns {Nullable<NodePos>} The page node position of the specified page or null
@@ -53,6 +55,7 @@ export const getPageNodePosByPageNum = (doc: PMNode, pageNum: number): Nullable<
 
 /**
  * Get the page number of the resolved position.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @param zeroIndexed - Whether to return the page number as zero-indexed. Default is true.

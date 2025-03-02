@@ -41,6 +41,7 @@ export const isValidPageBorders = (pageBorder: BorderConfig): boolean => {
 
 /**
  * Get the page borders from a page node.
+ *
  * @param pageNode - The page node to get the page borders from.
  * @returns {Nullable<BorderConfig>} The page borders of the specified page.
  */

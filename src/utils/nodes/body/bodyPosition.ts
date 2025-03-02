@@ -25,6 +25,7 @@ export const getThisBodyNodePosition = (doc: PMNode, pos: ResolvedPos | number):
 
 /**
  * Get the body node position and the body node itself.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {bodyPos: number, bodyNode: Node} The position and the node of the body.
@@ -46,6 +47,7 @@ export const getBodyNodeAndPosition = (doc: PMNode, pos: ResolvedPos | number): 
 
 /**
  * Get the start of the body position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The start position of the body.
@@ -62,6 +64,7 @@ export const getStartOfBodyPosition = (doc: PMNode, pos: ResolvedPos | number): 
 
 /**
  * Get the end of the body position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The end position of the body.

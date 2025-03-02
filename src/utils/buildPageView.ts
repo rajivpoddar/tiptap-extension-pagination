@@ -347,6 +347,7 @@ const isNodeAfterAvailable = ($pos: ResolvedPos): boolean => {
 
 /**
  * Sets the cursor selection after creating the new document.
+ *
  * @param tr - The current transaction.
  * @returns {void}
  */

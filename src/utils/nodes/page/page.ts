@@ -15,6 +15,7 @@ import { HEADER_FOOTER_NODE_NAME } from "../../../constants/pageRegions";
 
 /**
  * Check if the given node is a page node.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is a page node, false otherwise.
  */
@@ -29,6 +30,7 @@ export const isPageNode = (node: Nullable<PMNode>): boolean => {
 
 /**
  * Check if the document has page nodes.
+ *
  * @param state - The editor state.
  * @returns {boolean} True if the document has page nodes, false otherwise.
  */
@@ -50,6 +52,7 @@ export const doesDocHavePageNodes = (state: EditorState): boolean => {
 
 /**
  * Collect page nodes and their positions in the document.
+ *
  * @param doc - The document node.
  * @returns {NodePosArray} A map of page positions to page nodes.
  */

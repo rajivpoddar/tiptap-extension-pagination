@@ -9,6 +9,7 @@ import { NodeAttributes } from "../../types/node";
 
 /**
  * Add the specified attributes to the node.
+ *
  * @param attributes - The attributes to add to the node.
  * @returns {Attributes} The attributes to add to the node.
  */
@@ -28,6 +29,7 @@ export const addNodeAttributes = <T extends Record<string, any>>(attributes: Nod
 
 /**
  * Parse the HTML attribute of the element.
+ *
  * @param element - The element to parse the attribute from.
  * @param attr - The attribute to parse.
  * @param fallback - The fallback value if the attribute is not found.
@@ -42,6 +44,7 @@ const parseHTMLAttribute =
 
 /**
  * Render the HTML attribute.
+ *
  * @param attr - The attribute to render.
  * @param attributes - The attributes to render.
  * @returns {Object} The rendered attribute.

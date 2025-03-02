@@ -6,6 +6,7 @@
 
 /**
  * Converts a string to title case.
+ *
  * @param str - The input string to convert.
  * @returns {string} The string in title case.
  */

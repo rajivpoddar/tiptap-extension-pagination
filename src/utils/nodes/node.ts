@@ -12,6 +12,7 @@ import { Nullable, Undefinable } from "../../types/record";
 
 /**
  * Get the type of the node at the specified position.
+ *
  * @param $pos - The resolved position in the document.
  * @returns {ResolvedPos} The type of the node at the specified position.
  */
@@ -31,6 +32,7 @@ export const getMaybeNodeSize = (node: Undefinable<PMNode>): number => {
 
 /**
  * Check if the node type matches the specified type.
+ *
  * @param node - The node to check.
  * @param type - The type of the node to match. Can be string or an array of strings.
  * @returns {boolean} True if the node type matches, false otherwise.
@@ -49,6 +51,7 @@ const doesNodeTypeMatch = (node: Nullable<PMNode>, type: string | string[]): boo
 
 /**
  * Get the parent node position of the specified type.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @param type - The type of the node to search for. Can be string or an array of strings.
@@ -97,6 +100,7 @@ export const getParentNodePosOfType = (doc: PMNode, $pos: ResolvedPos | number, 
 
 /**
  * Append the new node to the existing node and replace the existing node with the new node.
+ *
  * @param tr - The current transaction.
  * @param pos - The position to replace the node at.
  * @param existingNode - The existing node to replace.
@@ -110,6 +114,7 @@ export const appendAndReplaceNode = (tr: Transaction, pos: number, existingNode:
 
 /**
  * Delete the node at the specified position.
+ *
  * @param tr - The current transaction.
  * @param pos - The position of the node to delete.
  * @param node - The node to delete.
@@ -121,6 +126,7 @@ export const deleteNode = (tr: Transaction, pos: number, node: PMNode): void => 
 
 /**
  * Check if the node is empty.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is empty, false otherwise.
  */
@@ -130,6 +136,7 @@ export const isNodeEmpty = (node: PMNode): boolean => {
 
 /**
  * A rule that matches a node based on the specified tag and attribute.
+ *
  * @param baseElement - The base element to match.
  * @param nodeTagAttribute - The attribute of the node tag.
  * @param preventNestedNodes - True if nested nodes should be prevented, false otherwise.
@@ -142,6 +149,7 @@ export const parseHTMLNode = (baseElement: string, nodeTagAttribute: string, pre
 
 /**
  * Check if the given node is atomic.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is a text node, false otherwise.
  */

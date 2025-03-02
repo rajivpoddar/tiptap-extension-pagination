@@ -76,6 +76,7 @@ const Editor: React.FC<EditorProps> = ({ content, setContent, editable = true })
 
     /**
      * Handles change in text.
+     *
      * @param value - new text value
      * @returns {void}
      */

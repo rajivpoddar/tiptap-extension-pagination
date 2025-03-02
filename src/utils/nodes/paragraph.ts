@@ -18,6 +18,7 @@ import { isAtHardBreak } from "./hardBreak";
 
 /**
  * Check if the given node is a paragraph node.
+ *
  * @param node - The node to check.
  * @returns {boolean} True if the node is a paragraph node, false otherwise.
  */
@@ -32,6 +33,7 @@ export const isParagraphNode = (node: Nullable<PMNode>): boolean => {
 
 /**
  * Get the type of the node at the specified position.
+ *
  * @param $pos - The resolved position in the document.
  * @returns The type of the node at the specified position.
  */
@@ -41,6 +43,7 @@ export const isPositionWithinParagraph = ($pos: ResolvedPos): boolean => {
 
 /**
  * Get the start of the paragraph position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The start position of the paragraph.
@@ -56,6 +59,7 @@ export const getStartOfParagraphPosition = (doc: PMNode, pos: ResolvedPos | numb
 
 /**
  * Get the end of the paragraph position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The end position of the paragraph.
@@ -75,6 +79,7 @@ export const getEndOfParagraphPosition = (doc: PMNode, $pos: ResolvedPos | numbe
 
 /**
  * Get the previous paragraph node.
+ *
  * @param doc - The document node.
  * @param pos - The position in the document.
  * @returns {NullableNodePos} The previous paragraph node or null if not found and position.
@@ -104,6 +109,7 @@ export const getPreviousParagraph = (doc: PMNode, pos: number): NullableNodePos 
 
 /**
  * Get the next paragraph node.
+ *
  * @param doc - The document node.
  * @param pos - The position in the document.
  * @returns {NullableNodePos} The next paragraph node or null if not found and position.
@@ -134,6 +140,7 @@ export const getNextParagraph = (doc: PMNode, pos: number): NullableNodePos => {
 
 /**
  * Determine if the resolved position is at the start of a paragraph node.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @returns {boolean} True if the position is at the start of a paragraph node, false otherwise.
@@ -154,6 +161,7 @@ export const isAtStartOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): b
 
 /**
  * Determine if the resolved position is at the end of a paragraph node.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @returns {boolean} True if the position is at the end of a paragraph node, false otherwise.
@@ -173,6 +181,7 @@ export const isAtEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | number): boo
 
 /**
  * Determine if the resolved position is at the start or end of a paragraph node.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document.
  * @returns {boolean} True if the position is at the start or end of a paragraph node, false otherwise.
@@ -183,6 +192,7 @@ export const isAtStartOrEndOfParagraph = (doc: PMNode, $pos: ResolvedPos | numbe
 
 /**
  * Determine if the previous paragraph is empty.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the previous paragraph is empty or does not exist, false otherwise.
@@ -202,6 +212,7 @@ export const isPreviousParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number
 
 /**
  * Determine if the next paragraph is empty.
+ *
  * @param doc - The document node.
  * @param $pos - The resolved position in the document or the absolute position of the node.
  * @returns {boolean} True if the next paragraph is empty or does not exist, false otherwise.
@@ -221,6 +232,7 @@ export const isNextParagraphEmpty = (doc: PMNode, $pos: ResolvedPos | number): b
 
 /**
  * Get the paragraph node position.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {number} The position of the paragraph node.
@@ -231,6 +243,7 @@ export const getThisParagraphNodePosition = (doc: PMNode, pos: ResolvedPos | num
 
 /**
  * Get the paragraph node position and the paragraph node itself.
+ *
  * @param doc - The document node.
  * @param pos - The resolved position in the document or the absolute position of the node.
  * @returns {NullableNodePos} The position and the node or null if not found of the paragraph.
@@ -289,6 +302,7 @@ export const getFirstParagraphInNextPageBodyAfterPos = (doc: PMNode, pos: Resolv
 
 /**
  * Get the paragraph DOM node.
+ *
  * @param view - The editor view.
  * @param paragraphPos - The position of the paragraph in the document.
  * @returns {Node} The paragraph DOM node.
@@ -301,6 +315,7 @@ const getParagraphDOMNode = (view: EditorView, paragraphPos: number): Nullable<H
 
 /**
  * Measure the widths of each character in a paragraph.
+ *
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of character widths.
  */
@@ -321,6 +336,7 @@ const measureTextWidths = (pDOMNode: HTMLElement): number[] => {
 
 /**
  * Measure the width of the text up to a given offset in a paragraph.
+ *
  * @param pDOMNode - The paragraph DOM node.
  * @param offset - The offset within the paragraph.
  * @param lineNumber - The line number within the paragraph.
@@ -341,6 +357,7 @@ export const getTextWidthUpToOffsetInLine = (
 
 /**
  * Get the offset within a line given the offset in the paragraph and line number.
+ *
  * @param offset - The offset within the paragraph.
  * @param lineNumber - The line number within the paragraph.
  * @param lineBreakOffsets - The offsets where line breaks occur.
@@ -378,6 +395,7 @@ export const getOffsetForDistanceInLine = (
 
 /**
  * Measure the widths of each line in a paragraph.
+ *
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of line widths.
  */
@@ -433,6 +451,7 @@ export const measureParagraphLineWidths = (pDOMNode: HTMLElement): number[] => {
 
 /**
  * Get offsets where explicit and soft line breaks occur in a paragraph.
+ *
  * @param pDOMNode - The paragraph DOM node.
  * @returns {number[]} An array of offsets where line breaks occur.
  */
@@ -482,6 +501,7 @@ const getParagraphLineBreakOffsets = (view: EditorView, pDOMNode: HTMLElement): 
 
 /**
  * Get the line number for a given position within a paragraph using binary search.
+ *
  * @param lineBreakOffsets - The offsets where line breaks occur.
  * @param offset - The position within the paragraph.
  * @returns {number} The line number of the position (0-indexed).
@@ -503,6 +523,7 @@ const getPDOMNodeFromPos = (view: EditorView, pos: ResolvedPos | number): Nullab
 /**
  * Helper function to calculate the total length of text content in an element.
  * It will recursively sum the lengths of all text nodes within the element.
+ *
  * @param elementNode - The DOM element node (e.g., <code>, <span>).
  * @returns {number} - The total length of text content inside the element.
  */
@@ -549,6 +570,7 @@ const calculateParagraphEndOffset = (view: EditorView, pos: ResolvedPos | number
 /**
  * Given a paragraph position and position within said paragraph, return the number of
  * lines in the paragraph and the line number of the position.
+ *
  * @param view - The editor view.
  * @param pos - The [resolved] position in the document.
  * @returns {ParagraphLineInfo} The number of lines in the paragraph and the
@@ -590,6 +612,7 @@ export const getParagraphLineInfo = (view: EditorView, pos: ResolvedPos | number
 
 /**
  * Checks if the position is at the first line of the paragraph.
+ *
  * @param view - The editor view.
  * @param $pos - The [resolved] position in the document.
  * @returns {boolean} True if the position is at the first line of the paragraph, false otherwise.
@@ -605,6 +628,7 @@ export const isPosAtFirstLineOfParagraph = (
 
 /**
  * Checks if the position is at the last line of the paragraph.
+ *
  * @param view - The editor view.
  * @param $pos - The [resolved] position in the document.
  * @returns {boolean} True if the position is at the last line of the paragraph, false otherwise.
