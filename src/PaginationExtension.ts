@@ -99,6 +99,8 @@ export interface PaginationOptions {
 }
 
 declare module "@tiptap/core" {
+    interface EditorOptions extends PaginationOptions {}
+
     interface Commands<ReturnType> {
         page: {
             /**
