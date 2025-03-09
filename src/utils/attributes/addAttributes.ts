@@ -38,8 +38,14 @@ export const addNodeAttributes = <T extends Record<string, any>>(attributes: Nod
 const parseHTMLAttribute =
     <T>(attr: string, fallback: T) =>
     (element: HTMLElement): T => {
-        const margins = element.getAttribute(attr);
-        return margins ? JSON.parse(margins) : fallback;
+        const attrValue = element.getAttribute(attr);
+        if (!attrValue) return fallback;
+
+        try {
+            return JSON.parse(attrValue);
+        } catch (error) {
+            return fallback;
+        }
     };
 
 /**
