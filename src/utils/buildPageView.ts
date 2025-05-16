@@ -12,7 +12,6 @@ import { MIN_PARAGRAPH_HEIGHT } from "../constants/pagination";
 import { NodePosArray } from "../types/node";
 import { CursorMap } from "../types/cursor";
 import { Nullable, Undefinable } from "../types/record";
-import { MarginConfig } from "../types/page";
 import { moveToNearestValidCursorPosition, moveToThisTextBlock, setSelection, setSelectionAtEndOfDocument } from "./selection";
 import { inRange } from "./math";
 import { getPaginationNodeAttributes } from "./nodes/page/attributes/getPageAttributes";
@@ -39,30 +38,35 @@ export const buildPageView = (editor: Editor, view: EditorView, options: Paginat
     const { state, dispatch } = view;
     const { doc } = state;
 
-    try {
-        const contentNodes = collectContentNodes(doc);
-        const nodeHeights = measureNodeHeights(view, contentNodes);
+    requestAnimationFrame(() => {
+        try {
+            const contentNodes = collectContentNodes(doc);
+            const nodeHeights = measureNodeHeights(view, contentNodes);
 
-        // Record the cursor's old position
-        const { tr, selection } = state;
-        const oldCursorPos = selection.from;
+            // Record the cursor's old position
+            const { tr, selection } = state;
+            const oldCursorPos = selection.from;
 
-        const { newDoc, oldToNewPosMap } = buildNewDocument(editor, options, contentNodes, nodeHeights);
+            const { newDoc, oldToNewPosMap } = buildNewDocument(editor, options, contentNodes, nodeHeights);
 
-        // Compare the content of the documents
-        if (!newDoc.content.eq(doc.content)) {
-            tr.replaceWith(0, doc.content.size, newDoc.content);
-            tr.setMeta("pagination", true);
+            // Compare the content of the documents
+            if (!newDoc.content.eq(doc.content)) {
+                tr.replaceWith(0, doc.content.size, newDoc.content);
+                tr.setMeta("pagination", true);
 
-            const newDocContentSize = newDoc.content.size;
-            const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, newDocContentSize);
-            paginationUpdateCursorPosition(tr, newCursorPos);
+                const newDocContentSize = newDoc.content.size;
+                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, newDocContentSize);
+                paginationUpdateCursorPosition(tr, newCursorPos);
+            }
+
+            // Only dispatch if a transaction was created and has steps
+            if (tr.docChanged || tr.selectionSet) {
+                dispatch(tr);
+            }
+        } catch (error) {
+            console.error("Error updating page view. Details:", error);
         }
-
-        dispatch(tr);
-    } catch (error) {
-        console.error("Error updating page view. Details:", error);
-    }
+    });
 };
 
 /**
@@ -95,7 +99,7 @@ const collectContentNodes = (doc: PMNode): NodePosArray => {
                 }
             });
         } else {
-            contentNodes.push({ node: pageNode, pos: pageOffset + 1 });
+            contentNodes.push({ node: pageNode, pos: pageOffset });
         }
     });
 
@@ -108,13 +112,22 @@ const collectContentNodes = (doc: PMNode): NodePosArray => {
  * @param element - The element to calculate margins for.
  * @returns {MarginConfig} The margins of the element.
  */
-const calculateElementMargins = (element: HTMLElement): MarginConfig => {
+const calculateElementMargins = (element: HTMLElement): {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+    rawTop: string;
+    rawBottom: string;
+} => {
     const style = window.getComputedStyle(element);
     return {
         top: parseFloat(style.marginTop),
         right: parseFloat(style.marginRight),
         bottom: parseFloat(style.marginBottom),
         left: parseFloat(style.marginLeft),
+        rawTop: style.marginTop,
+        rawBottom: style.marginBottom,
     };
 };
 
@@ -130,23 +143,43 @@ const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): numbe
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
         const domNode = view.nodeDOM(pos);
+
+        // Enhanced Debugging
+        if (!domNode) {
+            console.log(`[Pagination Debug] Node Type: ${node.type.name}, view.nodeDOM(pos) returned null or undefined, Pos: ${pos}`);
+        } else if (!(domNode instanceof HTMLElement)) {
+            console.log(`[Pagination Debug] Node Type: ${node.type.name}, view.nodeDOM(pos) returned a non-HTMLElement:`, domNode, `Pos: ${pos}`);
+        }
+
         if (domNode instanceof HTMLElement) {
-            let { height } = domNode.getBoundingClientRect();
+            const { height: BCRHeight } = domNode.getBoundingClientRect();
 
-            const { top: marginTop } = calculateElementMargins(domNode);
+            // Get all margins
+            const { top: marginTop, bottom: marginBottom, rawTop, rawBottom } = calculateElementMargins(domNode);
 
-            if (height === 0) {
+            let calculatedHeight = BCRHeight;
+
+            if (calculatedHeight === 0) {
                 if (node.type === paragraphType || node.isTextblock) {
                     // Assign a minimum height to empty paragraphs or textblocks
-                    height = MIN_PARAGRAPH_HEIGHT;
+                    calculatedHeight = MIN_PARAGRAPH_HEIGHT;
                 }
             }
 
-            // We use top margin only because there is overlap of margins between paragraphs
-            return height + marginTop;
+            const finalHeightForPagination = calculatedHeight + marginTop + marginBottom;
+
+            console.log(
+                `[Pagination Debug] Node Type: ${node.type.name}, BCRHeight: ${BCRHeight.toFixed(2)}, MarginTop: ${marginTop.toFixed(2)} (raw: ${rawTop}), MarginBottom: ${marginBottom.toFixed(2)} (raw: ${rawBottom}), Final Height for Pagination: ${finalHeightForPagination.toFixed(2)}, Node Pos: ${pos}`
+            );
+
+            return finalHeightForPagination;
         }
 
-        return MIN_PARAGRAPH_HEIGHT; // Default to minimum height if DOM element is not found
+        // Fallback log if not an HTMLElement (already logged with more detail above)
+        console.log(
+            `[Pagination Debug] Fallback: Node Type: ${node.type.name}, Defaulting to MIN_PARAGRAPH_HEIGHT: ${MIN_PARAGRAPH_HEIGHT}, Node Pos: ${pos}`
+        );
+        return MIN_PARAGRAPH_HEIGHT; // Default to minimum height
     });
 
     return nodeHeights;
