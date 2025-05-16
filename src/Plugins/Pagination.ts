@@ -8,8 +8,8 @@ import { Editor } from "@tiptap/core";
 import { Plugin, PluginKey, EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { buildPageView } from "../utils/buildPageView";
-import { isNodeEmpty } from "../utils/nodes/node";
-import { doesDocHavePageNodes } from "../utils/nodes/page/page";
+// import { isNodeEmpty } from "../utils/nodes/node"; // Removing unused import
+// import { doesDocHavePageNodes } from "../utils/nodes/page/page"; // Removing unused import
 import { PaginationOptions } from "../PaginationExtension";
 
 type PaginationPluginProps = {
@@ -31,21 +31,26 @@ const PaginationPlugin = ({ editor, options }: PaginationPluginProps) => {
                     const { doc, schema } = state;
                     const pageType = schema.nodes.page;
 
-                    if (!pageType) return;
+                    if (!pageType) return; // Schema not ready
 
                     const docChanged = !doc.eq(prevState.doc);
-                    const initialLoad = isNodeEmpty(prevState.doc) && !isNodeEmpty(doc);
-                    const hasPageNodes = doesDocHavePageNodes(state);
 
-                    if (!docChanged && hasPageNodes && !initialLoad) return;
+                    // Only proceed if the document has actually changed and is not empty.
+                    // This simplifies the logic and avoids reacting to intermediate empty/placeholder states.
+                    if (!docChanged || doc.content.size <= 2) {
+                        return;
+                    }
+
+                    // The isInitialContentLoaded logic and its setTimeout can be removed for now.
+                    // We are relying on docChanged and a non-empty doc to be the trigger.
 
                     isPaginating = true;
-
-                    buildPageView(editor, view, options);
-
-                    // Reset paginating flag regardless of success or failure because we do not want to get
-                    // stuck out of this loop.
-                    isPaginating = false;
+                    try {
+                        // buildPageView now internally uses requestAnimationFrame
+                        buildPageView(editor, view, options);
+                    } finally {
+                        isPaginating = false;
+                    }
                 },
             };
         },

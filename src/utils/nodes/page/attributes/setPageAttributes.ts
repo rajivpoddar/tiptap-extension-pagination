@@ -19,7 +19,7 @@ import { setNodeAttribute, setNodesTypeAttribute } from "../../../attributes/set
  * @param value - The value to set the attribute to.
  * @returns {boolean} True if any attribute was changed, false otherwise.
  */
-export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any): boolean => {
+export const setPageNodesAttribute = <T = unknown>(tr: Transaction, attr: string, value: T): boolean => {
     return setNodesTypeAttribute(tr, attr, value, setPageNodeAttribute);
 };
 
@@ -33,7 +33,7 @@ export const setPageNodesAttribute = (tr: Transaction, attr: string, value: any)
  * @param value - The value to set the attribute to.
  * @returns {boolean} True if the attribute was changed, false otherwise.
  */
-export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode, attr: string, value: any): boolean => {
+export const setPageNodeAttribute = <T = unknown>(tr: Transaction, pos: number, node: PMNode, attr: string, value: T): boolean => {
     if (!isPageNode(node)) {
         return false;
     }
@@ -49,7 +49,7 @@ export const setPageNodeAttribute = (tr: Transaction, pos: number, node: PMNode,
  * @param value - The value to set the attribute to.
  * @returns {boolean} True if any attribute was changed, false otherwise.
  */
-export const setBodyNodesAttribute = (tr: Transaction, attr: string, value: any): boolean => {
+export const setBodyNodesAttribute = <T = unknown>(tr: Transaction, attr: string, value: T): boolean => {
     return setNodesTypeAttribute(tr, attr, value, setBodyNodeAttribute);
 };
 

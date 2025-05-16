@@ -35,33 +35,35 @@ import { Editor } from "@tiptap/core";
  * @returns {void}
  */
 export const buildPageView = (editor: Editor, view: EditorView, options: PaginationOptions): void => {
-    const { state, dispatch } = view;
-    const { doc } = state;
-
     requestAnimationFrame(() => {
+        const { state, dispatch } = view;
+        const { doc } = state;
+
         try {
             const contentNodes = collectContentNodes(doc);
+
             const nodeHeights = measureNodeHeights(view, contentNodes);
-
-            // Record the cursor's old position
-            const { tr, selection } = state;
-            const oldCursorPos = selection.from;
-
+            const oldCursorPos = state.selection.from;
             const { newDoc, oldToNewPosMap } = buildNewDocument(editor, options, contentNodes, nodeHeights);
 
-            // Compare the content of the documents
             if (!newDoc.content.eq(doc.content)) {
+                const tr = state.tr;
                 tr.replaceWith(0, doc.content.size, newDoc.content);
                 tr.setMeta("pagination", true);
-
-                const newDocContentSize = newDoc.content.size;
-                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, newDocContentSize);
+                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, newDoc);
                 paginationUpdateCursorPosition(tr, newCursorPos);
-            }
-
-            // Only dispatch if a transaction was created and has steps
-            if (tr.docChanged || tr.selectionSet) {
-                dispatch(tr);
+                if (tr.docChanged || tr.selectionSet) {
+                    dispatch(tr);
+                }
+            } else {
+                const newCursorPos = mapCursorPosition(contentNodes, oldCursorPos, oldToNewPosMap, doc);
+                if (newCursorPos !== null && newCursorPos !== oldCursorPos) {
+                    const tr = state.tr;
+                    paginationUpdateCursorPosition(tr, newCursorPos);
+                    if (tr.selectionSet) {
+                        dispatch(tr);
+                    }
+                }
             }
         } catch (error) {
             console.error("Error updating page view. Details:", error);
@@ -117,8 +119,6 @@ const calculateElementMargins = (element: HTMLElement): {
     right: number;
     bottom: number;
     left: number;
-    rawTop: string;
-    rawBottom: string;
 } => {
     const style = window.getComputedStyle(element);
     return {
@@ -126,8 +126,6 @@ const calculateElementMargins = (element: HTMLElement): {
         right: parseFloat(style.marginRight),
         bottom: parseFloat(style.marginBottom),
         left: parseFloat(style.marginLeft),
-        rawTop: style.marginTop,
-        rawBottom: style.marginBottom,
     };
 };
 
@@ -142,44 +140,38 @@ const measureNodeHeights = (view: EditorView, contentNodes: NodePosArray): numbe
     const paragraphType = view.state.schema.nodes.paragraph;
 
     const nodeHeights = contentNodes.map(({ pos, node }) => {
-        const domNode = view.nodeDOM(pos);
-
-        // Enhanced Debugging
-        if (!domNode) {
-            console.log(`[Pagination Debug] Node Type: ${node.type.name}, view.nodeDOM(pos) returned null or undefined, Pos: ${pos}`);
-        } else if (!(domNode instanceof HTMLElement)) {
-            console.log(`[Pagination Debug] Node Type: ${node.type.name}, view.nodeDOM(pos) returned a non-HTMLElement:`, domNode, `Pos: ${pos}`);
-        }
-
-        if (domNode instanceof HTMLElement) {
-            const { height: BCRHeight } = domNode.getBoundingClientRect();
-
-            // Get all margins
-            const { top: marginTop, bottom: marginBottom, rawTop, rawBottom } = calculateElementMargins(domNode);
-
-            let calculatedHeight = BCRHeight;
-
-            if (calculatedHeight === 0) {
-                if (node.type === paragraphType || node.isTextblock) {
-                    // Assign a minimum height to empty paragraphs or textblocks
-                    calculatedHeight = MIN_PARAGRAPH_HEIGHT;
-                }
+        let domNode: Node | null | undefined = null;
+        try {
+            if (!view.dom) {
+                return MIN_PARAGRAPH_HEIGHT;
             }
-
-            const finalHeightForPagination = calculatedHeight + marginTop + marginBottom;
-
-            console.log(
-                `[Pagination Debug] Node Type: ${node.type.name}, BCRHeight: ${BCRHeight.toFixed(2)}, MarginTop: ${marginTop.toFixed(2)} (raw: ${rawTop}), MarginBottom: ${marginBottom.toFixed(2)} (raw: ${rawBottom}), Final Height for Pagination: ${finalHeightForPagination.toFixed(2)}, Node Pos: ${pos}`
-            );
-
-            return finalHeightForPagination;
+            if (pos < 0 || pos > view.state.doc.content.size) {
+                return MIN_PARAGRAPH_HEIGHT;
+            }
+            view.state.doc.resolve(pos);
+            domNode = view.nodeDOM(pos);
+        } catch (e) {
+            console.error(`[Pagination] Error in measureNodeHeights during resolve/nodeDOM for node ${node.type.name} at pos ${pos}:`, e);
+            return MIN_PARAGRAPH_HEIGHT;
         }
 
-        // Fallback log if not an HTMLElement (already logged with more detail above)
-        console.log(
-            `[Pagination Debug] Fallback: Node Type: ${node.type.name}, Defaulting to MIN_PARAGRAPH_HEIGHT: ${MIN_PARAGRAPH_HEIGHT}, Node Pos: ${pos}`
-        );
-        return MIN_PARAGRAPH_HEIGHT; // Default to minimum height
+        if (!domNode) {
+            return MIN_PARAGRAPH_HEIGHT;
+        } else if (!(domNode instanceof HTMLElement)) {
+            return MIN_PARAGRAPH_HEIGHT;
+        }
+
+        const { height: BCRHeight } = domNode.getBoundingClientRect();
+        const { top: marginTop, bottom: marginBottom } = calculateElementMargins(domNode);
+        let calculatedHeight = BCRHeight;
+
+        if (calculatedHeight === 0) {
+            if (node.type === paragraphType || node.isTextblock) {
+                calculatedHeight = MIN_PARAGRAPH_HEIGHT;
+            }
+        }
+        const finalHeightForPagination = calculatedHeight + marginTop + marginBottom;
+        return finalHeightForPagination;
     });
 
     return nodeHeights;
@@ -330,30 +322,47 @@ const limitMappedCursorPositions = (oldToNewPosMap: CursorMap, docSize: number):
  * @param contentNodes - The content nodes and their positions.
  * @param oldCursorPos - The old cursor position.
  * @param oldToNewPosMap - The mapping from old positions to new positions.
- * @param newDocContentSize - The size of the new document. Serves as maximum limit for cursor position.
+ * @param newDoc - The new document node.
  * @returns {number} The new cursor position.
  */
-const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap, newDocContentSize: number) => {
-    let newCursorPos: Nullable<number> = null;
+const mapCursorPosition = (contentNodes: NodePosArray, oldCursorPos: number, oldToNewPosMap: CursorMap, newDoc: PMNode) => {
+    let mappedNewCursorPos: Nullable<number> = null;
+    const newDocContentSize = newDoc.content.size;
+
     for (let i = 0; i < contentNodes.length; i++) {
-        const { node, pos: oldNodePos } = contentNodes[i];
-        const nodeSize = node.nodeSize;
+        const { node: oldNode, pos: oldNodePos } = contentNodes[i];
+        const oldNodeSize = oldNode.nodeSize;
 
-        if (inRange(oldCursorPos, oldNodePos, oldNodePos + nodeSize)) {
-            const offsetInNode = oldCursorPos - oldNodePos;
-            const newNodePos = oldToNewPosMap.get(oldNodePos);
-            if (newNodePos === undefined) {
-                console.error("Unable to determine new node position from cursor map!");
-                newCursorPos = 0;
+        if (inRange(oldCursorPos, oldNodePos, oldNodePos + oldNodeSize)) {
+            const offsetInOldNode = oldCursorPos - oldNodePos;
+            const newNodeStartPos = oldToNewPosMap.get(oldNodePos);
+
+            if (newNodeStartPos === undefined) {
+                mappedNewCursorPos = 0;
             } else {
-                newCursorPos = Math.min(newNodePos + offsetInNode, newDocContentSize - 1);
+                let potentialPos = newNodeStartPos + offsetInOldNode;
+                potentialPos = Math.min(potentialPos, newDocContentSize -1);
+                potentialPos = Math.max(0, potentialPos);
+                try {
+                    const $resolvedPos = newDoc.resolve(potentialPos);
+                    mappedNewCursorPos = $resolvedPos.pos;
+                } catch (resolveError) {
+                    console.warn(`[Pagination] Error in mapCursorPosition resolving potentialPos ${potentialPos} (from oldPos ${oldCursorPos}):`, resolveError);
+                    mappedNewCursorPos = Math.max(0, Math.min(newNodeStartPos, newDocContentSize - 1));
+                }
             }
-
             break;
         }
     }
 
-    return newCursorPos;
+    if (mappedNewCursorPos === null) {
+        if (contentNodes.length > 0 && oldCursorPos >= contentNodes[contentNodes.length - 1].pos + contentNodes[contentNodes.length - 1].node.nodeSize) {
+            mappedNewCursorPos = newDocContentSize > 0 ? newDocContentSize -1 : 0;
+        } else {
+            mappedNewCursorPos = 0;
+        }
+    }
+    return mappedNewCursorPos;
 };
 
 /**
